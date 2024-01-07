@@ -1,0 +1,318 @@
+package com.suihan74.satena2.scene.preferences.page.accounts
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import com.suihan74.satena2.R
+import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.dialog.MenuDialog
+import com.suihan74.satena2.compose.dialog.dialogButton
+import com.suihan74.satena2.compose.dialog.menuDialogItem
+import com.suihan74.satena2.model.mastodon.TootVisibility
+import com.suihan74.satena2.model.misskey.NoteVisibility
+import com.suihan74.satena2.scene.preferences.PrefButton
+import com.suihan74.satena2.scene.preferences.PrefItem
+import com.suihan74.satena2.scene.preferences.Section
+import com.suihan74.satena2.scene.preferences.page.BasicPreferencesPage
+import com.suihan74.satena2.scene.preferences.page.MutableComposableList
+import com.suihan74.satena2.scene.preferences.page.buildComposableList
+import com.suihan74.satena2.ui.theme.CurrentTheme
+import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
+import com.suihan74.satena2.utility.extension.add
+
+/**
+ * 「アカウント」ページ
+ */
+@Composable
+fun AccountsPage(
+    state: LazyListState = LazyListState(),
+    viewModel: AccountViewModel
+) {
+    val contents = accountPageContents(viewModel = viewModel)
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = state,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(contents) { composable ->
+                composable.invoke()
+            }
+            emptyFooter()
+        }
+
+        // リロードボタン
+        FloatingActionButton(
+            backgroundColor = CurrentTheme.primary,
+            contentColor = CurrentTheme.onPrimary,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 24.dp, end = 16.dp),
+            onClick = {
+                viewModel.reload()
+            }
+        ) {
+            Icon(
+                Icons.Filled.Refresh,
+                contentDescription = "reload"
+            )
+        }
+    }
+}
+
+/**
+ * 「アカウント」ページのコンテンツ
+ *
+ * TODO: サインイン済みの場合の`AccountItem`に渡す情報
+ */
+@Composable
+fun accountPageContents(viewModel: AccountViewModel) = buildComposableList {
+    hatenaSection(viewModel)
+    mastodonSection(viewModel)
+    misskeySection(viewModel)
+}
+
+/**
+ * はてなセクション
+ */
+@Composable
+private fun MutableComposableList.hatenaSection(viewModel: AccountViewModel) = add(
+    { Section(R.string.pref_account_section_hatena) },
+    {
+        val context = LocalContext.current
+        val signedInHatena = viewModel.signedInHatena.collectAsState()
+        if (signedInHatena.value) {
+            val account = viewModel.hatenaAccount.collectAsState()
+            val userName = account.value?.name.orEmpty()
+            val iconUrl = account.value?.name?.let {
+                "https://cdn1.www.st-hatena.com/users/$it/profile.gif"
+            }
+            AccountItem(
+                painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(context)
+                        .data(iconUrl)
+                        .error(R.drawable.ic_file)
+                        .build()
+                ),
+                text = userName,
+                onClick = { viewModel.launchHatenaAuthorizationActivity(context) },
+                onClear = { viewModel.signOutHatena() }
+            )
+        }
+        else {
+            PrefButton(R.string.sign_in) {
+                viewModel.launchHatenaAuthorizationActivity(context)
+            }
+        }
+    }
+)
+
+/**
+ * マストドンセクション
+ */
+@Composable
+private fun MutableComposableList.mastodonSection(viewModel: AccountViewModel) = run {
+    val context = LocalContext.current
+
+    add { Section(R.string.pref_account_section_mastodon) }
+    if (viewModel.signedInMastodon.collectAsState().value) {
+        add(
+            {
+                val account = viewModel.mastodonAccount.collectAsState().value!!
+                val instance = viewModel.mastodonInstance.collectAsState().value
+                AccountItem(
+                    painter = rememberAsyncImagePainter(
+                        model = ImageRequest.Builder(context)
+                            .data(account.avatar)
+                            .error(R.drawable.ic_file)
+                            .build()
+                    ),
+                    text = "${account.userName}@$instance",
+                    onClick = { viewModel.launchMastodonAuthorizationActivity(context) },
+                    onClear = { viewModel.signOutMastodon() }
+                )
+            },
+            {
+                val menuVisible = remember { mutableStateOf(false) }
+                val current by viewModel.mastodonPostVisibility.collectAsState()
+                PrefButton(
+                    mainTextId = R.string.pref_account_mastodon_visibility,
+                    subTextPrefixId = R.string.pref_current_value_prefix,
+                    subTextId = current.textId
+                ) {
+                    menuVisible.value = true
+                }
+
+                if (menuVisible.value) {
+                    MenuDialog(
+                        colors = themedCustomDialogColors(),
+                        titleText = stringResource(R.string.pref_account_mastodon_visibility),
+                        menuItems = buildList {
+                            addAll(
+                                TootVisibility.values().map {
+                                    menuDialogItem(textId = it.textId) {
+                                        viewModel.updateMastodonPostVisibility(it)
+                                        true
+                                    }
+                                }
+                            )
+                        },
+                        negativeButton = dialogButton(R.string.cancel) { menuVisible.value = false },
+                        onDismissRequest = { menuVisible.value = false },
+                        properties = viewModel.dialogProperties()
+                    )
+                }
+            }
+        )
+    }
+    else {
+        add { PrefButton(R.string.sign_in) { viewModel.launchMastodonAuthorizationActivity(context) } }
+    }
+}
+
+/**
+ * Misskeyセクション
+ */
+@Composable
+private fun MutableComposableList.misskeySection(viewModel: AccountViewModel) = run {
+    val context = LocalContext.current
+
+    add { Section(R.string.pref_account_section_misskey) }
+    if (viewModel.signedInMisskey.collectAsState(initial = false).value) {
+        add(
+            {
+                val instance by viewModel.misskeyInstance.collectAsState()
+                val account by viewModel.misskeyAccount.collectAsState()
+                AccountItem(
+                    painter = rememberAsyncImagePainter(
+                        model = ImageRequest.Builder(context)
+                            .data(account?.avatarUrl)
+                            .error(R.drawable.ic_file)
+                            .build()
+                    ),
+                    text = account?.let { "${it.username}@${instance}" } ?: "アカウント情報取得失敗@${instance}",
+                    onClick = { viewModel.launchMisskeyAuthorizationActivity(context) },
+                    onClear = { viewModel.signOutMisskey() }
+                )
+            },
+            {
+                val menuVisible = remember { mutableStateOf(false) }
+                val current by viewModel.misskeyPostVisibility.collectAsState()
+                PrefButton(
+                    mainTextId = R.string.pref_account_misskey_visibility,
+                    subTextPrefixId = R.string.pref_current_value_prefix,
+                    subTextId = current.textId
+                ) {
+                    menuVisible.value = true
+                }
+
+                if (menuVisible.value) {
+                    MenuDialog(
+                        colors = themedCustomDialogColors(),
+                        titleText = stringResource(R.string.pref_account_misskey_visibility),
+                        menuItems = buildList {
+                            addAll(
+                                NoteVisibility.values().map {
+                                    menuDialogItem(textId = it.textId) {
+                                        viewModel.updateMisskeyPostVisibility(it)
+                                        true
+                                    }
+                                }
+                            )
+                        },
+                        negativeButton = dialogButton(R.string.cancel) { menuVisible.value = false },
+                        onDismissRequest = { menuVisible.value = false },
+                        properties = viewModel.dialogProperties()
+                    )
+                }
+            }
+        )
+    }
+    else {
+        add { PrefButton(R.string.sign_in) { viewModel.launchMisskeyAuthorizationActivity(context) } }
+    }
+}
+
+// ------ //
+
+@Preview
+@Composable
+private fun AccountPagePreview() {
+    Box(
+        Modifier.background(CurrentTheme.background)
+    ) {
+        BasicPreferencesPage(
+            contents = accountPageContents(FakeAccountViewModel(signedInHatena = false))
+        )
+    }
+}
+
+// ------ //
+
+@Composable
+private fun AccountItem(
+    painter: Painter,
+    text: String,
+    onClear: ()->Unit = {},
+    onClick: ()->Unit = {},
+) {
+    PrefItem(onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painter,
+                contentDescription = "account icon",
+                modifier = Modifier.size(32.dp)
+            )
+            Text(
+                text = text,
+                fontSize = 16.sp,
+                color = CurrentTheme.onBackground,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            )
+            IconButton(onClick = onClear) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "remove account button",
+                    tint = CurrentTheme.onBackground,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AccountItemPreview() {
+    Box(
+        Modifier.background(CurrentTheme.background)
+    ) {
+        AccountItem(
+            painter = painterResource(id = R.mipmap.ic_launcher),
+            text = "suihan74"
+        )
+    }
+}
