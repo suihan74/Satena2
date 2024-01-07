@@ -198,7 +198,7 @@ class NotificationWorker @AssistedInject constructor(
         val builder = NotificationCompat.Builder(context, Application.NOTIFICATION_CHANNEL_ID)
             .setGroup(Application.NOTIFICATION_CHANNEL_ID)
             .setStyle(style)
-            .setSmallIcon(R.drawable.ic_stat_name)
+            .setSmallIcon(R.mipmap.ic_stat_name)
             .setContentTitle(title)
             .setContentText(message)
             .setContentIntent(pendingIntent)
