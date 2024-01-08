@@ -2,11 +2,17 @@ package com.suihan74.satena2.scene.preferences.page.general
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import com.suihan74.satena2.R
 import com.suihan74.satena2.scene.preferences.PreferencesCategory
@@ -15,11 +21,14 @@ import com.suihan74.satena2.scene.preferences.page.FakePreferencesPageViewModelI
 import com.suihan74.satena2.scene.preferences.page.IPreferencePageViewModel
 import com.suihan74.satena2.scene.preferences.page.PreferencePageViewModel
 import com.suihan74.satena2.utility.extension.showToast
+import com.suihan74.satena2.utility.migration.AppDataMigrator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 interface GeneralViewModel : IPreferencePageViewModel {
@@ -64,9 +73,22 @@ interface GeneralViewModel : IPreferencePageViewModel {
     // ------ //
 
     /**
+     * [Activity]作成時にインテントランチャの初期化を行う
+     */
+    fun onCreateActivity(
+        activityResultRegistry: ActivityResultRegistry?,
+        lifecycle: Lifecycle?
+    )
+
+    /**
      * Android通知送信の権限をリクエストする
      */
     fun requestNotificationPermission(requestPermission: ActivityResultLauncher<String>)
+
+    /**
+     * アプリデータをエクスポートする処理を開始
+     */
+    fun launchAppDataExport()
 }
 
 // ------ //
@@ -140,6 +162,17 @@ class GeneralViewModelImpl @Inject constructor(
     // ------ //
 
     /**
+     * [Activity]作成時にインテントランチャの初期化を行う
+     */
+    override fun onCreateActivity(
+        activityResultRegistry: ActivityResultRegistry?,
+        lifecycle: Lifecycle?
+    ) {
+        lifecycleObserver = LifecycleObserver(activityResultRegistry!!)
+        lifecycle?.addObserver(lifecycleObserver)
+    }
+
+    /**
      * Android通知送信の権限をリクエストする
      */
     override fun requestNotificationPermission(requestPermission: ActivityResultLauncher<String>) {
@@ -157,6 +190,63 @@ class GeneralViewModelImpl @Inject constructor(
             context.showToast(R.string.request_notification_permission_msg, Toast.LENGTH_SHORT)
         }
         requestPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    /**
+     * アプリデータをエクスポートする処理を開始
+     */
+    override fun launchAppDataExport() {
+        lifecycleObserver.launchFileCreatorLauncher()
+    }
+
+    private fun startAppDataExport(destUri: Uri) {
+        viewModelScope.launch {
+            runCatching {
+                AppDataMigrator.Export()
+                    .write(context, destUri)
+                context.showToast(
+                    context.getString(R.string.pref_general_export_appdata_succeeded)
+                )
+            }.onFailure {
+                context.showToast(R.string.pref_general_export_appdata_failed)
+            }
+        }
+    }
+
+    // ------ //
+
+    private lateinit var lifecycleObserver : LifecycleObserver
+
+    inner class LifecycleObserver(
+        private val registry : ActivityResultRegistry
+    ) : DefaultLifecycleObserver {
+        /** アプリデータ出力先ファイル選択ランチャ */
+        private lateinit var fileCreatorLauncher : ActivityResultLauncher<String>
+
+        override fun onCreate(owner: LifecycleOwner) {
+            fileCreatorLauncher = registry.register(
+                "filePickerLauncher",
+                owner,
+                ActivityResultContracts.CreateDocument("application/satena2-settings"),
+            ) { result ->
+                if (result == null) {
+                    viewModelScope.launch {
+                        context.showToast(R.string.pref_general_export_appdata_canceled)
+                    }
+                    return@register
+                }
+                else {
+                    startAppDataExport(result)
+                }
+            }
+        }
+
+        fun launchFileCreatorLauncher() {
+            val now = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd-hh-mm-ss")
+            val defaultFilename = "${formatter.format(now)}.satena2-settings"
+            fileCreatorLauncher.launch(defaultFilename)
+        }
     }
 }
 
@@ -184,6 +274,15 @@ class FakeGeneralViewModel :
 
     // ------ //
 
+    override fun onCreateActivity(
+        activityResultRegistry: ActivityResultRegistry?,
+        lifecycle: Lifecycle?
+    ) {
+    }
+
     override fun requestNotificationPermission(requestPermission: ActivityResultLauncher<String>) {
+    }
+
+    override fun launchAppDataExport() {
     }
 }

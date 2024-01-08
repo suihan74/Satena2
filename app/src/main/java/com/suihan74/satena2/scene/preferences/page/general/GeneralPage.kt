@@ -250,7 +250,7 @@ private fun MutableComposableList.backupSection(viewModel: GeneralViewModel) = a
     { Section(R.string.pref_general_section_backup) },
     {
         PrefButton(mainTextId = R.string.pref_general_save_settings) {
-            // TODO
+            viewModel.launchAppDataExport()
         }
     },
     {

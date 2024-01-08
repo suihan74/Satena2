@@ -168,6 +168,9 @@ class PreferencesActivity : ComponentActivity() {
             userLabels = userLabelsViewModel
         )
 
+        // 初期化処理が必要なViewModelの処理
+        generalViewModel.onCreateActivity(activityResultRegistry, lifecycle)
+
         setContent {
             val longClickVibrationDuration by generalViewModel.longClickVibrationDuration.collectAsState()
 

@@ -61,6 +61,7 @@ class AppDataMigrator {
                 )
 
                 context.fileOutputStream(targetUri) { stream ->
+                    stream.write(0x00)
                     stream.write(SIGNATURE)
                     stream.write(headerHash)
                     stream.write(bodyHash)
