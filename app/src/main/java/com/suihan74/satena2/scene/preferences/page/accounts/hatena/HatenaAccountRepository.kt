@@ -8,6 +8,7 @@ import com.suihan74.hatena.model.account.Account
 import com.suihan74.satena2.Application
 import com.suihan74.satena2.model.dataStore.Preferences
 import com.suihan74.satena2.model.hatena.HatenaAccessToken
+import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -28,10 +29,11 @@ class HatenaFetchNgUsersException(
 // ------ //
 
 interface HatenaAccountRepository {
+
     /**
      * サインイン状態
      */
-    val signedIn: StateFlow<Boolean>
+    val state: StateFlow<SignInState>
 
     /**
      * アカウント情報
@@ -136,7 +138,7 @@ class HatenaAccountRepositoryImpl(
     /**
      * サインイン状態
      */
-    override val signedIn = MutableStateFlow(false)
+    override val state = MutableStateFlow(SignInState.None)
 
     /**
      * アカウント情報
@@ -191,15 +193,18 @@ class HatenaAccountRepositoryImpl(
             accountMutex.withLock {
                 if (hatenaRK.value == rk) return@withContext
                 runCatching {
+                    state.value = SignInState.Signing
                     hatenaRK.value = rk
                     client.value =
                         if (rk.isBlank()) HatenaClient
                         else HatenaClient.signIn(rk)
-                    signedIn.value = rk.isNotBlank()
+                    state.value =
+                        if (rk.isBlank()) SignInState.None
+                        else SignInState.SignedIn
                 }.onFailure {
                     hatenaRK.value = ""
                     client.value = HatenaClient
-                    signedIn.value = false
+                    state.value = SignInState.None
                     account.value = null
                     exceptionFlow.emit(HatenaSignInException(cause = it))
                     return@withContext
@@ -213,7 +218,7 @@ class HatenaAccountRepositoryImpl(
                     }.onFailure {
                         hatenaRK.value = ""
                         client.value = HatenaClient
-                        signedIn.value = false
+                        state.value = SignInState.None
                         account.value = null
                         exceptionFlow.emit(HatenaSignInException(cause = it))
                     }

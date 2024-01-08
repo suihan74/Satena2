@@ -29,6 +29,8 @@ import com.suihan74.satena2.scene.browser.BrowserActivityContract
 import com.suihan74.satena2.scene.entries.bottomSheet.SearchSetting
 import com.suihan74.satena2.scene.preferences.PreferencesActivityContract
 import com.suihan74.satena2.scene.preferences.PreferencesRepository
+import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
+import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAccountRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAuthenticationActivity
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaFetchNgUsersException
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaSignInException
@@ -67,6 +69,11 @@ interface EntriesViewModel :
      * リスト更新の実行状態
      */
     fun loadingStateFlow(destination: Destination) : StateFlow<Boolean>
+
+    /**
+     * Hatenaのサインイン状態
+     */
+    val hatenaSignInState : StateFlow<SignInState>
 
     /**
      * Hatenaのアカウント情報
@@ -270,8 +277,9 @@ interface EntriesViewModel :
  */
 @HiltViewModel
 class EntriesViewModelImpl @Inject constructor(
-    private val repository : EntriesRepository,
-    prefsRepository : PreferencesRepository,
+    private val entriesRepo: EntriesRepository,
+    private val hatenaRepo: HatenaAccountRepository,
+    prefsRepository: PreferencesRepository,
     private val ngWordsRepository: NgWordsRepository
 ) : EntriesViewModel,
     ViewModel(),
@@ -282,12 +290,17 @@ class EntriesViewModelImpl @Inject constructor(
     /**
      * スワイプによるリスト更新の実行状態
      */
-    override fun loadingStateFlow(destination: Destination) : StateFlow<Boolean> = repository.getLoadingState(destination)
+    override fun loadingStateFlow(destination: Destination) : StateFlow<Boolean> = entriesRepo.getLoadingState(destination)
 
     /**
-     * Hatenaのユーザー名
+     * Hatenaのサインイン状態
      */
-    override val hatenaAccount : StateFlow<Account?> = repository.hatenaAccount
+    override val hatenaSignInState : StateFlow<SignInState> = hatenaRepo.state
+
+    /**
+     * Hatenaのユーザー
+     */
+    override val hatenaAccount : StateFlow<Account?> = hatenaRepo.account
 
     /**
      * ボトムメニューを使用する
@@ -337,12 +350,12 @@ class EntriesViewModelImpl @Inject constructor(
     /**
      * 現在有効な検索設定
      */
-    override val searchSettingFlow = repository.searchSettingFlow
+    override val searchSettingFlow = entriesRepo.searchSettingFlow
 
     /**
      * 現在有効なマイブクマ検索設定
      */
-    override val searchMyBookmarksSettingFlow = repository.searchMyBookmarksSettingFlow
+    override val searchMyBookmarksSettingFlow = entriesRepo.searchMyBookmarksSettingFlow
 
     // ------ //
 
@@ -417,7 +430,7 @@ class EntriesViewModelImpl @Inject constructor(
         lifecycle?.addObserver(lifecycleObserver)
         // 非同期的に送出された例外を処理する
         lifecycle?.coroutineScope?.let { scope ->
-            repository.accountExceptionFlow
+            hatenaRepo.exceptionFlow
                 .onEach {
                     when(it) {
                         is HatenaSignInException -> {
@@ -438,7 +451,7 @@ class EntriesViewModelImpl @Inject constructor(
                 }
                 .launchIn(scope)
 
-            repository.exceptionFlow
+            entriesRepo.exceptionFlow
                 .onEach {
                     when(it) {
                         is LoadingFailureException -> {
@@ -458,7 +471,7 @@ class EntriesViewModelImpl @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        repository.onCleared()
+        entriesRepo.onCleared()
     }
 
     private var intent : Intent? = null
@@ -482,7 +495,7 @@ class EntriesViewModelImpl @Inject constructor(
     override fun swipeRefresh(destination: Destination) {
         viewModelScope.launch {
             runCatching {
-                repository.loadEntries(destination)
+                entriesRepo.loadEntries(destination)
             }.onFailure {
                 context.showToast(R.string.entry_msg_load_entries_failure)
             }
@@ -495,7 +508,7 @@ class EntriesViewModelImpl @Inject constructor(
     override fun loadAdditional(destination: Destination) {
         viewModelScope.launch {
             runCatching {
-                repository.additionalLoadEntries(destination)
+                entriesRepo.additionalLoadEntries(destination)
             }.onFailure {
                 context.showToast(R.string.entry_msg_load_entries_failure)
             }
@@ -508,7 +521,7 @@ class EntriesViewModelImpl @Inject constructor(
     override fun search(searchSetting: SearchSetting) {
         viewModelScope.launch {
             runCatching {
-                repository.updateSearchSetting(searchSetting)
+                entriesRepo.updateSearchSetting(searchSetting)
             }
         }
     }
@@ -519,7 +532,7 @@ class EntriesViewModelImpl @Inject constructor(
     override fun searchMyBookmarks(searchSetting: SearchSetting) {
         viewModelScope.launch {
             runCatching {
-                repository.updateSearchMyBookmarksSetting(searchSetting)
+                entriesRepo.updateSearchMyBookmarksSetting(searchSetting)
             }
         }
     }
@@ -650,7 +663,7 @@ class EntriesViewModelImpl @Inject constructor(
      */
     private fun readMarkEntry(entry: DisplayEntry) {
         viewModelScope.launch {
-            repository.readMark(entry.entry)
+            entriesRepo.readMark(entry.entry)
         }
     }
 
@@ -659,7 +672,7 @@ class EntriesViewModelImpl @Inject constructor(
      */
     override fun removeReadMark(entry: DisplayEntry) {
         viewModelScope.launch {
-            repository.removeReadMark(entry.entry)
+            entriesRepo.removeReadMark(entry.entry)
         }
     }
 
@@ -669,7 +682,7 @@ class EntriesViewModelImpl @Inject constructor(
     override fun removeBookmark(entry: DisplayEntry) {
         viewModelScope.launch {
             runCatching {
-                repository.removeBookmark(entry.entry)
+                entriesRepo.removeBookmark(entry.entry)
             }.onSuccess {
                 context.showToast(R.string.entry_msg_success_remove_bookmark)
             }.onFailure {
@@ -685,7 +698,7 @@ class EntriesViewModelImpl @Inject constructor(
     override fun readLaterEntry(entry: DisplayEntry, isPrivate: Boolean) {
         viewModelScope.launch {
             runCatching {
-                repository.readLater(entry.entry, isPrivate)
+                entriesRepo.readLater(entry.entry, isPrivate)
             }.onSuccess {
                 context.showToast(R.string.post_bookmark_success_msg)
             }.onFailure {
@@ -700,7 +713,7 @@ class EntriesViewModelImpl @Inject constructor(
     override fun readEntry(entry: DisplayEntry, isPrivate: Boolean) {
         viewModelScope.launch {
             runCatching {
-                repository.read(entry.entry, isPrivate)
+                entriesRepo.read(entry.entry, isPrivate)
             }.onSuccess {
                 context.showToast(R.string.post_bookmark_success_msg)
             }.onFailure {
@@ -716,7 +729,7 @@ class EntriesViewModelImpl @Inject constructor(
      */
     override fun onClickComment(entry: DisplayEntry, bookmark: BookmarkResult) {
         viewModelScope.launch {
-            repository.readMark(entry.entry)
+            entriesRepo.readMark(entry.entry)
         }
         lifecycleObserver.launchBookmarksActivity(entry.entry, bookmark.user)
     }
@@ -826,32 +839,32 @@ class EntriesViewModelImpl @Inject constructor(
      * エントリリスト
      */
     override fun entriesFlow(destination: Destination) : EntriesListFlow {
-        return repository.entriesFlow(viewModelScope, destination)
+        return entriesRepo.entriesFlow(viewModelScope, destination)
     }
 
     /**
      * 除外されたエントリリスト
      */
     override fun excludedEntriesFlow(destination: Destination) : EntriesListFlow {
-        return repository.excludedEntriesFlow(viewModelScope, destination)
+        return entriesRepo.excludedEntriesFlow(viewModelScope, destination)
     }
 
     /**
      * Issueリスト
      */
     override fun issuesFlow(category: Category) : Flow<List<Issue>> {
-        return repository.issuesFlow(viewModelScope, category)
+        return entriesRepo.issuesFlow(viewModelScope, category)
     }
 
     /**
      * 通知リスト
      */
-    override val noticesFlow = repository.noticesFlow
+    override val noticesFlow = entriesRepo.noticesFlow
 
     /**
      * メンテナンス情報リスト
      */
-    override val maintenanceEntriesFlow = repository.maintenanceEntriesFlow
+    override val maintenanceEntriesFlow = entriesRepo.maintenanceEntriesFlow
 
     // ------ //
 
@@ -859,7 +872,7 @@ class EntriesViewModelImpl @Inject constructor(
      * 各画面に対応する一意のキーを取得する
      */
     override fun getMapKey(destination: Destination) : String {
-        return repository.makeMapKey(destination)
+        return entriesRepo.makeMapKey(destination)
     }
 
     // ------ //
@@ -972,7 +985,7 @@ class EntriesViewModelImpl @Inject constructor(
                 BookmarksActivityContract.WithEntry()
             ) { resultEntry ->
                 viewModelScope.launch {
-                    repository.updateEntry(resultEntry)
+                    entriesRepo.updateEntry(resultEntry)
                 }
             }
 
@@ -982,7 +995,7 @@ class EntriesViewModelImpl @Inject constructor(
                 BookmarksActivityContract.WithEntryAndUser()
             ) { resultEntry ->
                 viewModelScope.launch {
-                    repository.updateEntry(resultEntry)
+                    entriesRepo.updateEntry(resultEntry)
                 }
             }
 
@@ -992,7 +1005,7 @@ class EntriesViewModelImpl @Inject constructor(
                 BookmarksActivityContract.WithNotice()
             ) { resultEntry ->
                 viewModelScope.launch {
-                    repository.updateEntry(resultEntry)
+                    entriesRepo.updateEntry(resultEntry)
                 }
             }
 
@@ -1042,6 +1055,8 @@ class FakeEntriesViewModel(
     override fun loadingStateFlow(destination: Destination): StateFlow<Boolean> {
         return dummyLoadingStateFlow
     }
+
+    override val hatenaSignInState : StateFlow<SignInState> = MutableStateFlow(SignInState.None)
 
     override val hatenaAccount: StateFlow<Account?> = MutableStateFlow(null)
 

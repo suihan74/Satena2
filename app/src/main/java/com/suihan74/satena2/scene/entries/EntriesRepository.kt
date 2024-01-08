@@ -62,11 +62,6 @@ class LoadingFailureException(
 
 interface EntriesRepository {
     /**
-     * Hatenaのアカウント情報
-     */
-    val hatenaAccount: StateFlow<Account?>
-
-    /**
      * エントリ用のフィルタ設定
      */
     val filtersFlow : Flow<List<IgnoredEntry>>
@@ -100,11 +95,6 @@ interface EntriesRepository {
      * ロード関係エラーの非同期的な送出
      */
     val exceptionFlow : Flow<Throwable>
-
-    /**
-     * アカウント関係エラーの非同期的な送出
-     */
-    val accountExceptionFlow : Flow<Throwable>
 
     // ------ //
 
@@ -224,7 +214,6 @@ class EntriesRepositoryImpl @Inject constructor(
 
     private val noticeDao = appDatabase.noticeDao()
 
-    override val hatenaAccount = repository.account
     /**
      * エントリリストのキャッシュ
      */
@@ -277,11 +266,6 @@ class EntriesRepositoryImpl @Inject constructor(
      * ロード関係エラーの非同期的な送出
      */
     override val exceptionFlow = MutableSharedFlow<Throwable>()
-
-    /**
-     * アカウント関係エラーの非同期的な送出
-     */
-    override val accountExceptionFlow = repository.exceptionFlow
 
     // ------ //
 

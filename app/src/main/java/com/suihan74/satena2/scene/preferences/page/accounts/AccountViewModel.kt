@@ -35,7 +35,7 @@ interface AccountViewModel : IPreferencePageViewModel {
     /**
      * Hatena: サインイン状態
      */
-    val signedInHatena : StateFlow<Boolean>
+    val signedInHatena : StateFlow<SignInState>
     /**
      * Hatena: アカウント情報
      */
@@ -151,7 +151,7 @@ class AccountViewModelImpl @Inject constructor(
     /**
      * Hatena: サインイン状態
      */
-    override val signedInHatena = hatena.signedIn
+    override val signedInHatena = hatena.state
     /**
      * Hatena: アカウント情報
      */
@@ -315,7 +315,7 @@ class FakeAccountViewModel(
     AccountViewModel,
     IPreferencePageViewModel by FakePreferencesPageViewModelImpl()
 {
-    override val signedInHatena = MutableStateFlow(signedInHatena)
+    override val signedInHatena = MutableStateFlow(SignInState.None)
     override val hatenaAccount = MutableStateFlow(null)
 
     // ------ //
@@ -340,11 +340,11 @@ class FakeAccountViewModel(
     // ------ //
 
     override fun launchHatenaAuthorizationActivity(context: Context) {
-        signedInHatena.value = true
+        signedInHatena.value = SignInState.SignedIn
     }
 
     override fun signOutHatena() {
-        signedInHatena.value = false
+        signedInHatena.value = SignInState.None
     }
 
     // ------- //

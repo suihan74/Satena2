@@ -2,10 +2,17 @@ package com.suihan74.satena2.scene.preferences.page.accounts
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -13,7 +20,11 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -26,10 +37,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.suihan74.satena2.R
-import com.suihan74.satena2.compose.emptyFooter
 import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
+import com.suihan74.satena2.compose.emptyFooter
 import com.suihan74.satena2.model.mastodon.TootVisibility
 import com.suihan74.satena2.model.misskey.NoteVisibility
 import com.suihan74.satena2.scene.preferences.PrefButton
@@ -101,28 +112,40 @@ private fun MutableComposableList.hatenaSection(viewModel: AccountViewModel) = a
     { Section(R.string.pref_account_section_hatena) },
     {
         val context = LocalContext.current
-        val signedInHatena = viewModel.signedInHatena.collectAsState()
-        if (signedInHatena.value) {
-            val account = viewModel.hatenaAccount.collectAsState()
-            val userName = account.value?.name.orEmpty()
-            val iconUrl = account.value?.name?.let {
-                "https://cdn1.www.st-hatena.com/users/$it/profile.gif"
+        val state by viewModel.signedInHatena.collectAsState()
+        when (state) {
+            SignInState.None -> {
+                PrefButton(R.string.sign_in) {
+                    viewModel.launchHatenaAuthorizationActivity(context)
+                }
             }
-            AccountItem(
-                painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(context)
-                        .data(iconUrl)
-                        .error(R.drawable.ic_file)
-                        .build()
-                ),
-                text = userName,
-                onClick = { viewModel.launchHatenaAuthorizationActivity(context) },
-                onClear = { viewModel.signOutHatena() }
-            )
-        }
-        else {
-            PrefButton(R.string.sign_in) {
-                viewModel.launchHatenaAuthorizationActivity(context)
+
+            SignInState.SignedIn -> {
+                val account = viewModel.hatenaAccount.collectAsState()
+                val userName = account.value?.name.orEmpty()
+                val iconUrl = account.value?.name?.let {
+                    "https://cdn1.www.st-hatena.com/users/$it/profile.gif"
+                }
+                AccountItem(
+                    painter = rememberAsyncImagePainter(
+                        model = ImageRequest.Builder(context)
+                            .data(iconUrl)
+                            .error(R.drawable.ic_file)
+                            .build()
+                    ),
+                    text = userName,
+                    onClick = { viewModel.launchHatenaAuthorizationActivity(context) },
+                    onClear = { viewModel.signOutHatena() }
+                )
+            }
+
+            SignInState.Signing -> {
+                Column(Modifier.fillMaxWidth()) {
+                    CircularProgressIndicator(
+                        color = CurrentTheme.onBackground,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
     }

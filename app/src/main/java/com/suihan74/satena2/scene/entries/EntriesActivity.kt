@@ -63,6 +63,7 @@ import com.suihan74.satena2.scene.entries.bottomSheet.EntryBottomSheetContent
 import com.suihan74.satena2.scene.entries.bottomSheet.EntryItemMenuContent
 import com.suihan74.satena2.scene.entries.bottomSheet.ExcludedEntriesList
 import com.suihan74.satena2.scene.entries.bottomSheet.SearchSettingContent
+import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
 import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionDialog
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
@@ -519,7 +520,9 @@ private fun EntriesScenePreview() {
  *
  * [ScaffoldPaddingParameter] (contentのinner padding)を使用するとボトムバーの切り欠き部分が透過されなくなる
  */
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "FlowOperatorInvokedInComposition")
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "FlowOperatorInvokedInComposition",
+    "RestrictedApi"
+)
 @Composable
 private fun MainContent(
     viewModel: EntriesViewModel,
@@ -821,7 +824,7 @@ fun MenuContent(
             MutableTransitionState(initialState = false).also { it.targetState = true }
         }
     val coroutineScope = rememberCoroutineScope()
-    val hatenaAccount by viewModel.hatenaAccount.collectAsState()
+    val state by viewModel.hatenaSignInState.collectAsState()
 
     // 開始アニメーション
     val closeButtonRotation = remember { Animatable(0f) }
@@ -858,6 +861,16 @@ fun MenuContent(
         }
         delay(300)
         onChangeMenuState()
+    }
+
+    val onClickCategories = suspend {
+        onClose()
+        drawerState.snapTo(DrawerValue.Open)
+    }
+
+    val onClickSettings = suspend {
+        onClose()
+        viewModel.launchPreferencesActivity()
     }
 
     Scaffold(
@@ -897,22 +910,35 @@ fun MenuContent(
                     .fillMaxSize()
                     .padding(bottom = 96.dp)
             ) {
-                if (hatenaAccount == null) {
-                    MenuItemsWithoutSigning(
-                        viewModel = viewModel,
-                        visibility = visibility,
-                        drawerState = drawerState,
-                        onClose = onClose
-                    )
-                }
-                else {
-                    MenuItemsWithSigning(
-                        viewModel = viewModel,
-                        visibility = visibility,
-                        navController = navController,
-                        drawerState = drawerState,
-                        onClose = onClose
-                    )
+                when (state) {
+                    SignInState.None -> {
+                        MenuItemsWithoutSigning(
+                            viewModel = viewModel,
+                            visibility = visibility,
+                            onClose = onClose,
+                            onClickCategories = onClickCategories,
+                            onClickSettings = onClickSettings
+                        )
+                    }
+
+                    SignInState.SignedIn -> {
+                        MenuItemsWithSignedIn(
+                            viewModel = viewModel,
+                            visibility = visibility,
+                            navController = navController,
+                            onClose = onClose,
+                            onClickCategories = onClickCategories,
+                            onClickSettings = onClickSettings
+                        )
+                    }
+
+                    SignInState.Signing -> {
+                        MenuItemsWithSigning(
+                            visibility = visibility,
+                            onClickCategories = onClickCategories,
+                            onClickSettings = onClickSettings
+                        )
+                    }
                 }
             }
         },
@@ -927,8 +953,9 @@ fun MenuContent(
 private fun MenuItemsWithoutSigning(
     viewModel: EntriesViewModel,
     visibility: MutableTransitionState<Boolean>,
-    drawerState: DrawerState,
-    onClose: suspend ()->Unit
+    onClose: suspend ()->Unit,
+    onClickCategories: suspend ()->Unit,
+    onClickSettings: suspend ()->Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -946,10 +973,7 @@ private fun MenuItemsWithoutSigning(
                 stringResource(R.string.entry_menu_categories),
                 R.drawable.ic_category,
             ) {
-                coroutineScope.launch {
-                    onClose()
-                    drawerState.snapTo(DrawerValue.Open)
-                }
+                coroutineScope.launch { onClickCategories() }
             }
             MenuText(
                 1,
@@ -966,10 +990,7 @@ private fun MenuItemsWithoutSigning(
                 stringResource(R.string.entry_menu_preferences),
                 R.drawable.ic_settings,
             ) {
-                coroutineScope.launch {
-                    onClose()
-                    viewModel.launchPreferencesActivity()
-                }
+                coroutineScope.launch { onClickSettings() }
             }
         }
     }
@@ -979,12 +1000,13 @@ private fun MenuItemsWithoutSigning(
  * サインイン状態でのメニュー項目
  */
 @Composable
-private fun MenuItemsWithSigning(
+private fun MenuItemsWithSignedIn(
     viewModel: EntriesViewModel,
     visibility: MutableTransitionState<Boolean>,
     navController: NavHostController,
-    drawerState: DrawerState,
-    onClose: suspend ()->Unit
+    onClose: suspend ()->Unit,
+    onClickCategories: suspend ()->Unit,
+    onClickSettings: suspend ()->Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -1011,10 +1033,7 @@ private fun MenuItemsWithSigning(
                 stringResource(R.string.entry_menu_categories),
                 R.drawable.ic_category,
             ) {
-                coroutineScope.launch {
-                    onClose()
-                    drawerState.snapTo(DrawerValue.Open)
-                }
+                coroutineScope.launch { onClickCategories() }
             }
             MenuText(
                 1,
@@ -1031,10 +1050,43 @@ private fun MenuItemsWithSigning(
                 stringResource(R.string.entry_menu_preferences),
                 R.drawable.ic_settings,
             ) {
-                coroutineScope.launch {
-                    onClose()
-                    viewModel.launchPreferencesActivity()
-                }
+                coroutineScope.launch { onClickSettings() }
+            }
+        }
+    }
+}
+
+/**
+ * サインイン処理中のメニュー項目
+ */
+@Composable
+private fun MenuItemsWithSigning(
+    visibility: MutableTransitionState<Boolean>,
+    onClickCategories: suspend ()->Unit,
+    onClickSettings: suspend ()->Unit
+) {
+    val coroutineScope = rememberCoroutineScope()
+    AnimatedVisibility(
+        visibleState = visibility,
+        enter = EnterTransition.None,
+        exit = ExitTransition.None
+    ) {
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            MenuText(
+                1,
+                stringResource(R.string.entry_menu_categories),
+                R.drawable.ic_category,
+            ) {
+                coroutineScope.launch { onClickCategories() }
+            }
+            MenuText(
+                0,
+                stringResource(R.string.entry_menu_preferences),
+                R.drawable.ic_settings,
+            ) {
+                coroutineScope.launch { onClickSettings() }
             }
         }
     }
