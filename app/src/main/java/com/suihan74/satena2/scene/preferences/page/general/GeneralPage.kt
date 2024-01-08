@@ -255,7 +255,7 @@ private fun MutableComposableList.backupSection(viewModel: GeneralViewModel) = a
     },
     {
         PrefButton(mainTextId = R.string.pref_general_load_settings) {
-            // TODO
+            viewModel.launchAppDataImport()
         }
     }
 )

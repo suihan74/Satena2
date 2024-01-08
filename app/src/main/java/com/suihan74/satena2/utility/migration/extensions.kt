@@ -18,12 +18,12 @@ internal fun Int.toByteArray(): ByteArray {
 /**
  * @throws ArrayIndexOutOfBoundsException
  */
-internal fun ByteArray.toInt(): Int {
+internal fun ByteArray.toInt(size: Int = Int.SIZE_BYTES): Int {
     var result = 0
-    if (Int.SIZE_BYTES < this.size) {
+    if (size < this.size) {
         throw ArrayIndexOutOfBoundsException("ByteArray overflows when treated as Int")
     }
-    for (i in 0 until Int.SIZE_BYTES) {
+    for (i in 0 until size) {
         val value = (this[i] and  0xFF.toByte()).toInt().let {
             if (it < 0) 256 + it else it
         }

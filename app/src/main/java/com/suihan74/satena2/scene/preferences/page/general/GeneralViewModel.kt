@@ -89,6 +89,11 @@ interface GeneralViewModel : IPreferencePageViewModel {
      * アプリデータをエクスポートする処理を開始
      */
     fun launchAppDataExport()
+
+    /**
+     * アプリデータをインポートする処理を開始
+     */
+    fun launchAppDataImport()
 }
 
 // ------ //
@@ -196,7 +201,7 @@ class GeneralViewModelImpl @Inject constructor(
      * アプリデータをエクスポートする処理を開始
      */
     override fun launchAppDataExport() {
-        lifecycleObserver.launchFileCreatorLauncher()
+        lifecycleObserver.launchAppDataCreatorLauncher()
     }
 
     private fun startAppDataExport(destUri: Uri) {
@@ -213,6 +218,28 @@ class GeneralViewModelImpl @Inject constructor(
         }
     }
 
+    /**
+     * アプリデータをインポートする処理を開始
+     */
+    override fun launchAppDataImport() {
+        lifecycleObserver.launchAppDataPickerLauncher()
+    }
+
+
+    private fun startAppDataImport(destUri: Uri) {
+        viewModelScope.launch {
+            runCatching {
+                AppDataMigrator.Import()
+                    .read(context, destUri)
+                context.showToast(
+                    context.getString(R.string.pref_general_import_appdata_succeeded)
+                )
+            }.onFailure {
+                context.showToast(R.string.pref_general_import_appdata_failed)
+            }
+        }
+    }
+
     // ------ //
 
     private lateinit var lifecycleObserver : LifecycleObserver
@@ -220,14 +247,19 @@ class GeneralViewModelImpl @Inject constructor(
     inner class LifecycleObserver(
         private val registry : ActivityResultRegistry
     ) : DefaultLifecycleObserver {
+        private val appDataMimeType = "application/satena2.settings"
+
         /** アプリデータ出力先ファイル選択ランチャ */
-        private lateinit var fileCreatorLauncher : ActivityResultLauncher<String>
+        private lateinit var appDataCreatorLauncher: ActivityResultLauncher<String>
+
+        /** アプリデータ入力元ファイル選択ランチャ */
+        private lateinit var appDataPickerLauncher: ActivityResultLauncher<String>
 
         override fun onCreate(owner: LifecycleOwner) {
-            fileCreatorLauncher = registry.register(
-                "filePickerLauncher",
+            appDataCreatorLauncher = registry.register(
+                "appDataCreatorLauncher",
                 owner,
-                ActivityResultContracts.CreateDocument("application/satena2-settings"),
+                ActivityResultContracts.CreateDocument(appDataMimeType)
             ) { result ->
                 if (result == null) {
                     viewModelScope.launch {
@@ -239,13 +271,33 @@ class GeneralViewModelImpl @Inject constructor(
                     startAppDataExport(result)
                 }
             }
+
+            appDataPickerLauncher = registry.register(
+                "appDataPickerLauncher",
+                owner,
+                ActivityResultContracts.GetContent()
+            ) { result ->
+                if (result == null) {
+                    viewModelScope.launch {
+                        context.showToast(R.string.pref_general_import_appdata_canceled)
+                    }
+                    return@register
+                }
+                else {
+                    startAppDataImport(result)
+                }
+            }
         }
 
-        fun launchFileCreatorLauncher() {
+        fun launchAppDataCreatorLauncher() {
             val now = LocalDateTime.now()
             val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd-hh-mm-ss")
             val defaultFilename = "${formatter.format(now)}.satena2-settings"
-            fileCreatorLauncher.launch(defaultFilename)
+            appDataCreatorLauncher.launch(defaultFilename)
+        }
+
+        fun launchAppDataPickerLauncher() {
+            appDataPickerLauncher.launch("*/*")
         }
     }
 }
@@ -284,5 +336,8 @@ class FakeGeneralViewModel :
     }
 
     override fun launchAppDataExport() {
+    }
+
+    override fun launchAppDataImport() {
     }
 }
