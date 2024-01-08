@@ -103,10 +103,19 @@ class AppDataMigrator {
          */
         suspend fun read(context: Context, targetUri: Uri) = withContext(Dispatchers.IO) {
             runCatching {
+                Log.i("AppDataMigrator", "==== AppData Migration ====")
+                Log.i("AppDataMigrator", "close appDatabase...")
                 context.appDatabase.close()
 
+                Log.i("AppDataMigrator", "start to load...")
                 val path = targetUri.path!!
                 context.fileInputStream(targetUri) { stream ->
+                    // 終端文字
+                    val zeroCode = byteArrayOf(1)
+                    stream.read(zeroCode, 0, 1)
+                    check(zeroCode.toInt(1) == 0x00) {
+                        "this file is not an appData for Satena2 : $path"
+                    }
                     // シグネチャチェック
                     val signature = stream.readByteArray(SIGNATURE_SIZE)
                     check(signature.contentEquals(SIGNATURE)) {
@@ -115,13 +124,18 @@ class AppDataMigrator {
                     // ハッシュ値
                     val headerHash = stream.readByteArray(HASH_SIZE)
                     val bodyHash = stream.readByteArray(HASH_SIZE)
+                    Log.i("AppDataMigrator", "Header hash: ${headerHash.decodeToString()}")
+                    Log.i("AppDataMigrator", "Body hash: ${bodyHash.decodeToString()}")
                     // バージョンチェック
                     val version = stream.readByteArray(1)
+                    Log.i("AppDataMigrator", "version: ${version.toInt(1)}")
                     check(version.contentEquals(VERSION)) {
                         "cannot to read an old appData file: $path"
                     }
+
                     // 項目数
                     val itemsCount = stream.readInt()
+                    Log.i("AppDataMigrator", "count of items: $itemsCount")
                     // ヘッダのハッシュ値チェック
                     val actualHeaderHash = DigestUtility.md5Bytes(version.plus(itemsCount.toByteArray()))
                     check(actualHeaderHash.contentEquals(headerHash)) {
@@ -130,7 +144,9 @@ class AppDataMigrator {
                     // 項目読み取り
                     val items = ArrayList<MigrationData>(itemsCount)
                     for (i in 0 until itemsCount) {
-                        items.add(MigrationData.read(stream))
+                        val data = MigrationData.read(stream)
+                        items.add(data)
+                        Log.i("AppDataMigrator", "*[${data.type.name}] ${data.filename}")
                     }
                     // データ部分のハッシュ値チェック
                     val actualBodyHash = DigestUtility.md5Bytes(
@@ -141,8 +157,11 @@ class AppDataMigrator {
                         "this file is falsified: $path"
                     }
                     // 現状をバックアップ
+                    Log.i("AppDataMigrator", "create backup...")
                     backup(context)
+
                     // 読み込んだデータを処理
+                    Log.i("AppDataMigrator", "apply data...")
                     for (item in items) {
                         runCatching {
                             apply(context, item)
@@ -151,9 +170,12 @@ class AppDataMigrator {
                             throw e
                         }
                     }
+                    Log.i("AppDataMigrator", "delete backup...")
                     deleteBackupFiles(context)
                 }
+                Log.i("AppDataMigrator", "==== completed ====")
             }.onFailure { e ->
+                Log.e("AppDataMigrator", e.stackTraceToString())
                 when (e) {
                     is BackupFailureException -> {
                         deleteBackupFiles(context)
