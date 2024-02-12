@@ -1,8 +1,14 @@
 package com.suihan74.satena2.scene.bookmarks
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.UrlAnnotation
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withAnnotation
+import androidx.compose.ui.text.withStyle
 import com.suihan74.hatena.model.bookmark.Bookmark
 import com.suihan74.hatena.model.star.StarColor
 import com.suihan74.hatena.model.star.StarCount
@@ -69,14 +75,26 @@ fun buildAnnotatedComment(
 ) : AnnotatedString = buildAnnotatedString {
     if (bookmark.comment.isBlank()) return@buildAnnotatedString
     val urlRegex =
-        Regex("""https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
+        Regex("""id:[a-zA-Z0-9_]+|https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
 
     appendRegex(urlRegex, bookmark.comment) { m ->
-        withAnnotation(urlAnnotation = UrlAnnotation(m.value)) {
+        if (m.value.startsWith("http")) {
+            withAnnotation(urlAnnotation = UrlAnnotation(m.value)) {
+                withStyle(
+                    SpanStyle(
+                        color = linkColor,
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    append(m.value)
+                }
+            }
+        }
+        else {
             withStyle(
                 SpanStyle(
                     color = linkColor,
-                    textDecoration = TextDecoration.Underline
+                    textDecoration = TextDecoration.None
                 )
             ) {
                 append(m.value)

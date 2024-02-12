@@ -494,7 +494,7 @@ class BookmarksViewModelImpl @Inject constructor(
                 ?: entity.bookmarks.firstOrNull { it.user == user }
                 ?: (if (myBookmark?.user == user) myBookmark else null)?.toBookmark()
                 ?: entity.bookmarksEntry.bookmarks.firstOrNull { it.user == user }?.toBookmark(entity.entry.eid)
-            bookmark?.let { repository.makeDisplayBookmark(bookmark = it) }
+            bookmark?.let { repository.makeDisplayBookmark(bookmark = it, eid = entity.entry.eid) }
         }
     }
 

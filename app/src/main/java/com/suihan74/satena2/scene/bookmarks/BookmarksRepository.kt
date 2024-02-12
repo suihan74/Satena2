@@ -3,8 +3,16 @@ package com.suihan74.satena2.scene.bookmarks
 import android.util.Log
 import com.suihan74.hatena.HatenaClient
 import com.suihan74.hatena.model.account.Notice
-import com.suihan74.hatena.model.bookmark.*
-import com.suihan74.hatena.model.entry.*
+import com.suihan74.hatena.model.bookmark.Bookmark
+import com.suihan74.hatena.model.bookmark.BookmarkResult
+import com.suihan74.hatena.model.bookmark.BookmarksDigest
+import com.suihan74.hatena.model.bookmark.BookmarksEntry
+import com.suihan74.hatena.model.bookmark.BookmarksResponse
+import com.suihan74.hatena.model.entry.Entry
+import com.suihan74.hatena.model.entry.EntryItem
+import com.suihan74.hatena.model.entry.IssueEntry
+import com.suihan74.hatena.model.entry.MyHotEntry
+import com.suihan74.hatena.model.entry.RelatedEntriesResponse
 import com.suihan74.hatena.model.star.StarCount
 import com.suihan74.hatena.model.star.StarsEntry
 import com.suihan74.satena2.model.AppDatabase
@@ -14,8 +22,19 @@ import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelRepository
 import com.suihan74.satena2.utility.hatena.actualUrl
 import com.suihan74.satena2.utility.hatena.modifySpecificUrl
 import com.suihan74.satena2.utility.hatena.toBookmark
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.ZoneOffset
@@ -107,7 +126,7 @@ interface BookmarksRepository {
     /**
      * 指定の[Bookmark]から表示用の[DisplayBookmark]を作成する
      */
-    fun makeDisplayBookmark(bookmark: Bookmark) : DisplayBookmark
+    fun makeDisplayBookmark(bookmark: Bookmark, eid: Long) : DisplayBookmark
 
     // ------ //
 
@@ -258,7 +277,7 @@ class BookmarksRepositoryImpl @Inject constructor(
     private fun extractMyBookmark(entity: Entity, user: String) : DisplayBookmark? {
         with(entity) {
             entry.bookmarkedData?.let {
-                return it.toBookmark().toDisplayBookmark()
+                return it.toBookmark().toDisplayBookmark(entity.entry.eid)
             }
             allBookmarksFlow.value.firstOrNull { it.bookmark.user == user }?.let {
                 return it
@@ -267,7 +286,7 @@ class BookmarksRepositoryImpl @Inject constructor(
                 return it
             }
             bookmarksEntry.bookmarks.firstOrNull { it.user == user }?.let {
-                return it.toBookmark(entity.bookmarksEntry).toDisplayBookmark()
+                return it.toBookmark(entity.bookmarksEntry).toDisplayBookmark(entity.entry.eid)
             }
         }
         return null
@@ -589,8 +608,39 @@ class BookmarksRepositoryImpl @Inject constructor(
         val eid = entry.eid
         val formatter = DateTimeFormatter.ofPattern("uuuuMMdd")
         val zoneOffset = ZoneOffset.ofHours(9)
+        val bookmarksEntry = entityFlow.value.bookmarksEntry
+        val allBookmarks = allBookmarksFlow.value
 
         val urls = starsMapMutex.withLock {
+            val mentions = buildList {
+                for (b in bookmarks) {
+                    if (b.comment.isBlank()) {
+                        continue
+                    }
+                    val idsCalled = idCallRegex.findAll(b.comment)
+                    for (m in idsCalled) {
+                        val id = m.groupValues[2]
+                        if (id == b.user) {
+                            continue
+                        }
+                        val target = allBookmarks.firstOrNull { it.bookmark.user == id }?.let {
+                            val date = formatter.format(it.bookmark.timestamp.atOffset(zoneOffset))
+                            "${HatenaClient.baseUrlB}${it.bookmark.user}/$date#bookmark-$eid"
+                        }
+                            ?: bookmarksEntry.bookmarks.firstOrNull { it.user == id }?.let {
+                                val date = formatter.format(it.timestamp.atOffset(zoneOffset))
+                                "${HatenaClient.baseUrlB}${it.user}/$date#bookmark-$eid"
+                            }
+                        target?.let {
+                            val flow = starsMap.getOrPut(it) {
+                                MutableStateFlow(StarsEntry(url = "", stars = emptyList()))
+                            }
+                            add(it to flow)
+                        }
+                    }
+                }
+            }
+
             bookmarks
                 .filter { it.comment.isNotBlank() }
                 .map {
@@ -599,6 +649,8 @@ class BookmarksRepositoryImpl @Inject constructor(
                     val flow = starsMap.getOrPut(url) { MutableStateFlow(StarsEntry(url = "", stars = emptyList())) }
                     url to flow
                 }
+                .plus(mentions)
+                .distinct()
         }
 
         val starEntries = hatenaRepo.withClient { client ->
@@ -618,8 +670,6 @@ class BookmarksRepositoryImpl @Inject constructor(
         tab: BookmarksTab
     ) : List<DisplayBookmark> {
         val eid = entry.eid
-        val formatter = DateTimeFormatter.ofPattern("uuuuMMdd")
-        val zoneOffset = ZoneOffset.ofHours(9)
 
         val accountName = hatenaRepo.account.value?.name
         val ignoredUsers = ignoredUsersFlow.value
@@ -639,16 +689,7 @@ class BookmarksRepositoryImpl @Inject constructor(
                                 val notMuted = filters.none { it.match(b) }
                                 isMyBookmark || notNgUser && notBlankComment && notMuted
                             }
-                            .map { b ->
-                                val date = formatter.format(b.timestamp.atOffset(zoneOffset))
-                                val url = "${HatenaClient.baseUrlB}${b.user}/$date#bookmark-$eid"
-                                val starsEntry = starsMap[url] ?: MutableStateFlow(StarsEntry(url = "", stars = emptyList()))
-                                DisplayBookmark(
-                                    bookmark = b,
-                                    starsEntry = starsEntry,
-                                    labels = userLabelRepo.userLabelsFlow(b.user)
-                                )
-                            }
+                            .map { b -> b.toDisplayBookmark(eid) }
                     }
                 }
 
@@ -662,36 +703,14 @@ class BookmarksRepositoryImpl @Inject constructor(
                                 val notMuted = filters.none { it.match(b) }
                                 isMyBookmark || notNgUser && notBlankComment && notMuted
                             }
-                            .map { b ->
-                                val date = formatter.format(b.timestamp.atOffset(zoneOffset))
-                                val url = "${HatenaClient.baseUrlB}${b.user}/$date#bookmark-$eid"
-                                val starsEntry = starsMap[url] ?: MutableStateFlow(StarsEntry(url = "", stars = emptyList()))
-                                DisplayBookmark(
-                                    bookmark = b,
-                                    starsEntry = starsEntry,
-                                    labels = userLabelRepo.userLabelsFlow(b.user)
-                                )
-                            }
+                            .map { b -> b.toDisplayBookmark(eid) }
                     }
                 }
 
                 else -> {
                     filtersMutex.withLock {
                         bookmarks
-                            .map { b ->
-                                val isNgUser = ignoredUsers.contains(b.user)
-                                val isMuted = filters.any { it.match(b) }
-                                val date = formatter.format(b.timestamp.atOffset(zoneOffset))
-                                val url = "${HatenaClient.baseUrlB}${b.user}/$date#bookmark-$eid"
-                                val starsEntry = starsMap[url] ?: MutableStateFlow(StarsEntry(url = "", stars = emptyList()))
-                                DisplayBookmark(
-                                    bookmark = b,
-                                    ignoredUser = isNgUser,
-                                    filtered = isMuted,
-                                    starsEntry = starsEntry,
-                                    labels = userLabelRepo.userLabelsFlow(b.user)
-                                )
-                            }
+                            .map { b -> b.toDisplayBookmark(eid) }
                             .let { list ->
                                 myBookmarkFlow.value?.let { my ->
                                     if (list.any { it.bookmark.user == my.bookmark.user }) list
@@ -706,8 +725,13 @@ class BookmarksRepositoryImpl @Inject constructor(
 
     private val idCallRegex = Regex("""(^|[^a-zA-Z0-9])id:([a-zA-Z0-9_]+)""")
 
-    private fun Bookmark.toDisplayBookmark() : DisplayBookmark {
+    private fun Bookmark.toDisplayBookmark(eid: Long) : DisplayBookmark {
         val ignoredUsers = ignoredUsersFlow.value
+        val formatter = DateTimeFormatter.ofPattern("uuuuMMdd")
+        val zoneOffset = ZoneOffset.ofHours(9)
+        val date = formatter.format(timestamp.atOffset(zoneOffset))
+        val url = "${HatenaClient.baseUrlB}${user}/$date#bookmark-$eid"
+        val starsEntry = starsMap[url] ?: MutableStateFlow(StarsEntry(url = "", stars = emptyList()))
 
         val mentions = buildList {
             val bookmarksEntry = entityFlow.value.bookmarksEntry
@@ -721,7 +745,7 @@ class BookmarksRepositoryImpl @Inject constructor(
                 val b = allBookmarks.firstOrNull { it.bookmark.user == id }
                     ?: bookmarksEntry.bookmarks.firstOrNull { it.user == id }
                         ?.toBookmark(bookmarksEntry)
-                        ?.toDisplayBookmark()
+                        ?.toDisplayBookmark(eid)
                 if (b != null) {
                     add(b)
                 }
@@ -737,11 +761,12 @@ class BookmarksRepositoryImpl @Inject constructor(
             ignoredUser = ignoredUsers.contains(this.user),
             filtered = filters.any { it.match(this) },
             mentions = mentions,
-            labels = labels
+            labels = labels,
+            starsEntry = starsEntry
         )
     }
 
-    override fun makeDisplayBookmark(bookmark: Bookmark) : DisplayBookmark = bookmark.toDisplayBookmark()
+    override fun makeDisplayBookmark(bookmark: Bookmark, eid: Long) : DisplayBookmark = bookmark.toDisplayBookmark(eid)
 
     /**
      * ユーザーを非表示にする
