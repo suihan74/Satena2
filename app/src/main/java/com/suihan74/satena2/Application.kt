@@ -98,10 +98,11 @@ class Application : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
-    override fun getWorkManagerConfiguration() =
+    override val workManagerConfiguration by lazy {
         Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+    }
 
     // ------ //
 

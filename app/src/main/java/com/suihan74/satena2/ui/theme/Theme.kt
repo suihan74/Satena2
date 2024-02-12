@@ -43,6 +43,7 @@ private val lightColorPalette = lightColors(
 
 val CurrentThemePreset = MutableStateFlow(DefaultThemePresetLight.colors)
 
+/** 現在使用中のテーマ */
 val CurrentTheme
     @Composable get() = CurrentThemePreset.collectAsState().value
 
