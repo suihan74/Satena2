@@ -480,6 +480,7 @@
 
     <!-- 振る舞い -->
     <string name="pref_entry_category_list_type">カテゴリ一覧の表示形式</string>
+    <string name="pref_entry_ignored_entries_visibility_in_mybookmarks">「マイブックマーク」カテゴリでは非表示エントリを表示する</string>
     <!-- タップ時動作 -->
     <string name="pref_entry_click_action">シングルタップ時の処理</string>
     <string name="pref_entry_long_click_action">ロングタップ時の処理</string>

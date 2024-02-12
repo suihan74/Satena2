@@ -33,6 +33,17 @@ interface EntriesActivityContract {
         override fun parseResult(resultCode: Int, intent: Intent?) {}
     }
 
+    /**
+     * タグを引数に呼び出す場合
+     */
+    class WithTag : ActivityResultContract<String, Unit>() {
+        override fun createIntent(context: Context, input: String) : Intent =
+            Intent(context, EntriesActivity::class.java).apply {
+                putExtra(EXTRA_TAG, input)
+            }
+        override fun parseResult(resultCode: Int, intent: Intent?) {}
+    }
+
     // ------ //
 
     companion object {
@@ -47,6 +58,11 @@ interface EntriesActivityContract {
          * URL
          */
         const val EXTRA_URL = "EntriesActivity.EXTRA_URL"
+
+        /**
+         * タグ
+         */
+        const val EXTRA_TAG = "EntriesActivity.EXTRA_TAG"
 
         /**
          * 通知画面を開く

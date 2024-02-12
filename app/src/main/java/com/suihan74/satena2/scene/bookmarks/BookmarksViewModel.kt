@@ -36,7 +36,14 @@ import com.suihan74.satena2.utility.extension.showToast
 import com.suihan74.satena2.utility.hatena.hatenaUserIconUrl
 import com.suihan74.satena2.utility.hatena.toBookmark
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
@@ -250,6 +257,11 @@ interface BookmarksViewModel : DialogPropertiesProvider {
      * 指定ユーザーが最近ブクマしたエントリ一覧画面に遷移する
      */
     fun launchEntriesActivityForUser(item: DisplayBookmark)
+
+    /**
+     * 指定タグで検索したエントリ一覧画面に遷移する
+     */
+    fun launchEntriesActivityForTag(tag: String)
 
     /**
      * ブクマに対するブクマ一覧を開く
@@ -590,6 +602,13 @@ class BookmarksViewModelImpl @Inject constructor(
     }
 
     /**
+     * 指定タグで検索したエントリ一覧画面に遷移する
+     */
+    override fun launchEntriesActivityForTag(tag: String) {
+        lifecycleObserver.launchEntriesActivityWithTag(tag)
+    }
+
+    /**
      * ブクマに対するブクマ一覧を開く
      */
     override fun launchBookmarksActivityToBookmark(item: DisplayBookmark) {
@@ -678,6 +697,8 @@ class BookmarksViewModelImpl @Inject constructor(
     inner class LifecycleObserver(private val registry : ActivityResultRegistry) : DefaultLifecycleObserver {
         private lateinit var entriesActivityWithUserLauncher : ActivityResultLauncher<String>
 
+        private lateinit var entriesActivityWithTagLauncher : ActivityResultLauncher<String>
+
         private lateinit var bookmarksActivityLauncher : ActivityResultLauncher<String>
 
         private lateinit var postBookmarksActivityLauncher : ActivityResultLauncher<Pair<Entry, EditData?>>
@@ -688,9 +709,15 @@ class BookmarksViewModelImpl @Inject constructor(
 
         override fun onCreate(owner: LifecycleOwner) {
             entriesActivityWithUserLauncher = registry.register(
-                "EntriesActivityLauncher",
+                "EntriesActivityLauncherWithUser",
                 owner,
                 EntriesActivityContract.WithUser()
+            ) { /* do nothing */ }
+
+            entriesActivityWithTagLauncher = registry.register(
+                "EntriesActivityLauncherWithTag",
+                owner,
+                EntriesActivityContract.WithTag()
             ) { /* do nothing */ }
 
             bookmarksActivityLauncher = registry.register(
@@ -721,6 +748,10 @@ class BookmarksViewModelImpl @Inject constructor(
 
         fun launchEntriesActivityWithUser(user: String) {
             entriesActivityWithUserLauncher.launch(user)
+        }
+
+        fun launchEntriesActivityWithTag(tag: String) {
+            entriesActivityWithTagLauncher.launch(tag)
         }
 
         fun launchBookmarksActivity(url: String) {
@@ -884,6 +915,9 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     // ------ //
 
     override fun launchEntriesActivityForUser(item: DisplayBookmark) {
+    }
+
+    override fun launchEntriesActivityForTag(tag: String) {
     }
 
     override fun launchBookmarksActivityToBookmark(item: DisplayBookmark) {

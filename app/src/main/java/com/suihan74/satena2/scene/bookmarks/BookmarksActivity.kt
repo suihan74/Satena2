@@ -83,7 +83,8 @@ private enum class BottomSheetContent {
     EntryMenu,
     BookmarkMenu,
     ShareBookmark,
-    UserLabel
+    UserLabel,
+    Tags
 }
 
 // ------ //
@@ -262,6 +263,13 @@ private fun BookmarksScene(
                                 bottomSheetState.show()
                             }
                         },
+                        onSelectTagsMenu = {
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.Tags
+                                bottomSheetState.show()
+                            }
+                        },
                         onIgnore = { ignoreUserDialogTarget.value = it },
                         onShare = {
                             coroutineScope.launch {
@@ -300,6 +308,24 @@ private fun BookmarksScene(
                                     viewModel.updateUserLabels(user, it)
                                     bottomSheetContent = BottomSheetContent.Empty
                                     bottomSheetState.hide()
+                                }
+                            }
+                        )
+                    }
+                }
+
+                // タグリスト
+                BottomSheetContent.Tags -> {
+                    if (bottomMenuTarget?.bookmark?.tags.isNullOrEmpty()) {
+                        Box(Modifier.height(1.dp))
+                    }
+                    else {
+                        BookmarkTagsContent(
+                            item = bottomMenuTarget,
+                            onSelectTag = {
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                    viewModel.launchEntriesActivityForTag(it)
                                 }
                             }
                         )

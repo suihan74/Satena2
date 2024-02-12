@@ -172,7 +172,8 @@ object ApplicationModule {
     fun provideEntriesRepository(@ApplicationContext context: Context) : EntriesRepository =
         EntriesRepositoryImpl(
             appDatabase = provideAppDatabase(context),
-            repository = provideHatenaAccountRepository(context)
+            hatenaRepo = provideHatenaAccountRepository(context),
+            dataStore = providePreferencesDataStore(context)
         )
 
     /**

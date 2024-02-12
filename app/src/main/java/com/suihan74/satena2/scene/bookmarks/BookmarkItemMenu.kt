@@ -1,6 +1,10 @@
 package com.suihan74.satena2.scene.bookmarks
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
@@ -27,6 +31,7 @@ fun BookmarkItemMenuContent(
     onShowRecentBookmarks: (DisplayBookmark)->Unit = {},
     onShowBookmarksToItem: (DisplayBookmark)->Unit = {},
     onShowUserLabelDialog: (DisplayBookmark)->Unit = {},
+    onSelectTagsMenu: (DisplayBookmark)->Unit = {},
     onShare: (DisplayBookmark)->Unit = {},
     onFollow: (DisplayBookmark)->Unit = {},
     onIgnore: (DisplayBookmark)->Unit = {},
@@ -55,6 +60,13 @@ fun BookmarkItemMenuContent(
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_show_bookmarks_to_bookmark)) {
                     onShowBookmarksToItem(item)
                     coroutineScope.launch { sheetState.hide() }
+                }
+            }
+            if (item.bookmark.tags.isNotEmpty()) {
+                item {
+                    BottomSheetMenuItem(text = stringResource(R.string.tag)) {
+                        onSelectTagsMenu(item)
+                    }
                 }
             }
             item {

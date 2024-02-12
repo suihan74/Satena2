@@ -22,6 +22,7 @@ import com.suihan74.hatena.model.bookmark.BookmarkResult
 import com.suihan74.hatena.model.entry.Entry
 import com.suihan74.hatena.model.entry.Issue
 import com.suihan74.hatena.model.entry.MaintenanceEntry
+import com.suihan74.hatena.model.entry.SearchType
 import com.suihan74.satena2.R
 import com.suihan74.satena2.model.NoticeVerb
 import com.suihan74.satena2.scene.bookmarks.BookmarksActivityContract
@@ -497,7 +498,13 @@ class EntriesViewModelImpl @Inject constructor(
             runCatching {
                 entriesRepo.loadEntries(destination)
             }.onFailure {
-                context.showToast(R.string.entry_msg_load_entries_failure)
+                when (it) {
+                    is IllegalStateException -> {}
+                    else -> {
+                        context.showToast(R.string.entry_msg_load_entries_failure)
+                    }
+                }
+                Log.e("swipeRefresh", it.stackTraceToString())
             }
         }
     }
@@ -511,6 +518,7 @@ class EntriesViewModelImpl @Inject constructor(
                 entriesRepo.additionalLoadEntries(destination)
             }.onFailure {
                 context.showToast(R.string.entry_msg_load_entries_failure)
+                Log.e("loadAdditional", it.stackTraceToString())
             }
         }
     }
@@ -917,6 +925,7 @@ class EntriesViewModelImpl @Inject constructor(
     ) {
         val url = intent?.getStringExtra(EntriesActivityContract.EXTRA_URL)
         val user = intent?.getStringExtra(EntriesActivityContract.EXTRA_USER)
+        val tag =  intent?.getStringExtra(EntriesActivityContract.EXTRA_TAG)
         val launchNotices = intent?.getBooleanExtra(EntriesActivityContract.EXTRA_LAUNCH_NOTICES, false)
 
         val (category, target, issue) = when {
@@ -929,8 +938,20 @@ class EntriesViewModelImpl @Inject constructor(
             // 別画面からユーザー指定で呼び出された場合
             user != null -> Triple(Category.User, user, null)
 
+            // 別画面からタグ指定で呼び出された場合
+            tag != null -> Triple(Category.Search, tag, null)
+
             // 通常時。初期表示カテを表示
             else -> Triple(initialState.category, null, initialState.issue)
+        }
+
+        if (tag != null) {
+            search(
+                SearchSetting(
+                    query = tag,
+                    searchType = SearchType.TAG
+                )
+            )
         }
 
         navigate(

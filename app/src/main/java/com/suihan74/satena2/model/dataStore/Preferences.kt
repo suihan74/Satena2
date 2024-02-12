@@ -145,6 +145,9 @@ data class Preferences(
     /** エントリ: スクロールでツールバーを隠す */
     val entryHidingToolbarByScroll : Boolean = true,
 
+    /** エントリ: MyBookmarkカテゴリでは非表示エントリを表示する */
+    val ignoredEntriesVisibilityInMyBookmarks : Boolean = true,
+
     // ------ //
 
     /** ブクマ: 最初に表示するタブ */

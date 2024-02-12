@@ -165,7 +165,7 @@ fun EntryItem(
                     width = Dimension.fillToConstraints
                     height = Dimension.wrapContent
                 }
-                .height((22f * 3).sp.value.dp)
+                .height(with(LocalDensity.current) { (22f * 3.2).sp.toDp() })
         )
         SubcomposeAsyncImage(
             model = entry.imageUrl,

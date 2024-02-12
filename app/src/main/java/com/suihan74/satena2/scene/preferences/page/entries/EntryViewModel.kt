@@ -2,7 +2,11 @@ package com.suihan74.satena2.scene.preferences.page.entries
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.lifecycle.viewModelScope
-import com.suihan74.satena2.scene.entries.*
+import com.suihan74.satena2.scene.entries.BottomMenuItem
+import com.suihan74.satena2.scene.entries.Category
+import com.suihan74.satena2.scene.entries.ClickEntryAction
+import com.suihan74.satena2.scene.entries.EntryCategoryListType
+import com.suihan74.satena2.scene.entries.EntryNavigationState
 import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.scene.preferences.page.FakePreferencesPageViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.IPreferencePageViewModel
@@ -43,6 +47,11 @@ interface EntryViewModel : IPreferencePageViewModel {
      * 最初に表示するタブ
      */
     val initialTabs : MutableStateFlow<Map<Category, Int>>
+
+    /**
+     * MyBookmarksカテゴリで非表示エントリを表示する
+     */
+    val ignoredEntriesVisibilityInMyBookmarks : MutableStateFlow<Boolean>
 
     /**
      * エントリ項目を単クリックしたときの処理
@@ -118,6 +127,11 @@ class EntryViewModelImpl @Inject constructor(
      * 最初に表示するタブ
      */
     override val initialTabs : MutableStateFlow<Map<Category, Int>> = prefsStateFlow(emptyMap())
+
+    /**
+     * MyBookmarksカテゴリで非表示エントリを表示する
+     */
+    override val ignoredEntriesVisibilityInMyBookmarks : MutableStateFlow<Boolean> = prefsStateFlow(true)
 
     /**
      * エントリ項目を単クリックしたときの処理
@@ -256,6 +270,7 @@ class FakeEntryViewModel :
     override val categoryListType = MutableStateFlow(EntryCategoryListType.LIST)
     override val initialState = MutableStateFlow(EntryNavigationState.default)
     override val initialTabs = MutableStateFlow<Map<Category, Int>>(emptyMap())
+    override val ignoredEntriesVisibilityInMyBookmarks = MutableStateFlow<Boolean>(true)
     override val clickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_COMMENTS)
     override val longClickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_MENU)
     override val doubleClickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_PAGE)

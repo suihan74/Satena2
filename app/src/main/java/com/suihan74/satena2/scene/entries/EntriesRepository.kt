@@ -1,9 +1,9 @@
 package com.suihan74.satena2.scene.entries
 
 import android.util.Log
+import androidx.datastore.core.DataStore
 import com.suihan74.hatena.CertifiedHatenaClient
 import com.suihan74.hatena.HatenaClientBase
-import com.suihan74.hatena.model.account.Account
 import com.suihan74.hatena.model.account.Notice
 import com.suihan74.hatena.model.bookmark.BookmarkResult
 import com.suihan74.hatena.model.entry.EntriesType
@@ -17,9 +17,11 @@ import com.suihan74.hatena.model.entry.UserEntry
 import com.suihan74.hatena.model.star.Star
 import com.suihan74.hatena.model.star.StarsEntry
 import com.suihan74.satena2.model.AppDatabase
+import com.suihan74.satena2.model.dataStore.Preferences
 import com.suihan74.satena2.model.entries.ReadEntry
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntry
 import com.suihan74.satena2.scene.entries.bottomSheet.SearchSetting
+import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAccountRepository
 import com.suihan74.satena2.utility.extension.onNot
 import com.suihan74.satena2.utility.hatena.actualUrl
@@ -206,7 +208,8 @@ interface EntriesRepository {
 
 class EntriesRepositoryImpl @Inject constructor(
     appDatabase: AppDatabase,
-    private val repository: HatenaAccountRepository
+    private val hatenaRepo: HatenaAccountRepository,
+    dataStore: DataStore<Preferences>
 ) : EntriesRepository {
     private val ignoredEntryDao = appDatabase.ignoredEntryDao()
 
@@ -221,6 +224,11 @@ class EntriesRepositoryImpl @Inject constructor(
     private val allEntriesMap = HashMap<String, Flow<List<DisplayEntry>>>()
     private val validEntriesMap = HashMap<String, EntriesListFlow>()
     private val excludedEntriesMap = HashMap<String, Flow<List<DisplayEntry>>>()
+
+    /**
+     * MyBookmarksカテゴリでは非表示エントリを表示する
+     */
+    private val ignoredEntriesVisibilityInMyBookmarks = dataStore.data.map { it.ignoredEntriesVisibilityInMyBookmarks }
 
     /**
      * 通知リスト
@@ -270,10 +278,10 @@ class EntriesRepositoryImpl @Inject constructor(
     // ------ //
 
     private suspend fun <T> withClient(action: suspend (client: HatenaClientBase)->T) : T =
-        repository.withClient(action)
+        hatenaRepo.withClient(action)
 
     private suspend fun <T> withSignedClient(action: suspend (client: CertifiedHatenaClient)->T) : T? =
-        repository.withSignedClient(action)
+        hatenaRepo.withSignedClient(action)
 
     // ------ //
 
@@ -346,8 +354,14 @@ class EntriesRepositoryImpl @Inject constructor(
                 }
             }
 
-            combine(rawFlow, filtersFlow, readEntriesFlow) { entries, filters, readEntries ->
-                toDisplayEntries(entries, filters, readEntries)
+            combine(
+                rawFlow,
+                filtersFlow,
+                readEntriesFlow,
+                ignoredEntriesVisibilityInMyBookmarks
+            ) { entries, filters, readEntries, ignoredVisibilityInMyBookmarks ->
+                val myBookmarksState = destination.category == Category.MyBookmarks && ignoredVisibilityInMyBookmarks
+                toDisplayEntries(entries, filters, readEntries, myBookmarksState)
             }
         }
     }
@@ -680,13 +694,17 @@ class EntriesRepositoryImpl @Inject constructor(
     private suspend fun toDisplayEntries(
         rawItems: List<Entry>,
         filters: List<IgnoredEntry>,
-        readEntries: List<ReadEntry>
+        readEntries: List<ReadEntry>,
+        ignoreFilter: Boolean = false
     ) : List<DisplayEntry> = withContext(Dispatchers.IO) {
         val displayEntries =
             rawItems.map { entry ->
                 val filterState =
-                    if (filters.any { it.match(entry) }) FilterState.EXCLUSION
-                    else FilterState.VALID
+                    when {
+                        ignoreFilter -> FilterState.VALID
+                        filters.any { it.match(entry) } -> FilterState.EXCLUSION
+                        else -> FilterState.VALID
+                    }
 
                 val readState =
                     readEntries.firstOrNull {

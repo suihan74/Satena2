@@ -7,11 +7,25 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -19,7 +33,14 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -33,12 +54,16 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.CombinedIconButton
-import com.suihan74.satena2.compose.emptyFooter
 import com.suihan74.satena2.compose.VerticalScrollableIndicator
 import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
-import com.suihan74.satena2.scene.entries.*
+import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.scene.entries.BottomMenuItem
+import com.suihan74.satena2.scene.entries.Category
+import com.suihan74.satena2.scene.entries.ClickEntryAction
+import com.suihan74.satena2.scene.entries.EntryCategoryListType
+import com.suihan74.satena2.scene.entries.EntryNavigationState
 import com.suihan74.satena2.scene.preferences.PrefButton
 import com.suihan74.satena2.scene.preferences.PrefItemDefaults
 import com.suihan74.satena2.scene.preferences.PrefToggleButton
@@ -50,7 +75,6 @@ import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
 import com.suihan74.satena2.utility.extension.add
 import com.suihan74.satena2.utility.extension.textId
-import com.suihan74.satena2.utility.hatena.textId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -169,7 +193,7 @@ private fun ClickEntryActionSelector(
     if (dialogVisible) {
         MenuDialog(
             titleText = stringResource(titleId),
-            menuItems = ClickEntryAction.values().map {
+            menuItems = ClickEntryAction.entries.map {
                 menuDialogItem(it.textId) { flow.value = it; true }
             },
             negativeButton = dialogButton(R.string.cancel) { dialogVisible = false },
@@ -199,7 +223,7 @@ private fun MutableComposableList.categorySection(
         if (dialogVisible) {
             MenuDialog(
                 titleText = stringResource(R.string.pref_entry_initial_state),
-                menuItems = Category.values()
+                menuItems = Category.entries
                     .filter { it.willBeHome }
                     .map {
                         menuDialogItem(
@@ -242,7 +266,7 @@ private fun MutableComposableList.behaviorSection(viewModel: EntryViewModel) = a
         if (dialogVisible.value) {
             MenuDialog(
                 titleText = stringResource(R.string.pref_entry_category_list_type),
-                menuItems = EntryCategoryListType.values().map {
+                menuItems = EntryCategoryListType.entries.map {
                     menuDialogItem(it.textId) { viewModel.categoryListType.value = it; true }
                 },
                 negativeButton = dialogButton(R.string.cancel) { dialogVisible.value = false },
@@ -251,6 +275,12 @@ private fun MutableComposableList.behaviorSection(viewModel: EntryViewModel) = a
                 properties = viewModel.dialogProperties()
             )
         }
+    },
+    {
+        PrefToggleButton(
+            mainTextId = R.string.pref_entry_ignored_entries_visibility_in_mybookmarks,
+            flow = viewModel.ignoredEntriesVisibilityInMyBookmarks
+        )
     }
 )
 
@@ -320,7 +350,7 @@ private fun BottomMenuPrefItem(
         if (dialogTargetIndex > -1) {
             MenuDialog(
                 titleText = stringResource(R.string.pref_entry_bottom_menu_items),
-                menuItems = BottomMenuItem.values().map { item ->
+                menuItems = BottomMenuItem.entries.map { item ->
                     menuDialogItem(item.textId) {
                         onComplete?.invoke(dialogTargetIndex - 1, item)
                         true
@@ -353,7 +383,7 @@ private fun InitialTabsSelector(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val categories = remember { Category.values().filter { !it.singleTab } }
+    val categories = remember { Category.entries.filter { !it.singleTab } }
     val tabsMap by viewModel.initialTabs.collectAsState()
     val labelsMap = remember {
         buildMap {
