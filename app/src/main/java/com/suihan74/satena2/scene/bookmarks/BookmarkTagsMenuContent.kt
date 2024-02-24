@@ -11,7 +11,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.BottomSheetMenuItem
 import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.ui.theme.CurrentTheme
@@ -28,7 +30,6 @@ fun BookmarkTagsMenuContent(
         Box(Modifier.fillMaxHeight())
         return
     }
-    val coroutineScope = rememberCoroutineScope()
     Column {
         Spacer(Modifier.height(12.dp))
         BookmarkItem(item = item, clickable = false)
@@ -39,7 +40,10 @@ fun BookmarkTagsMenuContent(
             )
         ) {
             items(item.bookmark.tags) { tag ->
-                BottomSheetMenuItem(text = tag) {
+                BottomSheetMenuItem(
+                    text = tag,
+                    icon = painterResource(id = R.drawable.ic_tag)
+                ) {
                     onSelectTag(tag)
                 }
             }
