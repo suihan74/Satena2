@@ -167,7 +167,7 @@ private fun BrowserContent(
                 focusManager.clearFocus()
                 // ボトムメニューを閉じる際にコンテンツの遷移状態を初期化する
                 if (ModalBottomSheetValue.Hidden == it) {
-                    bottomNavController.navigate("basicMenu") {
+                    bottomNavController.navigate("empty") {
                         popUpTo(0)
                     }
                 }
@@ -200,8 +200,11 @@ private fun BrowserContent(
         sheetContent = {
             NavHost(
                 navController = bottomNavController,
-                startDestination = "basicMenu"
+                startDestination = "empty"
             ) {
+                composable("empty") {
+                    Box(Modifier.height(1.dp))
+                }
                 // 基本のメニュー
                 composable("basicMenu") {
                     AddressBarMenuContent(
@@ -258,10 +261,21 @@ private fun BrowserContent(
         ) {
             MainContent(
                 viewModel = viewModel,
-                navController = bottomNavController,
-                bottomSheetState = bottomSheetState,
-                drawerState = drawerState,
-                drawerAlignment = drawerAlignment
+                webViewCaptureBackPresses =
+                    bottomSheetState.currentValue == ModalBottomSheetValue.Hidden && drawerState.isClosed,
+                onShowMenu = {
+                    bottomNavController.navigate("basicMenu") {
+                        popUpTo(0)
+                    }
+                    coroutineScope.launch {
+                        bottomSheetState.show()
+                    }
+                },
+                onShowBackForwardList = {
+                    coroutineScope.launch {
+                        showHistoryBottomSheet(bottomSheetState, bottomNavController)
+                    }
+                }
             )
         }
     }
@@ -288,10 +302,9 @@ private fun BrowserContent(
 @Composable
 private fun MainContent(
     viewModel: BrowserViewModel,
-    navController: NavHostController,
-    bottomSheetState: ModalBottomSheetState,
-    drawerState: DrawerState,
-    drawerAlignment: Alignment.Horizontal
+    webViewCaptureBackPresses: Boolean,
+    onShowMenu: ()->Unit,
+    onShowBackForwardList: ()->Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -341,8 +354,7 @@ private fun MainContent(
                 navigator = webViewNavigator,
                 client = viewModel.webViewClient,
                 chromeClient = viewModel.webChromeClient,
-                captureBackPresses =
-                    bottomSheetState.currentValue == ModalBottomSheetValue.Hidden && drawerState.isClosed,
+                captureBackPresses = webViewCaptureBackPresses,
                 onCreated = { viewModel.onCreated(it, coroutineScope) },
                 onDispose = { viewModel.onDispose() },
                 factory = { context ->
@@ -392,21 +404,11 @@ private fun MainContent(
                 AddressBar(
                     viewModel = viewModel,
                     webViewNavigator = webViewNavigator,
-                    onLongClickBackForward = {
-                        coroutineScope.launch {
-                            showHistoryBottomSheet(bottomSheetState, navController)
-                        }
-                    }
+                    onLongClickBackForward = onShowBackForwardList
                 )
             },
             actions = {
-                IconButton(
-                    onClick = {
-                        coroutineScope.launch {
-                            bottomSheetState.show()
-                        }
-                    }
-                ) {
+                IconButton(onClick = onShowMenu) {
                     Icon(
                         Icons.Filled.Menu,
                         contentDescription = "search",
