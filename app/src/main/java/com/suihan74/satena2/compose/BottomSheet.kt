@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ProvideTextStyle
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,6 +70,6 @@ fun BottomSheetMenuItem(
         onClick = onClick,
         onLongClick = onLongClick
     ) {
-        Text(text = text)
+        MarqueeText(text = text)
     }
 }

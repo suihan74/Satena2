@@ -3,7 +3,6 @@ package com.suihan74.satena2.scene.bookmarks
 import com.suihan74.hatena.model.bookmark.Bookmark
 import com.suihan74.hatena.model.bookmark.TweetsAndClicks
 import com.suihan74.hatena.model.star.StarsEntry
-import com.suihan74.satena2.model.userLabel.Label
 import com.suihan74.satena2.model.userLabel.UserAndLabels
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,7 +41,16 @@ data class DisplayBookmark(
      */
     val mentions : List<DisplayBookmark> = emptyList(),
     /**
+     * ブコメに含まれるURL
+     */
+    val urls : List<Link> = emptyList(),
+    /**
      * ユーザーラベル
      */
     val labels : Flow<UserAndLabels?> = MutableStateFlow(null)
-)
+) {
+    data class Link(
+        val url : String,
+        val range : IntRange
+    )
+}

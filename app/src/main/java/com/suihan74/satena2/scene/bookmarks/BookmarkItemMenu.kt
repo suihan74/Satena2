@@ -31,6 +31,7 @@ fun BookmarkItemMenuContent(
     onShowRecentBookmarks: (DisplayBookmark)->Unit = {},
     onShowBookmarksToItem: (DisplayBookmark)->Unit = {},
     onShowUserLabelDialog: (DisplayBookmark)->Unit = {},
+    onSelectUrlsMenu: (DisplayBookmark)->Unit = {},
     onSelectTagsMenu: (DisplayBookmark)->Unit = {},
     onShare: (DisplayBookmark)->Unit = {},
     onFollow: (DisplayBookmark)->Unit = {},
@@ -60,6 +61,13 @@ fun BookmarkItemMenuContent(
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_show_bookmarks_to_bookmark)) {
                     onShowBookmarksToItem(item)
                     coroutineScope.launch { sheetState.hide() }
+                }
+            }
+            if (item.urls.isNotEmpty()) {
+                item {
+                    BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_links)) {
+                        onSelectUrlsMenu(item)
+                    }
                 }
             }
             if (item.bookmark.tags.isNotEmpty()) {

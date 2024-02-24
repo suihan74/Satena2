@@ -20,9 +20,9 @@ import com.suihan74.satena2.ui.theme.CurrentTheme
  * 選択したブクマにつけられたタグ一覧を表示するダイアログ
  */
 @Composable
-fun BookmarkTagsContent(
+fun BookmarkUrlsMenuContent(
     item: DisplayBookmark?,
-    onSelectTag: (String)->Unit = {}
+    onSelectUrl: (String)->Unit = {}
 ) {
     if (item == null) {
         Box(Modifier.fillMaxHeight())
@@ -38,9 +38,9 @@ fun BookmarkTagsContent(
                 color = CurrentTheme.primary
             )
         ) {
-            items(item.bookmark.tags) { tag ->
-                BottomSheetMenuItem(text = tag) {
-                    onSelectTag(tag)
+            items(item.urls) { link ->
+                BottomSheetMenuItem(text = link.url) {
+                    onSelectUrl(link.url)
                 }
             }
         }

@@ -724,6 +724,7 @@ class BookmarksRepositoryImpl @Inject constructor(
     }
 
     private val idCallRegex = Regex("""(^|[^a-zA-Z0-9])id:([a-zA-Z0-9_]+)""")
+    private val urlRegex = Regex("""https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
 
     private fun Bookmark.toDisplayBookmark(eid: Long) : DisplayBookmark {
         val ignoredUsers = ignoredUsersFlow.value
@@ -752,6 +753,15 @@ class BookmarksRepositoryImpl @Inject constructor(
             }
         }
 
+        val urls = urlRegex.findAll(comment)
+            .map {
+                DisplayBookmark.Link(
+                    url = it.value,
+                    range = it.range
+                )
+            }
+            .toList()
+
         val labels = userLabelRepo.userLabelsFlow(this.user)
 
         return DisplayBookmark(
@@ -761,8 +771,9 @@ class BookmarksRepositoryImpl @Inject constructor(
             ignoredUser = ignoredUsers.contains(this.user),
             filtered = filters.any { it.match(this) },
             mentions = mentions,
+            urls = urls,
             labels = labels,
-            starsEntry = starsEntry
+            starsEntry = starsEntry,
         )
     }
 

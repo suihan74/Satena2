@@ -217,6 +217,7 @@
     <string name="bookmark_menu_show_recent_bookmarks">最近のブックマークを見る</string>
     <string name="bookmark_menu_show_bookmarks_to_bookmark">このブクマへのブックマークを見る</string>
     <string name="bookmark_menu_share">共有</string>
+    <string name="bookmark_menu_links">リンク</string>
     <string name="bookmark_menu_follow">ユーザーをフォロー</string>
     <string name="bookmark_menu_unfollow">ユーザーをフォロー解除</string>
     <string name="bookmark_menu_mute">ユーザーを非表示</string>

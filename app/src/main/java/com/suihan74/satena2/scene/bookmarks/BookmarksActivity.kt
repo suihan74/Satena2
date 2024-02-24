@@ -84,6 +84,7 @@ private enum class BottomSheetContent {
     BookmarkMenu,
     ShareBookmark,
     UserLabel,
+    Urls,
     Tags
 }
 
@@ -263,6 +264,13 @@ private fun BookmarksScene(
                                 bottomSheetState.show()
                             }
                         },
+                        onSelectUrlsMenu = {
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.Urls
+                                bottomSheetState.show()
+                            }
+                        },
                         onSelectTagsMenu = {
                             coroutineScope.launch {
                                 bottomSheetState.hide()
@@ -314,13 +322,31 @@ private fun BookmarksScene(
                     }
                 }
 
+                // コメントに含まれるリンクリスト
+                BottomSheetContent.Urls -> {
+                    if (bottomMenuTarget?.urls.isNullOrEmpty()) {
+                        Box(Modifier.height(1.dp))
+                    }
+                    else {
+                        BookmarkUrlsMenuContent(
+                            item = bottomMenuTarget,
+                            onSelectUrl = {
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                    viewModel.openBrowser(it)
+                                }
+                            }
+                        )
+                    }
+                }
+
                 // タグリスト
                 BottomSheetContent.Tags -> {
                     if (bottomMenuTarget?.bookmark?.tags.isNullOrEmpty()) {
                         Box(Modifier.height(1.dp))
                     }
                     else {
-                        BookmarkTagsContent(
+                        BookmarkTagsMenuContent(
                             item = bottomMenuTarget,
                             onSelectTag = {
                                 coroutineScope.launch {
