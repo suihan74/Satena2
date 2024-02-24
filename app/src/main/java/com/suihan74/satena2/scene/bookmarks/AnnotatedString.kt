@@ -1,5 +1,6 @@
 package com.suihan74.satena2.scene.bookmarks
 
+import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -87,7 +88,7 @@ fun buildAnnotatedComment(
                         textDecoration = TextDecoration.Underline
                     )
                 ) {
-                    append(m.value)
+                    append(Uri.decode(m.value))
                 }
             }
         }
