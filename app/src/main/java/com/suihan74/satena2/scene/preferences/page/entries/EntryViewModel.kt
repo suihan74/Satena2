@@ -174,6 +174,8 @@ class EntryViewModelImpl @Inject constructor(
                 categoryListType.value = it.entryCategoryListType
                 initialState.value = it.entryInitialState
                 initialTabs.value = it.entryInitialTabs
+                ignoredEntriesVisibilityInMyBookmarks.value = it.ignoredEntriesVisibilityInMyBookmarks
+
                 clickEntryAction.value = it.clickEntryAction
                 longClickEntryAction.value = it.longClickEntryAction
                 doubleClickEntryAction.value = it.doubleClickEntryAction
@@ -198,6 +200,7 @@ class EntryViewModelImpl @Inject constructor(
                 entryCategoryListType = categoryListType.value,
                 entryInitialState = initialState.value,
                 entryInitialTabs = initialTabs.value,
+                ignoredEntriesVisibilityInMyBookmarks = ignoredEntriesVisibilityInMyBookmarks.value,
                 clickEntryAction = clickEntryAction.value,
                 longClickEntryAction = longClickEntryAction.value,
                 doubleClickEntryAction = doubleClickEntryAction.value,
