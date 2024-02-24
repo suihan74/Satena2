@@ -152,7 +152,10 @@ private fun BrowserContent(
     val drawerGestureEnabled = remember { mutableStateOf(true) }
 
     val bottomNavController = rememberNavController()
-    val bottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val bottomSheetState = rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden,
+        skipHalfExpanded = true
+    )
     val focusManager = LocalFocusManager.current
 
     val url by viewModel.currentUrl.collectAsState(initial = "")
