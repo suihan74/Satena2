@@ -228,6 +228,9 @@ private fun EntriesScene(
         }
     }
 
+    // 既読マークを使用するかのフラグ
+    val entryReadMarkVisible by viewModel.recordReadEntriesEnabled.collectAsState()
+
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,
         scrimColor = CurrentTheme.tapGuard,
@@ -276,6 +279,7 @@ private fun EntriesScene(
                         sheetState = bottomSheetState,
                         category = currentCategory,
                         account = hatenaAccount,
+                        readMarkVisible = entryReadMarkVisible,
                         onLaunchBookmarksActivity = { viewModel.launchBookmarksActivity(it) },
                         onLaunchBrowserActivity = { viewModel.launchBrowserActivity(it) },
                         onLaunchOuterBrowser = { viewModel.openWithOtherApp(it) },
@@ -359,6 +363,7 @@ private fun EntriesScene(
 
                     ExcludedEntriesList(
                         items = excludedEntries,
+                        entryReadMarkVisible = entryReadMarkVisible,
                         onClickItem = {
                             viewModel.onEvent(it, EntryItemEvent.Click, onShowMenu, onShare)
                         },
@@ -412,6 +417,7 @@ private fun EntriesScene(
                 category = currentCategory,
                 issue = currentIssue,
                 target = currentTarget,
+                entryReadMarkVisible = entryReadMarkVisible,
                 onChangeTab = { tabIndex -> currentTab.intValue = tabIndex },
                 onOpenIssuesMenu = {
                     bottomSheetContent = EntryBottomSheetContent.Issues
@@ -532,6 +538,7 @@ private fun MainContent(
     category: Category,
     issue: Issue?,
     target: String?,
+    entryReadMarkVisible: Boolean,
     onChangeTab: (Int)->Unit = {},
     onOpenIssuesMenu: ()->Unit = {},
     onChangeMenuState: ()->Unit = {},
@@ -772,6 +779,7 @@ private fun MainContent(
                         category = c,
                         issue = pageIssue,
                         target = argTarget,
+                        readMarkVisible = entryReadMarkVisible,
                         onChangeTab = onChangeTab,
                         onRefresh = onRefresh,
                         onAppearLastItem = onAppearLastItem,

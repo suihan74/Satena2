@@ -29,6 +29,7 @@ fun EntryItemMenuContent(
     sheetState: ModalBottomSheetState,
     category: Category,
     account: Account?,
+    readMarkVisible: Boolean,
     onLaunchBookmarksActivity: (DisplayEntry)->Unit = {},
     onLaunchBrowserActivity: (DisplayEntry)->Unit = {},
     onLaunchOuterBrowser: (DisplayEntry)->Unit = {},
@@ -52,7 +53,10 @@ fun EntryItemMenuContent(
 
     Column {
         Spacer(Modifier.height(12.dp))
-        EntryItem(item = item)
+        EntryItem(
+            item = item,
+            readMarkVisible = readMarkVisible,
+        )
         LazyColumn(
             Modifier.verticalScrollbar(
                 state = rememberLazyListState(),

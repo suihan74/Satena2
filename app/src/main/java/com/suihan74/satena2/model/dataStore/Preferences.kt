@@ -148,6 +148,9 @@ data class Preferences(
     /** エントリ: MyBookmarkカテゴリでは非表示エントリを表示する */
     val ignoredEntriesVisibilityInMyBookmarks : Boolean = true,
 
+    /** エントリ: 既読エントリを記録する */
+    val recordReadEntriesEnabled : Boolean = true,
+
     // ------ //
 
     /** ブクマ: 最初に表示するタブ */

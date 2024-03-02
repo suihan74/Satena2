@@ -136,6 +136,11 @@ interface EntriesViewModel :
      */
     val searchMyBookmarksSettingFlow : StateFlow<SearchSetting>
 
+    /**
+     * 既読エントリを記録する
+     */
+    val recordReadEntriesEnabled : StateFlow<Boolean>
+
     // ------ //
 
     /**
@@ -358,6 +363,11 @@ class EntriesViewModelImpl @Inject constructor(
      */
     override val searchMyBookmarksSettingFlow = entriesRepo.searchMyBookmarksSettingFlow
 
+    /**
+     * 既読エントリを記録する
+     */
+    override val recordReadEntriesEnabled = MutableStateFlow(true)
+
     // ------ //
 
     private val clickAction = MutableStateFlow(ClickEntryAction.NOTHING)
@@ -393,6 +403,8 @@ class EntriesViewModelImpl @Inject constructor(
                 clickEdgeAction.value = it.clickEntryEdgeAction
                 longClickEdgeAction.value = it.longClickEntryEdgeAction
                 doubleClickEdgeAction.value = it.doubleClickEntryEdgeAction
+
+                recordReadEntriesEnabled.value = it.recordReadEntriesEnabled
             }
             .launchIn(viewModelScope)
 
@@ -670,8 +682,10 @@ class EntriesViewModelImpl @Inject constructor(
      * 既読マークをつける
      */
     private fun readMarkEntry(entry: DisplayEntry) {
-        viewModelScope.launch {
-            entriesRepo.readMark(entry.entry)
+        if (recordReadEntriesEnabled.value) {
+            viewModelScope.launch {
+                entriesRepo.readMark(entry.entry)
+            }
         }
     }
 
@@ -1101,6 +1115,8 @@ class FakeEntriesViewModel(
     override val searchSettingFlow = MutableStateFlow(SearchSetting())
 
     override val searchMyBookmarksSettingFlow = MutableStateFlow(SearchSetting())
+
+    override val recordReadEntriesEnabled = MutableStateFlow(true)
 
     // ------ //
 

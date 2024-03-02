@@ -48,6 +48,8 @@ private val horizontalPadding = 8.dp
 @Composable
 fun EntryItem(
     item: DisplayEntry,
+    imageSize: Dp = 80.dp,
+    readMarkVisible: Boolean = true,
     onClick: ((DisplayEntry)->Unit)? = null,
     onLongClick: ((DisplayEntry)->Unit)? = null,
     onDoubleClick: ((DisplayEntry)->Unit)? = null,
@@ -55,8 +57,7 @@ fun EntryItem(
     onLongClickEdge: (DisplayEntry)->Unit = {},
     onDoubleClickEdge: (DisplayEntry)->Unit = {},
     onClickComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> },
-    onLongClickComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> },
-    imageSize: Dp = 80.dp
+    onLongClickComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> }
 ) {
     val entry = item.entry
     val decodedTitle = Html.fromHtml(Uri.decode(entry.title)).toString()
@@ -109,7 +110,7 @@ fun EntryItem(
                         end = parent.end,
                         horizontalBias = 0f
                     )
-                    visibility = (item.read != null).toVisibility()
+                    visibility = (readMarkVisible && item.read != null).toVisibility()
                 }
         )
         SubcomposeAsyncImage(

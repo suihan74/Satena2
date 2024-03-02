@@ -54,6 +54,13 @@ interface EntryViewModel : IPreferencePageViewModel {
     val ignoredEntriesVisibilityInMyBookmarks : MutableStateFlow<Boolean>
 
     /**
+     * 既読エントリを記録する
+     */
+    val recordReadEntriesEnabled : MutableStateFlow<Boolean>
+
+    // ------ //
+
+    /**
      * エントリ項目を単クリックしたときの処理
      */
     val clickEntryAction : MutableStateFlow<ClickEntryAction>
@@ -134,6 +141,13 @@ class EntryViewModelImpl @Inject constructor(
     override val ignoredEntriesVisibilityInMyBookmarks : MutableStateFlow<Boolean> = prefsStateFlow(true)
 
     /**
+     * 既読エントリを記録する
+     */
+    override val recordReadEntriesEnabled : MutableStateFlow<Boolean> = prefsStateFlow(true)
+
+    // ------ //
+
+    /**
      * エントリ項目を単クリックしたときの処理
      */
     override val clickEntryAction : MutableStateFlow<ClickEntryAction> = prefsStateFlow(ClickEntryAction.SHOW_COMMENTS)
@@ -175,6 +189,7 @@ class EntryViewModelImpl @Inject constructor(
                 initialState.value = it.entryInitialState
                 initialTabs.value = it.entryInitialTabs
                 ignoredEntriesVisibilityInMyBookmarks.value = it.ignoredEntriesVisibilityInMyBookmarks
+                recordReadEntriesEnabled.value = it.recordReadEntriesEnabled
 
                 clickEntryAction.value = it.clickEntryAction
                 longClickEntryAction.value = it.longClickEntryAction
@@ -201,6 +216,7 @@ class EntryViewModelImpl @Inject constructor(
                 entryInitialState = initialState.value,
                 entryInitialTabs = initialTabs.value,
                 ignoredEntriesVisibilityInMyBookmarks = ignoredEntriesVisibilityInMyBookmarks.value,
+                recordReadEntriesEnabled = recordReadEntriesEnabled.value,
                 clickEntryAction = clickEntryAction.value,
                 longClickEntryAction = longClickEntryAction.value,
                 doubleClickEntryAction = doubleClickEntryAction.value,
@@ -273,7 +289,8 @@ class FakeEntryViewModel :
     override val categoryListType = MutableStateFlow(EntryCategoryListType.LIST)
     override val initialState = MutableStateFlow(EntryNavigationState.default)
     override val initialTabs = MutableStateFlow<Map<Category, Int>>(emptyMap())
-    override val ignoredEntriesVisibilityInMyBookmarks = MutableStateFlow<Boolean>(true)
+    override val ignoredEntriesVisibilityInMyBookmarks = MutableStateFlow(true)
+    override val recordReadEntriesEnabled = MutableStateFlow(true)
     override val clickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_COMMENTS)
     override val longClickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_MENU)
     override val doubleClickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_PAGE)

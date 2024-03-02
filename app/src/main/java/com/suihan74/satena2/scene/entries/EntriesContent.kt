@@ -65,6 +65,7 @@ fun EntriesContent(
     category: Category,
     issue: Issue?,
     target: String? = null,  // todo: 呼び出し元で空文字で置換してしまっていてnullになることがない
+    readMarkVisible: Boolean,
     onChangeTab: (Int) -> Unit = {},
     onRefresh: () -> Unit = {},
     onAppearLastItem: () -> Unit = {},
@@ -127,7 +128,9 @@ fun EntriesContent(
                 loading = loading,
                 onRefresh = onRefresh,
                 onAppearLastItem = onAppearLastItem,
+                pagerState = null,
                 lazyListState = listState,
+                readMarkVisible = readMarkVisible,
                 onClickItem = onClickItem,
                 onLongClickItem = onLongClickItem,
                 onDoubleClickItem = onDoubleClickItem,
@@ -149,6 +152,7 @@ fun EntriesContent(
                 category = category,
                 issue = issue,
                 target = t,
+                readMarkVisible = readMarkVisible,
                 onChangeTab = onChangeTab,
                 onRefresh = onRefresh,
                 onAppearLastItem = onAppearLastItem,
@@ -180,6 +184,7 @@ private fun MultipleTabsContent(
     category: Category,
     issue: Issue?,
     target: String? = null,
+    readMarkVisible: Boolean,
     onChangeTab: (Int)->Unit = {},
     onRefresh: ()->Unit = {},
     onAppearLastItem: ()->Unit = {},
@@ -294,6 +299,7 @@ private fun MultipleTabsContent(
                 tabIndex = page,
                 pagerState = pagerState,
                 lazyListState = lazyListState,
+                readMarkVisible = readMarkVisible,
                 entries = entries,
                 loading = loading,
                 onRefresh = onRefresh,
@@ -320,6 +326,7 @@ private fun MultipleTabsContentPreview() {
         navHostController = NavHostController(LocalContext.current),
         listStateMap = hashMapOf(),
         category = Category.All,
+        readMarkVisible = true,
         issue = null,
         target = null
     )
@@ -339,8 +346,9 @@ private fun SingleTabContent(
     entries: List<DisplayEntry>,
     loading: Boolean,
     tabIndex: Int = 0,
-    pagerState: PagerState? = null,
-    lazyListState: LazyListState = rememberLazyListState(),
+    pagerState: PagerState?,
+    lazyListState: LazyListState,
+    readMarkVisible: Boolean,
     onRefresh: ()->Unit = {},
     onAppearLastItem: ()->Unit = {},
     onClickItem: ((DisplayEntry)->Unit)? = null,
@@ -394,6 +402,7 @@ private fun SingleTabContent(
             ) { entry ->
                 EntryItem(
                     item = entry,
+                    readMarkVisible = readMarkVisible,
                     onClick = onClickItem,
                     onLongClick = onLongClickItem,
                     onDoubleClick = onDoubleClickItem,
@@ -429,6 +438,9 @@ private fun SingleTabContentPreview() {
         viewModel = vm,
         navHostController = NavHostController(LocalContext.current),
         entries = emptyList(),
-        loading = loading
+        loading = loading,
+        readMarkVisible = true,
+        pagerState = null,
+        lazyListState = rememberLazyListState()
     )
 }

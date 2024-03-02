@@ -84,6 +84,11 @@ interface BookmarksViewModel : DialogPropertiesProvider {
      */
     val useSystemTimeZone : Flow<Boolean>
 
+    /**
+     * 既読エントリを記録する
+     */
+    val recordReadEntriesEnabled : StateFlow<Boolean>
+
     // ------ //
 
     /**
@@ -319,6 +324,11 @@ class BookmarksViewModelImpl @Inject constructor(
      */
     override val useSystemTimeZone = dataStore.data.map { it.useSystemTimeZone }
 
+    /**
+     * 既読エントリを記録する
+     */
+    override val recordReadEntriesEnabled = MutableStateFlow(true)
+
     // ------ //
 
     /**
@@ -409,6 +419,13 @@ class BookmarksViewModelImpl @Inject constructor(
                         it.copy(bookmarkInitialTab = tab)
                     }
                 }
+            }
+            .launchIn(viewModelScope)
+
+        // 設定反映
+        dataStore.data
+            .onEach {
+                recordReadEntriesEnabled.value = it.recordReadEntriesEnabled
             }
             .launchIn(viewModelScope)
     }
@@ -784,6 +801,9 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     override val longClickVibrationDuration = MutableStateFlow(40L)
 
     override val useSystemTimeZone = MutableStateFlow(false)
+
+    override val recordReadEntriesEnabled = MutableStateFlow(true)
+
     // ------ //
 
     override val entityFlow = MutableStateFlow(Entity.EMPTY)

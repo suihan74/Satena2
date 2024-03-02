@@ -175,6 +175,9 @@ private fun BookmarksScene(
 
     var entryMenuTarget by remember { mutableStateOf<DisplayEntry?>(null) }
 
+    // エントリの既読マークを使用するかのフラグ
+    val entryReadMarkVisible by viewModel.recordReadEntriesEnabled.collectAsState()
+
     val onShowEntryMenu: (DisplayEntry)->Unit = {
         entryMenuTarget = it
         bottomSheetContent = BottomSheetContent.EntryMenu
@@ -218,6 +221,7 @@ private fun BookmarksScene(
                         sheetState = bottomSheetState,
                         category = Category.All,
                         account = account,
+                        readMarkVisible = entryReadMarkVisible,
                         onLaunchBookmarksActivity = { entryActionHandler.launchBookmarksActivity(it) },
                         onLaunchBrowserActivity = { entryActionHandler.launchBrowserActivity(it) },
                         onLaunchOuterBrowser = { entryActionHandler.openWithOtherApp(it) },

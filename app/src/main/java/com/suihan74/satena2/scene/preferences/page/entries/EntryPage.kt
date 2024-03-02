@@ -108,7 +108,7 @@ fun entryPageContents(
     actionsSection(viewModel)
     categorySection(viewModel, initialTabsSelectorVisible)
     behaviorSection(viewModel)
-    historySection()
+    historySection(viewModel)
     readLaterSection()
 }
 
@@ -284,8 +284,14 @@ private fun MutableComposableList.behaviorSection(viewModel: EntryViewModel) = a
     }
 )
 
-private fun MutableComposableList.historySection() = add(
-    { Section(R.string.pref_entry_section_history) }
+private fun MutableComposableList.historySection(viewModel: EntryViewModel) = add(
+    { Section(R.string.pref_entry_section_history) },
+    {
+        PrefToggleButton(
+            mainTextId = R.string.pref_entry_record_read_entries_enabled,
+            flow = viewModel.recordReadEntriesEnabled
+        )
+    }
 )
 
 private fun MutableComposableList.readLaterSection() = add(

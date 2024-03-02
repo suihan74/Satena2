@@ -27,6 +27,7 @@ import com.suihan74.satena2.ui.theme.CurrentTheme
 @Composable
 fun ExcludedEntriesList(
     items: List<DisplayEntry>,
+    entryReadMarkVisible: Boolean,
     onClickItem: ((DisplayEntry)->Unit)? = null,
     onLongClickItem: ((DisplayEntry)->Unit)? = null,
     onDoubleClickItem: ((DisplayEntry)->Unit)? = null,
@@ -58,6 +59,7 @@ fun ExcludedEntriesList(
             items(items) { entry ->
                 EntryItem(
                     item = entry,
+                    readMarkVisible = entryReadMarkVisible,
                     onClick = onClickItem,
                     onLongClick = onLongClickItem,
                     onDoubleClick = onDoubleClickItem,
