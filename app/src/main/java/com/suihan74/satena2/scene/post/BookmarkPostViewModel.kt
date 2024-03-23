@@ -15,7 +15,9 @@ import com.suihan74.satena2.R
 import com.suihan74.satena2.model.dataStore.Preferences
 import com.suihan74.satena2.model.mastodon.TootVisibility
 import com.suihan74.satena2.model.misskey.NoteVisibility
+import com.suihan74.satena2.model.theme.ThemePreset
 import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
+import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAccountRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.mastodon.MastodonAccountRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.misskey.MisskeyAccountRepository
@@ -274,11 +276,12 @@ class BookmarkPostViewModelImpl @Inject constructor(
     private val hatena: HatenaAccountRepository,
     private val mastodon: MastodonAccountRepository,
     private val misskey: MisskeyAccountRepository,
-    private val dataStore: DataStore<Preferences>
+    prefsRepo: PreferencesRepository
 ) :
     BookmarkPostViewModel,
     ViewModel(),
-    DialogPropertiesProvider by DialogPropertiesProviderImpl(dataStore) {
+    DialogPropertiesProvider by DialogPropertiesProviderImpl(prefsRepo.dataStore)
+{
     private val clientFlow = hatena.client
 
     override val isAuthMastodon = mastodon.account.map { it != null }
@@ -304,7 +307,7 @@ class BookmarkPostViewModelImpl @Inject constructor(
     /**
      * 投稿前に確認する
      */
-    override val confirmBeforePosting = dataStore.data.map { it.postBookmarkConfirmation }
+    override val confirmBeforePosting = prefsRepo.dataStore.data.map { it.postBookmarkConfirmation }
 
     override val comment = MutableStateFlow("")
 
@@ -369,7 +372,7 @@ class BookmarkPostViewModelImpl @Inject constructor(
 
     init {
         // 設定を反映
-        dataStore.data
+        prefsRepo.dataStore.data
             .onEach {
                 dismissOnClickOutside.value = it.dismissDialogOnClickOutside
                 verticalAlignment.value =
@@ -410,7 +413,7 @@ class BookmarkPostViewModelImpl @Inject constructor(
             )
         }
             .onEach { states ->
-                dataStore.updateData { prefs -> prefs.copy(postBookmarkLastStates = states) }
+                prefsRepo.dataStore.updateData { prefs -> prefs.copy(postBookmarkLastStates = states) }
             }
             .launchIn(viewModelScope)
 
@@ -424,7 +427,7 @@ class BookmarkPostViewModelImpl @Inject constructor(
                 private = private
             )
         }.onEach { states ->
-            dataStore.updateData { prefs -> prefs.copy(postBookmarkLastStates = states) }
+            prefsRepo.dataStore.updateData { prefs -> prefs.copy(postBookmarkLastStates = states) }
         }.launchIn(viewModelScope)
 
         // サインイン後にタグ取得

@@ -7,7 +7,6 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.ui.Alignment
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -19,13 +18,13 @@ import com.suihan74.hatena.model.account.Notice
 import com.suihan74.hatena.model.bookmark.Bookmark
 import com.suihan74.hatena.model.entry.Entry
 import com.suihan74.satena2.R
-import com.suihan74.satena2.model.dataStore.Preferences
 import com.suihan74.satena2.model.userLabel.Label
 import com.suihan74.satena2.model.userLabel.UserAndLabels
 import com.suihan74.satena2.scene.browser.BrowserActivityContract
 import com.suihan74.satena2.scene.entries.EntriesActivityContract
 import com.suihan74.satena2.scene.post.EditData
 import com.suihan74.satena2.scene.post.PostBookmarkActivityContract
+import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAccountRepository
 import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelRepository
 import com.suihan74.satena2.utility.DialogPropertiesProvider
@@ -281,11 +280,11 @@ class BookmarksViewModelImpl @Inject constructor(
     private val repository: BookmarksRepository,
     private val userLabelRepo: UserLabelRepository,
     hatenaRepo: HatenaAccountRepository,
-    private val dataStore: DataStore<Preferences>
+    private val prefsRepo: PreferencesRepository,
 ) :
     ViewModel(),
     BookmarksViewModel,
-    DialogPropertiesProvider by DialogPropertiesProviderImpl(dataStore)
+    DialogPropertiesProvider by DialogPropertiesProviderImpl(prefsRepo.dataStore)
 {
     /**
      * リスト更新の実行状態
@@ -305,24 +304,24 @@ class BookmarksViewModelImpl @Inject constructor(
     /**
      * ドロワの配置
      */
-    override val drawerAlignmentFlow = dataStore.data.map { it.drawerAlignment }
+    override val drawerAlignmentFlow = prefsRepo.dataStore.data.map { it.drawerAlignment }
 
     /**
      * タブ長押しで初期タブを変更する
      */
-    override val changeInitialTabByLongClickFlow = dataStore.data.map { it.bookmarkChangeInitialTabByLongClick }
+    override val changeInitialTabByLongClickFlow = prefsRepo.dataStore.data.map { it.bookmarkChangeInitialTabByLongClick }
 
     private val changeInitialTabFlow = MutableSharedFlow<BookmarksTab>()
 
     /**
      * 長押し時の振動時間
      */
-    override val longClickVibrationDuration = dataStore.data.map { it.longClickVibrationDuration }
+    override val longClickVibrationDuration = prefsRepo.dataStore.data.map { it.longClickVibrationDuration }
 
     /**
      * 日時をシステムのタイムゾーンで表示する
      */
-    override val useSystemTimeZone = dataStore.data.map { it.useSystemTimeZone }
+    override val useSystemTimeZone = prefsRepo.dataStore.data.map { it.useSystemTimeZone }
 
     /**
      * 既読エントリを記録する
@@ -408,7 +407,7 @@ class BookmarksViewModelImpl @Inject constructor(
         combine(changeInitialTabByLongClickFlow, changeInitialTabFlow, ::Pair)
             .onEach { (enabled, tab) ->
                 if (enabled) {
-                    dataStore.updateData {
+                    prefsRepo.dataStore.updateData {
                         if (it.bookmarkInitialTab != tab) {
                             Toast.makeText(
                                 context,
@@ -423,7 +422,7 @@ class BookmarksViewModelImpl @Inject constructor(
             .launchIn(viewModelScope)
 
         // 設定反映
-        dataStore.data
+        prefsRepo.dataStore.data
             .onEach {
                 recordReadEntriesEnabled.value = it.recordReadEntriesEnabled
             }
@@ -473,7 +472,7 @@ class BookmarksViewModelImpl @Inject constructor(
      */
     @OptIn(ExperimentalFoundationApi::class)
     override suspend fun initializeTab(pagerState: PagerState) {
-        dataStore.data.map { it.bookmarkInitialTab }
+        prefsRepo.dataStore.data.map { it.bookmarkInitialTab }
             .collect {
                 if (!tabInitialized.value) {
                     tabInitialized.value = true

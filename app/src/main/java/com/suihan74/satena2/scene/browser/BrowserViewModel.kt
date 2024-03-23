@@ -202,7 +202,7 @@ interface BrowserViewModel {
 
 @HiltViewModel
 class BrowserViewModelImpl @Inject constructor(
-    private val prefsRepository: PreferencesRepository,
+    prefsRepo: PreferencesRepository,
     private val browserDataStore: DataStore<BrowserPreferences>,
     private val repo: HistoryRepository
 ) : ViewModel(), BrowserViewModel {
@@ -260,7 +260,7 @@ class BrowserViewModelImpl @Inject constructor(
     /**
      * ドロワの配置
      */
-    override val drawerAlignment = prefsRepository.dataStore.data.map { it.drawerAlignment }
+    override val drawerAlignment = prefsRepo.dataStore.data.map { it.drawerAlignment }
 
     /**
      * アドレスバーの配置

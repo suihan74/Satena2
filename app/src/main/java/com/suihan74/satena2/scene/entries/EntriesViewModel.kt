@@ -285,13 +285,13 @@ interface EntriesViewModel :
 class EntriesViewModelImpl @Inject constructor(
     private val entriesRepo: EntriesRepository,
     private val hatenaRepo: HatenaAccountRepository,
-    prefsRepository: PreferencesRepository,
+    prefsRepo: PreferencesRepository,
     private val ngWordsRepository: NgWordsRepository
 ) : EntriesViewModel,
     ViewModel(),
-    DialogPropertiesProvider by DialogPropertiesProviderImpl(prefsRepository.dataStore)
+    DialogPropertiesProvider by DialogPropertiesProviderImpl(prefsRepo.dataStore)
 {
-    private val prefsFlow = prefsRepository.dataStore.data
+    private val prefsFlow = prefsRepo.dataStore.data
 
     /**
      * スワイプによるリスト更新の実行状態
