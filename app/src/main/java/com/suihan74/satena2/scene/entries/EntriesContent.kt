@@ -1,25 +1,47 @@
 package com.suihan74.satena2.scene.entries
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.*
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ScrollableTabRow
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.UiComposable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.suihan74.hatena.model.bookmark.BookmarkResult
 import com.suihan74.hatena.model.entry.Issue
-import com.suihan74.satena2.compose.*
+import com.suihan74.satena2.compose.AdditionalLoadableLazyColumn
+import com.suihan74.satena2.compose.SwipeRefreshBox
+import com.suihan74.satena2.compose.VerticalScrollableIndicator
+import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -144,27 +166,37 @@ fun EntriesContent(
 
         else -> {
             val t = if (target.isNullOrBlank()) null else target
-            MultipleTabsContent(
-                id = id,
-                viewModel = viewModel,
-                navHostController = navHostController,
-                listStateMap = listStateMap,
-                category = category,
-                issue = issue,
-                target = t,
-                readMarkVisible = readMarkVisible,
-                onChangeTab = onChangeTab,
-                onRefresh = onRefresh,
-                onAppearLastItem = onAppearLastItem,
-                onClickItem = onClickItem,
-                onLongClickItem = onLongClickItem,
-                onDoubleClickItem = onDoubleClickItem,
-                onClickItemEdge = onClickItemEdge,
-                onLongClickItemEdge = onLongClickItemEdge,
-                onDoubleClickItemEdge = onDoubleClickItemEdge,
-                onClickItemComment = onClickItemComment,
-                onLongClickItemComment = onLongClickItemComment
-            )
+            BoxWithConstraints {
+                val screenWidth = with(LocalDensity.current) { constraints.maxWidth.toDp() }
+                val screenHeight = with(LocalDensity.current) { constraints.maxHeight.toDp() }
+                val pageSize = remember(screenWidth, screenHeight) {
+                    if (screenHeight < screenWidth) PageSize.Fixed(screenWidth / 2)
+                    else PageSize.Fill
+                }
+
+                MultipleTabsContent(
+                    id = id,
+                    viewModel = viewModel,
+                    navHostController = navHostController,
+                    listStateMap = listStateMap,
+                    category = category,
+                    issue = issue,
+                    target = t,
+                    readMarkVisible = readMarkVisible,
+                    pageSize = pageSize,
+                    onChangeTab = onChangeTab,
+                    onRefresh = onRefresh,
+                    onAppearLastItem = onAppearLastItem,
+                    onClickItem = onClickItem,
+                    onLongClickItem = onLongClickItem,
+                    onDoubleClickItem = onDoubleClickItem,
+                    onClickItemEdge = onClickItemEdge,
+                    onLongClickItemEdge = onLongClickItemEdge,
+                    onDoubleClickItemEdge = onDoubleClickItemEdge,
+                    onClickItemComment = onClickItemComment,
+                    onLongClickItemComment = onLongClickItemComment
+                )
+            }
         }
     }
 }
@@ -185,6 +217,7 @@ private fun MultipleTabsContent(
     issue: Issue?,
     target: String? = null,
     readMarkVisible: Boolean,
+    pageSize: PageSize,
     onChangeTab: (Int)->Unit = {},
     onRefresh: ()->Unit = {},
     onAppearLastItem: ()->Unit = {},
@@ -222,13 +255,17 @@ private fun MultipleTabsContent(
                 target = target,
                 tabIndex = index
             )
+            val selected =
+                if (pageSize == PageSize.Fill) pagerState.currentPage == index
+                else pagerState.currentPage == index || pagerState.currentPage + 1 == index
+
             Tab(
-                selected = pagerState.currentPage == index,
+                selected = selected,
                 selectedContentColor = CurrentTheme.tabSelectedColor,
                 unselectedContentColor = CurrentTheme.tabUnSelectedColor,
                 onClick = {
                     pagerState.settledPage
-                    if (pagerState.currentPage == index) {
+                    if (selected) {
                         val lazyListState = lazyListState(viewModel, listStateMap, destination)
                         coroutineScope.launch {
                             runCatching {
@@ -280,6 +317,7 @@ private fun MultipleTabsContent(
 
         HorizontalPager(
             modifier = Modifier.fillMaxSize(),
+            pageSize = pageSize,
             state = pagerState
         ) { page ->
             val destination = Destination(
@@ -317,6 +355,7 @@ private fun MultipleTabsContent(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun MultipleTabsContentPreview() {
@@ -328,7 +367,8 @@ private fun MultipleTabsContentPreview() {
         category = Category.All,
         readMarkVisible = true,
         issue = null,
-        target = null
+        target = null,
+        pageSize = PageSize.Fill
     )
 }
 
