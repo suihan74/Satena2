@@ -115,10 +115,10 @@ class Application : Application(), Configuration.Provider {
         initializeSerializers()
         initializeNotification()
 
-        CurrentThemePreset.value = TemporaryTheme.colors
+        CurrentThemePreset.value = TemporaryTheme
         appDatabase.themeDao().currentThemeFlow()
             .onEach {
-                CurrentThemePreset.value = it.colors
+                CurrentThemePreset.value = it
             }
             .launchIn(coroutineScope)
     }

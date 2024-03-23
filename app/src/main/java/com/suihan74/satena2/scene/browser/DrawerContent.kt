@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.suihan74.satena2.R
 import com.suihan74.satena2.scene.bookmarks.BookmarksViewModel
+import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
 import com.suihan74.satena2.scene.bookmarks.FakeBookmarksViewModel
 import com.suihan74.satena2.scene.browser.drawer.BookmarksContentHost
 import com.suihan74.satena2.scene.browser.drawer.BrowserBookmarksContentDestination
@@ -76,7 +77,8 @@ fun DrawerContent(
     bookmarksViewModel: BookmarksViewModel,
     prefsViewModel: PrefsBrowserViewModel,
     drawerState: DrawerState,
-    pagerState: PagerState
+    pagerState: PagerState,
+    onSelectBookmark: (DisplayBookmark)->Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val pages = remember { DrawerTab.entries }
@@ -152,7 +154,8 @@ fun DrawerContent(
                         bookmarksViewModel = bookmarksViewModel,
                         bookmarksScrollState = bookmarksScrollState,
                         drawerState = drawerState,
-                        navController = bookmarksNavController
+                        navController = bookmarksNavController,
+                        onSelectBookmark = onSelectBookmark
                     )
                 }
 
@@ -191,6 +194,7 @@ private fun DrawerContentPreview() {
         bookmarksViewModel = FakeBookmarksViewModel(),
         prefsViewModel = com.suihan74.satena2.scene.preferences.page.browser.FakeBrowserViewModel(),
         drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
-        pagerState = rememberPagerState(initialPage = 0) { 4 }
+        pagerState = rememberPagerState(initialPage = 0) { 4 },
+        onSelectBookmark = {}
     )
 }

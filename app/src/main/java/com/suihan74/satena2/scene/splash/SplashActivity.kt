@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -26,6 +28,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.suihan74.satena2.R
+import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
 import com.suihan74.satena2.utility.copyrightYearStr
@@ -37,6 +40,8 @@ import kotlinx.coroutines.launch
 class SplashActivity : ComponentActivity() {
     private val viewModel by viewModels<SplashViewModelImpl>()
 
+    private val themeViewModel by viewModels<ThemeViewModelImpl>()
+
     // ------ //
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +49,8 @@ class SplashActivity : ComponentActivity() {
         viewModel.onCreateActivity(activityResultRegistry, lifecycle)
 
         setContent {
-            Satena2Theme {
+            val theme by themeViewModel.currentThemeFlow.collectAsState()
+            Satena2Theme(theme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     SplashScene(viewModel.versionName)
                 }

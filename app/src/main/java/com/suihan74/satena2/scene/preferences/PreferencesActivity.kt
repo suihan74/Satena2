@@ -172,6 +172,8 @@ class PreferencesActivity : ComponentActivity() {
         generalViewModel.onCreateActivity(activityResultRegistry, lifecycle)
 
         setContent {
+            val theme by themeViewModel.currentThemeFlow.collectAsState()
+
             val longClickVibrationDuration by generalViewModel.longClickVibrationDuration.collectAsState()
 
             val pagerSize = Int.MAX_VALUE
@@ -195,7 +197,7 @@ class PreferencesActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalLongClickVibrationDuration provides longClickVibrationDuration
             ) {
-                Satena2Theme {
+                Satena2Theme(theme) {
                     PreferencesScene(
                         viewModels,
                         categories,

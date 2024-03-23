@@ -63,6 +63,7 @@ import com.suihan74.satena2.scene.preferences.page.ngWords.FakeNgWordsViewModel
 import com.suihan74.satena2.scene.preferences.page.ngWords.NgWordsViewModel
 import com.suihan74.satena2.scene.preferences.page.ngWords.NgWordsViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionDialog
+import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelDialog
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
@@ -97,6 +98,8 @@ private enum class BottomSheetContent {
 class BookmarksActivity : ComponentActivity() {
     private val viewModel by viewModels<BookmarksViewModelImpl>()
 
+    private val themeViewModel by viewModels<ThemeViewModelImpl>()
+
     private val relatedEntriesViewModel by viewModels<RelatedEntriesViewModelImpl>()
 
     private val ngWordsViewModel by viewModels<NgWordsViewModelImpl>()
@@ -109,10 +112,11 @@ class BookmarksActivity : ComponentActivity() {
         relatedEntriesViewModel.onCreateActivity(activityResultRegistry, lifecycle)
 
         setContent {
+            val theme by themeViewModel.currentThemeFlow.collectAsState()
             val longClickVibrationDuration by viewModel.longClickVibrationDuration.collectAsState(40L)
             val useSystemTimeZone by viewModel.useSystemTimeZone.collectAsState(false)
 
-            Satena2Theme {
+            Satena2Theme(theme) {
                 CompositionLocalProvider(
                     LocalLongClickVibrationDuration provides longClickVibrationDuration,
                     LocalUseSystemTimeZone provides useSystemTimeZone

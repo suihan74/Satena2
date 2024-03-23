@@ -11,6 +11,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.suihan74.satena2.scene.bookmarks.BookmarksViewModel
+import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
 import com.suihan74.satena2.scene.browser.BrowserViewModel
 
 enum class BrowserBookmarksContentDestination {
@@ -24,7 +25,8 @@ fun BookmarksContentHost(
     bookmarksViewModel: BookmarksViewModel,
     bookmarksScrollState: LazyListState,
     drawerState: DrawerState,
-    navController: NavHostController
+    navController: NavHostController,
+    onSelectBookmark: (DisplayBookmark)->Unit
 ) {
     val currentUrl by browserViewModel.currentUrl.collectAsState("")
 
@@ -50,7 +52,8 @@ fun BookmarksContentHost(
                 bookmarksViewModel = bookmarksViewModel,
                 lazyListState = bookmarksScrollState,
                 drawerState = drawerState,
-                navController = navController
+                navController = navController,
+                onSelectBookmark = onSelectBookmark
             )
         }
     }

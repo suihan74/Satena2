@@ -33,6 +33,10 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material.rememberDrawerState
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,13 +68,18 @@ import com.google.accompanist.web.WebViewNavigator
 import com.google.accompanist.web.rememberSaveableWebViewState
 import com.suihan74.hatena.HatenaClient
 import com.suihan74.satena2.R
+import com.suihan74.satena2.compose.BookmarkSharingContent
 import com.suihan74.satena2.compose.CombinedIconButton
 import com.suihan74.satena2.compose.OrientatedModalDrawer
 import com.suihan74.satena2.compose.SharingContent
 import com.suihan74.satena2.compose.SwipeRefreshBox
 import com.suihan74.satena2.compose.verticalScrollbar
+import com.suihan74.satena2.scene.bookmarks.BookmarkItemMenuContent
+import com.suihan74.satena2.scene.bookmarks.BookmarkTagsMenuContent
+import com.suihan74.satena2.scene.bookmarks.BookmarkUrlsMenuContent
 import com.suihan74.satena2.scene.bookmarks.BookmarksViewModel
 import com.suihan74.satena2.scene.bookmarks.BookmarksViewModelImpl
+import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
 import com.suihan74.satena2.utility.extension.add
@@ -106,7 +115,8 @@ class BrowserActivity : ComponentActivity() {
         }
 
         setContent {
-            Satena2Theme {
+            val theme by viewModel.theme.collectAsState()
+            Satena2Theme(theme) {
                 BrowserContent(
                     viewModel = viewModel,
                     bookmarksViewModel = bookmarksViewModel,
@@ -161,6 +171,10 @@ private fun BrowserContent(
     val url by viewModel.currentUrl.collectAsState(initial = "")
     val entryUrl = remember(url) { if (url.isBlank()) url else HatenaClient.getEntryUrl(url) }
     val title by viewModel.webChromeClient.titleFlow.collectAsState(initial = "" to "")
+
+    var bookmarkMenuTarget by remember {
+        mutableStateOf<DisplayBookmark?>(null)
+    }
 
     LaunchedEffect(Unit) {
         // ボトムシート表示状態の変化時に処理
@@ -243,6 +257,61 @@ private fun BrowserContent(
                         onInsertBlockedResource = { viewModel.insertBlockedResource(it) }
                     )
                 }
+                // todo: ブクマメニュー
+                composable("bookmarkMenu") {
+                    BookmarkItemMenuContent(
+                        item = bookmarkMenuTarget,
+                        sheetState = bottomSheetState,
+                        onShowRecentBookmarks = {},
+                        onShowBookmarksToItem = {},
+                        onShowUserLabelDialog = {
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+                                //bottomSheetContent = BottomSheetContent.UserLabel
+                                bottomSheetState.show()
+                            }
+                        },
+                        onSelectUrlsMenu = {
+                            bottomNavController.navigate("bookmarkUrlsMenu")
+                        },
+                        onSelectTagsMenu = {
+                            bottomNavController.navigate("bookmarkTagsMenu")
+                        },
+                        onIgnore = {},
+                        onShare = {
+                            bottomNavController.navigate("shareBookmarkMenu")
+                        }
+                    )
+                }
+                composable("bookmarkUrlsMenu") {
+                    BookmarkUrlsMenuContent(
+                        item = bookmarkMenuTarget,
+                        onSelectUrl = {
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+//                                viewModel.openBrowser(it)
+                            }
+                        }
+                    )
+                }
+                composable("bookmarkTagsMenu") {
+                    BookmarkTagsMenuContent(
+                        item = bookmarkMenuTarget,
+                        onSelectTag = {
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+//                                viewModel.launchEntriesActivityForTag(it)
+                            }
+                        }
+                    )
+                }
+                composable("shareBookmarkMenu") {
+                    Column(Modifier.height(300.dp)) {
+                        bookmarkMenuTarget?.let {
+                            BookmarkSharingContent(bookmark = it.bookmark)
+                        }
+                    }
+                }
             }
         }
     ) {
@@ -259,6 +328,15 @@ private fun BrowserContent(
                     prefsViewModel = prefsViewModel,
                     drawerState = drawerState,
                     pagerState = drawerPagerState,
+                    onSelectBookmark = {
+                        bookmarkMenuTarget = it
+                        bottomNavController.navigate("bookmarkMenu") {
+                            popUpTo(0)
+                        }
+                        coroutineScope.launch {
+                            bottomSheetState.show()
+                        }
+                    }
                 )
             }
         ) {

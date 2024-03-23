@@ -5,7 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.webkit.*
+import android.webkit.CookieManager
+import android.webkit.URLUtil
+import android.webkit.WebBackForwardList
+import android.webkit.WebHistoryItem
+import android.webkit.WebView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContract
@@ -21,17 +25,34 @@ import androidx.webkit.WebViewFeature
 import com.suihan74.satena2.model.browser.History
 import com.suihan74.satena2.model.browser.WebViewTheme
 import com.suihan74.satena2.model.dataStore.BrowserPreferences
+import com.suihan74.satena2.model.theme.ThemePreset
 import com.suihan74.satena2.scene.bookmarks.BookmarksActivityContract
 import com.suihan74.satena2.scene.browser.BrowserViewModel.Companion.SYSTEM_URL_ABOUT_BLANK
 import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.utility.ViewModel
 import com.suihan74.satena2.utility.extension.createIntentWithoutThisApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 interface BrowserViewModel {
+    /**
+     * テーマ
+     */
+    val theme : StateFlow<ThemePreset>
+
     /**
      * 表示中ページURL
      */
@@ -206,6 +227,10 @@ class BrowserViewModelImpl @Inject constructor(
     private val browserDataStore: DataStore<BrowserPreferences>,
     private val repo: HistoryRepository
 ) : ViewModel(), BrowserViewModel {
+    /**
+     * テーマ
+     */
+    override val theme = prefsRepo.theme
 
     override val currentUrl = MutableStateFlow("")
 
@@ -695,6 +720,8 @@ class BrowserViewModelImpl @Inject constructor(
 class FakeBrowserViewModel(
     private val coroutineScope: CoroutineScope
 ) : BrowserViewModel {
+    override val theme = MutableStateFlow(ThemePreset())
+
     override val currentUrl = MutableSharedFlow<String>()
 
     override val backForwardList = MutableStateFlow<WebBackForwardList?>(null)

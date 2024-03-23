@@ -65,6 +65,7 @@ import com.suihan74.satena2.scene.entries.bottomSheet.ExcludedEntriesList
 import com.suihan74.satena2.scene.entries.bottomSheet.SearchSettingContent
 import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
 import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionDialog
+import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
 import com.suihan74.satena2.utility.argument
@@ -84,17 +85,20 @@ import kotlin.math.roundToInt
 class EntriesActivity : ComponentActivity() {
     private val viewModel by viewModels<EntriesViewModelImpl>()
 
+    private val themeViewModel by viewModels<ThemeViewModelImpl>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.onCreateActivity(activityResultRegistry, lifecycle, intent)
 
         setContent {
+            val theme by themeViewModel.currentThemeFlow.collectAsState()
             val navController = rememberNavController()
             val longClickVibrationDuration by viewModel.longClickVibrationDuration.collectAsState(40L)
             val useSystemTimeZone by viewModel.useSystemTimeZone.collectAsState(false)
             val initialTabsMap by viewModel.initialTabs.collectAsState(emptyMap())
 
-            Satena2Theme {
+            Satena2Theme(theme) {
                 CompositionLocalProvider(
                     LocalLongClickVibrationDuration provides longClickVibrationDuration,
                     LocalUseSystemTimeZone provides useSystemTimeZone,

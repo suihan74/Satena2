@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
+import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,6 +32,8 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class HatenaAuthenticationActivity : ComponentActivity() {
     private val viewModel by viewModels<HatenaAuthenticationViewModelImpl>()
+    
+    private val themeViewModel by viewModels<ThemeViewModelImpl>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +48,8 @@ class HatenaAuthenticationActivity : ComponentActivity() {
         }
 
         setContent {
-            Satena2Theme {
+            val theme by themeViewModel.currentThemeFlow.collectAsState()
+            Satena2Theme(theme) {
                 HatenaAuthorizationContent(viewModel)
             }
         }

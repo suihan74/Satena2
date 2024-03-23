@@ -2,17 +2,21 @@ package com.suihan74.satena2.scene.preferences
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.DialogProperties
 import androidx.datastore.core.DataStore
 import com.suihan74.satena2.Application
+import com.suihan74.satena2.hilt.ApplicationModule.appDatabase
 import com.suihan74.satena2.model.dataStore.Preferences
+import com.suihan74.satena2.model.theme.ThemePreset
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,7 +24,14 @@ interface PreferencesRepository {
     /**
      * 設定データストア
      */
-    val dataStore : DataStore<Preferences>
+    val dataStore: DataStore<Preferences>
+
+    // ------ //
+
+    /**
+     * アプリテーマ
+     */
+    val theme: StateFlow<ThemePreset>
 
     // ------ //
 
@@ -50,6 +61,21 @@ class PreferencesRepositoryImpl @Inject constructor(
 ) : PreferencesRepository {
 
     private var updaterJobs : HashMap<String, Job?> = HashMap()
+
+    // ------ //
+
+    /**
+     * アプリテーマ
+     */
+    override val theme: StateFlow<ThemePreset> =
+        application.appDatabase.themeDao().currentThemeFlow()
+            .stateIn(
+                scope = application.coroutineScope,
+                started = SharingStarted.Lazily,
+                initialValue = ThemePreset()
+            )
+
+    // ------ //
 
     /**
      * 値更新に連動して設定用データストアを更新する`MutableStateFlow`を生成する

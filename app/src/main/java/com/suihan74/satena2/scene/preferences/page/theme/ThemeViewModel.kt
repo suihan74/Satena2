@@ -9,6 +9,7 @@ import com.suihan74.satena2.model.theme.InvalidThemePresetNameError
 import com.suihan74.satena2.model.theme.ThemePreset
 import com.suihan74.satena2.model.theme.ThemePresetDuplicationError
 import com.suihan74.satena2.model.theme.default.DefaultThemePresetLight
+import com.suihan74.satena2.model.theme.default.TemporaryTheme
 import com.suihan74.satena2.scene.preferences.page.FakePreferencesPageViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.IPreferencePageViewModel
 import com.suihan74.satena2.scene.preferences.page.PreferencePageViewModel
@@ -17,6 +18,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -77,7 +81,12 @@ class ThemeViewModelImpl @Inject constructor(
     /**
      * 現在アプリに適用されているテーマ
      */
-    override val currentThemeFlow: Flow<ThemePreset> = dao.currentThemeFlow()
+    override val currentThemeFlow: StateFlow<ThemePreset> =
+        dao.currentThemeFlow().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = TemporaryTheme
+        )
 
     // ------ //
 

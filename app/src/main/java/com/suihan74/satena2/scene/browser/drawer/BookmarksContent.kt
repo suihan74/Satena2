@@ -28,6 +28,7 @@ import com.suihan74.satena2.R
 import com.suihan74.satena2.scene.bookmarks.BookmarksTab
 import com.suihan74.satena2.scene.bookmarks.BookmarksTabContent
 import com.suihan74.satena2.scene.bookmarks.BookmarksViewModel
+import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
 import com.suihan74.satena2.scene.bookmarks.FakeBookmarksViewModel
 import com.suihan74.satena2.ui.theme.CurrentTheme
 
@@ -40,7 +41,8 @@ fun BookmarksContent(
     bookmarksViewModel: BookmarksViewModel,
     lazyListState: LazyListState,
     drawerState: DrawerState,
-    navController: NavController
+    navController: NavController,
+    onSelectBookmark: (DisplayBookmark)->Unit
 ) {
     var additionalAreaVisible by remember { mutableStateOf(false) }
     var currentTab by remember { mutableStateOf(BookmarksTab.RECENT) }
@@ -130,7 +132,7 @@ fun BookmarksContent(
                         Column(
                             Modifier.height(contentHeight)
                         ) {
-                            BookmarksTab.values().forEach { tab ->
+                            BookmarksTab.entries.forEach { tab ->
                                 Box(
                                     Modifier
                                         .fillMaxWidth()
@@ -165,7 +167,8 @@ fun BookmarksContent(
             tab = currentTab,
             lazyListState = lazyListState,
             bookmarks = items,
-            navController = navController
+            navController = navController,
+            onShowBookmarkItemMenu = onSelectBookmark
         )
     }
 
@@ -183,6 +186,7 @@ private fun BookmarksContentPreview() {
         bookmarksViewModel = FakeBookmarksViewModel(),
         lazyListState = rememberLazyListState(),
         drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
-        navController = rememberNavController()
+        navController = rememberNavController(),
+        onSelectBookmark = {}
     )
 }

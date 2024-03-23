@@ -15,11 +15,13 @@ import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.suihan74.satena2.model.theme.ThemePreset
 import com.suihan74.satena2.model.theme.default.DefaultThemePresetLight
+import com.suihan74.satena2.model.theme.default.TemporaryTheme
 import com.suihan74.satena2.serializer.ColorSerializer
 import com.suihan74.satena2.utility.extension.grayScale
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,14 +43,28 @@ private val lightColorPalette = lightColors(
     onSurface = Color(0x0, 0x0, 0x0)
 )
 
-val CurrentThemePreset = MutableStateFlow(DefaultThemePresetLight.colors)
+val CurrentThemePreset = MutableStateFlow(DefaultThemePresetLight)
 
 /** 現在使用中のテーマ */
+val LocalTheme = compositionLocalOf { CurrentThemePreset.value }
+
 val CurrentTheme
-    @Composable get() = CurrentThemePreset.collectAsState().value
+    @Composable get() = LocalTheme.current.colors
+
+/** 現在使用中のテーマ */
+//val CurrentTheme
+//    @Composable get() = CurrentThemePreset.collectAsState().value
 
 @Composable
-fun Satena2Theme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun Satena2Theme(
+    theme: ThemePreset,
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    val t =
+        if (theme == TemporaryTheme) LocalTheme.current
+        else theme
+
     val colors =
         if (darkTheme) darkColorPalette
         else lightColorPalette
@@ -56,20 +72,20 @@ fun Satena2Theme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
     // タイトルバーの色
     val systemUiController = rememberSystemUiController()
     systemUiController.setStatusBarColor(
-        color = CurrentTheme.titleBarBackground,
-        darkIcons = CurrentTheme.titleBarOnBackground.grayScale() < 0.5f
+        color = t.colors.titleBarBackground,
+        darkIcons = t.colors.titleBarOnBackground.grayScale() < 0.5f
     )
 
     // 選択テキストのハイライトカラー
     val textSelectionColors = TextSelectionColors(
-        handleColor = CurrentTheme.primary,
-        backgroundColor = CurrentTheme.primary.copy(alpha = 0.4f)
+        handleColor = t.colors.primary,
+        backgroundColor = t.colors.primary.copy(alpha = 0.4f)
     )
 
     // クリック時の背景色
-    val rippleColor = CurrentTheme.ripple
+    val rippleColor = t.colors.ripple
     // clickable用
-    val indicationColor = rememberRipple(color = CurrentTheme.ripple, bounded = true)
+    val indicationColor = rememberRipple(color = t.colors.ripple, bounded = true)
     // アイコンボタン用
     val buttonRippleColor = remember {
         object : RippleTheme {
@@ -99,6 +115,7 @@ fun Satena2Theme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
             LocalIndication provides indicationColor,
             LocalRippleTheme provides buttonRippleColor,
             LocalTextSelectionColors provides textSelectionColors,
+            LocalTheme provides t,
             content = content
         )
     }

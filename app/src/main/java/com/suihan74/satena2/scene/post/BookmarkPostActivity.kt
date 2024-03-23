@@ -94,6 +94,7 @@ import com.suihan74.satena2.compose.CombinedIconButton
 import com.suihan74.satena2.compose.HorizontalScrollableIndicator
 import com.suihan74.satena2.compose.MarqueeText
 import com.suihan74.satena2.compose.Tooltip
+import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
 import com.suihan74.satena2.utility.extension.putObjectExtra
@@ -109,11 +110,9 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 
 /** コンテンツの標準的な高さ */
-@Suppress("PrivatePropertyName")
 private val DEFAULT_CONTENT_HEIGHT = 154.dp
 
 /** タグリストコンテンツの標準的な高さ */
-@Suppress("PrivatePropertyName")
 private val TAGS_LIST_CONTENT_HEIGHT = 300.dp
 
 /** 遷移アニメーションの所要時間 */
@@ -122,6 +121,8 @@ private const val TRANSITION_DELAY = 200
 @AndroidEntryPoint
 class BookmarkPostActivity : ComponentActivity() {
     private val viewModel by viewModels<BookmarkPostViewModelImpl>()
+
+    private val themeViewModel by viewModels<ThemeViewModelImpl>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -145,7 +146,8 @@ class BookmarkPostActivity : ComponentActivity() {
             .launchIn(lifecycleScope)
 
         setContent {
-            Satena2Theme {
+            val theme by themeViewModel.currentThemeFlow.collectAsState()
+            Satena2Theme(theme) {
 //                BookmarkPostContent(viewModel)
                 BookmarkPostPage(viewModel) {
                     setCancelResult()
