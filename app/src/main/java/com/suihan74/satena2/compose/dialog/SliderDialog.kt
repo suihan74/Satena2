@@ -3,11 +3,19 @@ package com.suihan74.satena2.compose.dialog
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Slider
+import androidx.compose.material.SliderColors
+import androidx.compose.material.SliderDefaults
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,14 +48,14 @@ fun SliderDialog(
     onValueChanged: (Float)->Unit = {},
     onCompleted: (Float)->Boolean = { true }
 ) {
-    val sliderValue = remember { mutableStateOf(initialValue) }
+    val sliderValue = remember { mutableFloatStateOf(initialValue) }
     val interactionSource = remember { MutableInteractionSource() }
     LaunchedEffect(Unit) {
         interactionSource.interactions
             .onEach {
                 when (it) {
                     is DragInteraction.Stop, is PressInteraction.Release -> {
-                        onValueChanged(sliderValue.value)
+                        onValueChanged(sliderValue.floatValue)
                     }
                     else -> {}
                 }
@@ -59,11 +67,11 @@ fun SliderDialog(
         titleText = titleText,
         negativeButton = DialogButton(stringResource(R.string.cancel)) { onDismissRequest() },
         positiveButton = DialogButton(stringResource(R.string.ok)) {
-            onCompleted(sliderValue.value)
+            onCompleted(sliderValue.floatValue)
             onDismissRequest()
         },
         neutralButton = neutralButton,
-        modifier = Modifier,
+        modifier = modifier,
         properties = properties,
         widthRatio = widthRatio,
         colors = colors.customDialogColors,
@@ -78,11 +86,11 @@ fun SliderDialog(
                 )
             }
             Slider(
-                value = sliderValue.value,
+                value = sliderValue.floatValue,
                 valueRange = min .. max,
                 steps = steps,
                 onValueChange = {
-                    sliderValue.value = it
+                    sliderValue.floatValue = it
                 },
                 interactionSource = interactionSource,
                 colors = colors.sliderColors(),
