@@ -27,7 +27,6 @@ import com.suihan74.satena2.utility.hatena.users
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NoticesContent(
-    id: String,
     viewModel: EntriesViewModel,
     notices: List<Notice>,
     loading: Boolean,

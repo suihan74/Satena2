@@ -72,7 +72,6 @@ fun BookmarkDetailContent(
                     .padding(it)
             ) {
                 BookmarkArea(
-                    viewModel = viewModel,
                     item = displayItem,
                     modifier = Modifier.fillMaxWidth(),
                     onShowBookmarkItemMenu = onShowBookmarkItemMenu
@@ -107,7 +106,6 @@ fun BookmarkDetailContent(
 
 @Composable
 private fun BookmarkArea(
-    viewModel: BookmarksViewModel,
     item: DisplayBookmark,
     modifier: Modifier = Modifier,
     onShowBookmarkItemMenu: (DisplayBookmark)->Unit

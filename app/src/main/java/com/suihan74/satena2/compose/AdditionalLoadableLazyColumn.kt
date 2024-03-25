@@ -7,9 +7,19 @@ import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -34,7 +44,8 @@ fun Modifier.verticalScrollbar(
     val duration = if (state.isScrollInProgress) 150 else 500
     val alpha by animateFloatAsState(
         targetValue = targetAlpha,
-        animationSpec = tween(duration)
+        animationSpec = tween(duration),
+        label = ""
     )
     return drawWithContent {
         drawContent()
@@ -97,7 +108,7 @@ inline fun <T> AdditionalLoadableLazyColumn(
  * 末端へのスクロールによる追加ロードに対応したリストUI
  */
 @Composable
-fun <T> AdditionalLoadableLazyColumn(
+fun AdditionalLoadableLazyColumn(
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -108,7 +119,6 @@ fun <T> AdditionalLoadableLazyColumn(
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     flingBehavior: FlingBehavior = ScrollableDefaults.flingBehavior(),
     onAppearLastItem: ((Int) -> Unit)? = null,
-    key: ((T)->Any)? = null,
     content: LazyListScope.() -> Unit
 ) {
     LazyColumn(

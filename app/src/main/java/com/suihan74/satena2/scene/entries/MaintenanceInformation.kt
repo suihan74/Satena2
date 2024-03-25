@@ -28,7 +28,6 @@ import com.suihan74.satena2.utility.extension.zonedString
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MaintenanceInformationContent(
-    id: String,
     viewModel: EntriesViewModel,
     entries: List<MaintenanceEntry>,
     loading: Boolean,

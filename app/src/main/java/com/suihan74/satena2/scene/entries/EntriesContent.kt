@@ -108,7 +108,6 @@ fun EntriesContent(
             val loading by viewModel.loadingStateFlow(destination).collectAsState()
 
             NoticesContent(
-                id = id,
                 viewModel = viewModel,
                 notices = notices,
                 loading = loading,
@@ -123,7 +122,6 @@ fun EntriesContent(
             val loading by viewModel.loadingStateFlow(destination).collectAsState()
 
             MaintenanceInformationContent(
-                id = id,
                 viewModel = viewModel,
                 entries = maintenanceEntries,
                 loading = loading,
