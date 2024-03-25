@@ -44,7 +44,7 @@ class WebChromeClient(
                 _faviconFlow.emit(url to icon)
             }
         }
-        view.copyBackForwardList()?.let {
+        view.copyBackForwardList().let {
             backForwardList.value = it
         }
     }
