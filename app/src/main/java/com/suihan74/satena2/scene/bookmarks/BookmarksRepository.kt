@@ -126,7 +126,7 @@ interface BookmarksRepository {
     /**
      * 指定の[Bookmark]から表示用の[DisplayBookmark]を作成する
      */
-    fun makeDisplayBookmark(bookmark: Bookmark, eid: Long) : DisplayBookmark
+    suspend fun makeDisplayBookmark(bookmark: Bookmark, eid: Long) : DisplayBookmark
 
     // ------ //
 
@@ -274,10 +274,12 @@ class BookmarksRepositoryImpl @Inject constructor(
     /**
      * エンティティからユーザーのブクマを抽出する
      */
-    private fun extractMyBookmark(entity: Entity, user: String) : DisplayBookmark? {
+    private suspend fun extractMyBookmark(entity: Entity, user: String) : DisplayBookmark? {
         with(entity) {
             entry.bookmarkedData?.let {
-                return it.toBookmark().toDisplayBookmark(entity.entry.eid)
+                return it.toBookmark().toDisplayBookmark(entity.entry.eid).also { d ->
+                    loadStarsToBookmarks(entry, listOf(d.bookmark))
+                }
             }
             allBookmarksFlow.value.firstOrNull { it.bookmark.user == user }?.let {
                 return it
@@ -286,7 +288,9 @@ class BookmarksRepositoryImpl @Inject constructor(
                 return it
             }
             bookmarksEntry.bookmarks.firstOrNull { it.user == user }?.let {
-                return it.toBookmark(entity.bookmarksEntry).toDisplayBookmark(entity.entry.eid)
+                return it.toBookmark(entity.bookmarksEntry).toDisplayBookmark(entity.entry.eid).also { d ->
+                    loadStarsToBookmarks(entry, listOf(d.bookmark))
+                }
             }
         }
         return null
@@ -360,10 +364,15 @@ class BookmarksRepositoryImpl @Inject constructor(
                                 referredBlogEntries = emptyList(),
                                 scoredBookmarks = emptyList(),
                                 favoriteBookmarks = emptyList()
-                            ).also {
-                                loadStarsToBookmarks(entryImpl, it.scoredBookmarks)
-                                loadStarsToBookmarks(entryImpl, it.favoriteBookmarks)
-                            }
+                            )
+                        }.also { d ->
+                            loadStarsToBookmarks(
+                                entryImpl,
+                                sequenceOf(
+                                    d.scoredBookmarks,
+                                    d.favoriteBookmarks
+                                ).flatten().distinct().toList()
+                            )
                         }
                     },
                     async {
@@ -674,50 +683,48 @@ class BookmarksRepositoryImpl @Inject constructor(
         val accountName = hatenaRepo.account.value?.name
         val ignoredUsers = ignoredUsersFlow.value
 
-        return starsMapMutex.withLock {
-            when (tab) {
-                // todo: BookmarksTab.CUSTOM
+        return when (tab) {
+            // todo: BookmarksTab.CUSTOM
 
-                BookmarksTab.DIGEST -> {
-                    // todo: フィルタするかどうかを選べるようにする
-                    filtersMutex.withLock {
-                        bookmarks
-                            .filter { b ->
-                                val isMyBookmark = b.user == accountName
-                                val notNgUser = !ignoredUsers.contains(b.user)
-                                val notBlankComment = b.comment.isNotBlank()
-                                val notMuted = filters.none { it.match(b) }
-                                isMyBookmark || notNgUser && notBlankComment && notMuted
-                            }
-                            .map { b -> b.toDisplayBookmark(eid) }
-                    }
+            BookmarksTab.DIGEST -> {
+                // todo: フィルタするかどうかを選べるようにする
+                filtersMutex.withLock {
+                    bookmarks
+                        .filter { b ->
+                            val isMyBookmark = b.user == accountName
+                            val notNgUser = !ignoredUsers.contains(b.user)
+                            val notBlankComment = b.comment.isNotBlank()
+                            val notMuted = filters.none { it.match(b) }
+                            isMyBookmark || notNgUser && notBlankComment && notMuted
+                        }
+                        .map { b -> b.toDisplayBookmark(eid) }
                 }
+            }
 
-                BookmarksTab.RECENT -> {
-                    filtersMutex.withLock {
-                        bookmarks
-                            .filter { b ->
-                                val isMyBookmark = b.user == accountName
-                                val notNgUser = !ignoredUsers.contains(b.user)
-                                val notBlankComment = b.comment.isNotBlank()
-                                val notMuted = filters.none { it.match(b) }
-                                isMyBookmark || notNgUser && notBlankComment && notMuted
-                            }
-                            .map { b -> b.toDisplayBookmark(eid) }
-                    }
+            BookmarksTab.RECENT -> {
+                filtersMutex.withLock {
+                    bookmarks
+                        .filter { b ->
+                            val isMyBookmark = b.user == accountName
+                            val notNgUser = !ignoredUsers.contains(b.user)
+                            val notBlankComment = b.comment.isNotBlank()
+                            val notMuted = filters.none { it.match(b) }
+                            isMyBookmark || notNgUser && notBlankComment && notMuted
+                        }
+                        .map { b -> b.toDisplayBookmark(eid) }
                 }
+            }
 
-                else -> {
-                    filtersMutex.withLock {
-                        bookmarks
-                            .map { b -> b.toDisplayBookmark(eid) }
-                            .let { list ->
-                                myBookmarkFlow.value?.let { my ->
-                                    if (list.any { it.bookmark.user == my.bookmark.user }) list
-                                    else list.plus(my)
-                                } ?: list
-                            }
-                    }
+            else -> {
+                filtersMutex.withLock {
+                    bookmarks
+                        .map { b -> b.toDisplayBookmark(eid) }
+                        .let { list ->
+                            myBookmarkFlow.value?.let { my ->
+                                if (list.any { it.bookmark.user == my.bookmark.user }) list
+                                else list.plus(my)
+                            } ?: list
+                        }
                 }
             }
         }
@@ -726,13 +733,16 @@ class BookmarksRepositoryImpl @Inject constructor(
     private val idCallRegex = Regex("""(^|[^a-zA-Z0-9])id:([a-zA-Z0-9_]+)""")
     private val urlRegex = Regex("""https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
 
-    private fun Bookmark.toDisplayBookmark(eid: Long) : DisplayBookmark {
+    private suspend fun Bookmark.toDisplayBookmark(eid: Long) : DisplayBookmark {
         val ignoredUsers = ignoredUsersFlow.value
         val formatter = DateTimeFormatter.ofPattern("uuuuMMdd")
         val zoneOffset = ZoneOffset.ofHours(9)
         val date = formatter.format(timestamp.atOffset(zoneOffset))
         val url = "${HatenaClient.baseUrlB}${user}/$date#bookmark-$eid"
-        val starsEntry = starsMap[url] ?: MutableStateFlow(StarsEntry(url = "", stars = emptyList()))
+        val starsEntry =
+            starsMapMutex.withLock {
+                starsMap.getOrPut(url) { MutableStateFlow(StarsEntry(url = "", stars = emptyList())) }
+            }
 
         val mentions = buildList {
             val bookmarksEntry = entityFlow.value.bookmarksEntry
@@ -777,7 +787,7 @@ class BookmarksRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun makeDisplayBookmark(bookmark: Bookmark, eid: Long) : DisplayBookmark = bookmark.toDisplayBookmark(eid)
+    override suspend fun makeDisplayBookmark(bookmark: Bookmark, eid: Long) : DisplayBookmark = bookmark.toDisplayBookmark(eid)
 
     /**
      * ユーザーを非表示にする
