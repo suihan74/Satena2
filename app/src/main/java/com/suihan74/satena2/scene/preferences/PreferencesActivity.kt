@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.Icon
@@ -176,8 +177,11 @@ class PreferencesActivity : ComponentActivity() {
 
             val longClickVibrationDuration by generalViewModel.longClickVibrationDuration.collectAsState()
 
-            val pagerSize = Int.MAX_VALUE
-            val startIndex = pagerSize / 2
+            // 無限ループ`HorizontalPager`がバグる件
+            // https://issuetracker.google.com/issues/326887746
+
+            val pagerSize = PreferencesCategory.entries.size //Int.MAX_VALUE
+            val startIndex = 0 //pagerSize / 2
             val pagerState = rememberPagerState(initialPage = startIndex) { pagerSize }
             val categories = remember { PreferencesCategory.entries.toTypedArray() }
             val pageCount = remember(categories) { categories.size }
