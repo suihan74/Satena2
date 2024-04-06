@@ -79,14 +79,24 @@ import kotlinx.coroutines.launch
 // ------ //
 
 private enum class BottomSheetContent {
+    /** ブランク */
     Empty,
+    /** エントリを共有 */
     ShareEntry,
+    /** エントリに対するメニュー */
     EntryMenu,
+    /** ブクマに対するメニュー */
     BookmarkMenu,
+    /** ブクマを共有 */
     ShareBookmark,
+    /** ユーザーラベルの設定 */
     UserLabel,
+    /** ブクマに含まれるリンク一覧 */
     Urls,
-    Tags
+    /** ブクマに含まれるタグ一覧 */
+    Tags,
+    /** ブクマを通報 */
+    Report
 }
 
 // ------ //
@@ -294,6 +304,13 @@ private fun BookmarksScene(
                                 shareBookmarkTarget.value = it
                                 bottomSheetState.show()
                             }
+                        },
+                        onReport = {
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.Report
+                                bottomSheetState.show()
+                            }
                         }
                     )
                 }
@@ -360,6 +377,28 @@ private fun BookmarksScene(
                                 coroutineScope.launch {
                                     bottomSheetState.hide()
                                     viewModel.launchEntriesActivityForTag(it)
+                                }
+                            }
+                        )
+                    }
+                }
+
+                // ブクマを報告
+                BottomSheetContent.Report -> {
+                    if (bottomMenuTarget?.bookmark == null) {
+                        Box(Modifier.height(1.dp))
+                    }
+                    else {
+                        ReportBookmarkContent(
+                            entry = entity.entry,
+                            item = bottomMenuTarget,
+                            onReport = {
+                                coroutineScope.launch {
+                                    runCatching {
+                                        viewModel.report(it)
+                                    }.onSuccess {
+                                        bottomSheetState.hide()
+                                    }
                                 }
                             }
                         )

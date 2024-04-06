@@ -8,6 +8,7 @@ import com.suihan74.hatena.model.bookmark.BookmarkResult
 import com.suihan74.hatena.model.bookmark.BookmarksDigest
 import com.suihan74.hatena.model.bookmark.BookmarksEntry
 import com.suihan74.hatena.model.bookmark.BookmarksResponse
+import com.suihan74.hatena.model.bookmark.Report
 import com.suihan74.hatena.model.entry.Entry
 import com.suihan74.hatena.model.entry.EntryItem
 import com.suihan74.hatena.model.entry.IssueEntry
@@ -122,6 +123,11 @@ interface BookmarksRepository {
      * ユーザーが非表示か否か
      */
     fun isIgnored(user: String) : Boolean
+
+    /**
+     * ブクマを通報する
+     */
+    suspend fun report(report: Report)
 
     /**
      * 指定の[Bookmark]から表示用の[DisplayBookmark]を作成する
@@ -808,6 +814,15 @@ class BookmarksRepositoryImpl @Inject constructor(
      */
     override fun isIgnored(user: String) : Boolean {
         return ignoredUsersFlow.value.contains(user)
+    }
+
+    /**
+     * ブクマを通報する
+     */
+    override suspend fun report(report: Report) {
+        hatenaRepo.withSignedClient { client ->
+            client.bookmark.report(report)
+        }
     }
 
     // ------ //

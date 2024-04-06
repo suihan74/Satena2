@@ -12,6 +12,7 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.suihan74.satena2.R
@@ -36,6 +37,7 @@ fun BookmarkItemMenuContent(
     onShare: (DisplayBookmark)->Unit = {},
     onFollow: (DisplayBookmark)->Unit = {},
     onIgnore: (DisplayBookmark)->Unit = {},
+    onReport: (DisplayBookmark)->Unit = {}
 ) {
     if (item == null) {
         Box(Modifier.fillMaxHeight())
@@ -106,7 +108,12 @@ fun BookmarkItemMenuContent(
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_add_ng_word)) {}
             }
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_report)) {}
+                BottomSheetMenuItem(
+                    text = stringResource(R.string.bookmark_menu_report),
+                    color = Color(0xFD, 0x82, 0x82, 0xFF)
+                ) {
+                    onReport(item)
+                }
             }
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_manage_user_labels)) {

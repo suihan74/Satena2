@@ -231,6 +231,14 @@
     <string name="bookmark_unmute_user_succeeded_msg">id:%sの非表示を解除しました</string>
     <string name="bookmark_unmute_user_failure_msg">ユーザー非表示解除失敗</string>
 
+    <!-- ReportBookmarkContent -->
+    <string name="report_bookmark_title">ブックマークを通報</string>
+    <string name="report_bookmark_reason_desc">通報理由</string>
+    <string name="report_bookmark_comment_desc">詳細</string>
+    <string name="report_bookmark_comment_placeholder">このブックマークを報告した理由など、お気付きの点があればご記入ください。（任意）</string>
+    <string name="report_bookmark_success_msg">通報完了</string>
+    <string name="report_bookmark_failure_msg">通報に失敗しました</string>
+
     <!-- ====================================================================== -->
     <!-- PostBookmarkActivity -->
 

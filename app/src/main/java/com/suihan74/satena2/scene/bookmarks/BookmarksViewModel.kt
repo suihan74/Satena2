@@ -16,6 +16,7 @@ import com.suihan74.hatena.HatenaClient
 import com.suihan74.hatena.model.account.Account
 import com.suihan74.hatena.model.account.Notice
 import com.suihan74.hatena.model.bookmark.Bookmark
+import com.suihan74.hatena.model.bookmark.Report
 import com.suihan74.hatena.model.entry.Entry
 import com.suihan74.satena2.R
 import com.suihan74.satena2.model.userLabel.Label
@@ -177,6 +178,11 @@ interface BookmarksViewModel : DialogPropertiesProvider {
      * ブコメ検索クエリを登録する
      */
     fun setSearchQuery(query: String)
+
+    /**
+     * ブクマを通報する
+     */
+    suspend fun report(report: Report)
 
     // ------ //
 
@@ -531,6 +537,20 @@ class BookmarksViewModelImpl @Inject constructor(
         return if (query.isBlank()) list
         else list.filter { b ->
             b.bookmark.comment.contains(query) || b.bookmark.user.contains(query) || b.bookmark.tags.any { it.contains(query) }
+        }
+    }
+
+    /**
+     * ブクマを通報する
+     */
+    override suspend fun report(report: Report) {
+        runCatching {
+            repository.report(report)
+        }.onSuccess {
+            context.showToast(R.string.report_bookmark_success_msg)
+        }.onFailure {
+            context.showToast(R.string.report_bookmark_failure_msg)
+            throw it
         }
     }
 
@@ -914,6 +934,9 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     }
 
     override suspend fun toggleIgnore(user: String) {
+    }
+
+    override suspend fun report(report: Report) {
     }
 
     // ------ //
