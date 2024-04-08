@@ -80,7 +80,7 @@ fun ReportBookmarkContent(
             )
             // 通報理由
             Text(
-                text = selectedReason.name,
+                text = stringResource(selectedReason.textId),
                 color = CurrentTheme.onBackground,
                 modifier = Modifier
                     .clickable { dropdownExpanded = true }
@@ -99,7 +99,7 @@ fun ReportBookmarkContent(
                         }
                     ) {
                         Text(
-                            text = r.name,
+                            text = stringResource(r.textId),
                             color = CurrentTheme.onBackground
                         )
                     }
@@ -162,3 +162,16 @@ fun ReportBookmarkContent(
         }
     }
 }
+
+// ------
+
+/**
+ * 通報理由に対応したテキストID
+ */
+val Report.Reason.textId : Int get() =
+    when(this) {
+        Report.Reason.SPAM -> R.string.report_reason_spam
+        Report.Reason.CRIME -> R.string.report_reason_crime
+        Report.Reason.INSULT -> R.string.report_reason_insult
+        Report.Reason.OTHERS -> R.string.report_reason_others
+    }

@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -19,31 +17,31 @@ import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.BottomSheetMenuItem
 import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.ui.theme.CurrentTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
  * ブクマ項目のボトムメニューダイアログコンテンツ
  */
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BookmarkItemMenuContent(
     item: DisplayBookmark?,
-    sheetState: ModalBottomSheetState,
-    onShowRecentBookmarks: (DisplayBookmark)->Unit = {},
-    onShowBookmarksToItem: (DisplayBookmark)->Unit = {},
-    onShowUserLabelDialog: (DisplayBookmark)->Unit = {},
-    onSelectUrlsMenu: (DisplayBookmark)->Unit = {},
-    onSelectTagsMenu: (DisplayBookmark)->Unit = {},
-    onShare: (DisplayBookmark)->Unit = {},
-    onFollow: (DisplayBookmark)->Unit = {},
-    onIgnore: (DisplayBookmark)->Unit = {},
-    onReport: (DisplayBookmark)->Unit = {}
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+    onShowRecentBookmarks: suspend (DisplayBookmark)->Unit,
+    onShowBookmarksToItem: suspend (DisplayBookmark)->Unit,
+    onShowUserLabelDialog: suspend (DisplayBookmark)->Unit,
+    onSelectUrlsMenu: suspend (DisplayBookmark)->Unit,
+    onSelectTagsMenu: suspend (DisplayBookmark)->Unit,
+    onSelectNgWordsMenu: suspend (DisplayBookmark)->Unit,
+    onShare: suspend (DisplayBookmark)->Unit,
+    onFollow: suspend (DisplayBookmark)->Unit,
+    onIgnore: suspend (DisplayBookmark)->Unit,
+    onReport: suspend (DisplayBookmark)->Unit
 ) {
     if (item == null) {
         Box(Modifier.fillMaxHeight())
         return
     }
-    val coroutineScope = rememberCoroutineScope()
     Column {
         Spacer(Modifier.height(12.dp))
         BookmarkItem(item = item, clickable = false)
@@ -55,42 +53,48 @@ fun BookmarkItemMenuContent(
         ) {
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_show_recent_bookmarks)) {
-                    onShowRecentBookmarks(item)
-                    coroutineScope.launch { sheetState.hide() }
+                    coroutineScope.launch {
+                        onShowRecentBookmarks(item)
+                    }
                 }
             }
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_show_bookmarks_to_bookmark)) {
-                    onShowBookmarksToItem(item)
-                    coroutineScope.launch { sheetState.hide() }
+                    coroutineScope.launch {
+                        onShowBookmarksToItem(item)
+                    }
                 }
             }
             if (item.urls.isNotEmpty()) {
                 item {
                     BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_links)) {
-                        onSelectUrlsMenu(item)
+                        coroutineScope.launch {
+                            onSelectUrlsMenu(item)
+                        }
                     }
                 }
             }
             if (item.bookmark.tags.isNotEmpty()) {
                 item {
                     BottomSheetMenuItem(text = stringResource(R.string.tag)) {
-                        onSelectTagsMenu(item)
+                        coroutineScope.launch {
+                            onSelectTagsMenu(item)
+                        }
                     }
                 }
             }
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_share)) {
                     coroutineScope.launch {
-                        sheetState.hide()
                         onShare(item)
                     }
                 }
             }
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_follow)) {
-                    onFollow(item)
-                    coroutineScope.launch { sheetState.hide() }
+                    coroutineScope.launch {
+                        onFollow(item)
+                    }
                 }
             }
             item {
@@ -100,24 +104,33 @@ fun BookmarkItemMenuContent(
                         else R.string.bookmark_menu_mute
                     )
                 ) {
-                    onIgnore(item)
-                    coroutineScope.launch { sheetState.hide() }
+                    coroutineScope.launch {
+                        onIgnore(item)
+                    }
                 }
             }
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_add_ng_word)) {}
+                BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_add_ng_word)) {
+                    coroutineScope.launch {
+                        onSelectNgWordsMenu(item)
+                    }
+                }
             }
             item {
                 BottomSheetMenuItem(
                     text = stringResource(R.string.bookmark_menu_report),
                     color = Color(0xFD, 0x82, 0x82, 0xFF)
                 ) {
-                    onReport(item)
+                    coroutineScope.launch {
+                        onReport(item)
+                    }
                 }
             }
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_manage_user_labels)) {
-                    onShowUserLabelDialog(item)
+                    coroutineScope.launch {
+                        onShowUserLabelDialog(item)
+                    }
                 }
             }
         }

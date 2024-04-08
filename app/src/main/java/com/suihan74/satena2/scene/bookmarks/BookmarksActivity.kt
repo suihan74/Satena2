@@ -272,45 +272,52 @@ private fun BookmarksScene(
                 BottomSheetContent.BookmarkMenu -> {
                     BookmarkItemMenuContent(
                         item = bottomMenuTarget,
-                        sheetState = bottomSheetState,
-                        onShowRecentBookmarks = { viewModel.launchEntriesActivityForUser(it) },
-                        onShowBookmarksToItem = { viewModel.launchBookmarksActivityToBookmark(it) },
+                        coroutineScope = coroutineScope,
+                        onShowRecentBookmarks = {
+                            viewModel.launchEntriesActivityForUser(it)
+                            bottomSheetState.hide()
+                        },
+                        onShowBookmarksToItem = {
+                            viewModel.launchBookmarksActivityToBookmark(it)
+                            bottomSheetState.hide()
+                        },
                         onShowUserLabelDialog = {
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-                                bottomSheetContent = BottomSheetContent.UserLabel
-                                bottomSheetState.show()
-                            }
+                            bottomSheetState.hide()
+                            bottomSheetContent = BottomSheetContent.UserLabel
+                            bottomSheetState.show()
                         },
                         onSelectUrlsMenu = {
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-                                bottomSheetContent = BottomSheetContent.Urls
-                                bottomSheetState.show()
-                            }
+                            bottomSheetState.hide()
+                            bottomSheetContent = BottomSheetContent.Urls
+                            bottomSheetState.show()
                         },
                         onSelectTagsMenu = {
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-                                bottomSheetContent = BottomSheetContent.Tags
-                                bottomSheetState.show()
-                            }
+                            bottomSheetState.hide()
+                            bottomSheetContent = BottomSheetContent.Tags
+                            bottomSheetState.show()
                         },
-                        onIgnore = { ignoreUserDialogTarget.value = it },
+                        onSelectNgWordsMenu = {
+                            // todo
+                            bottomSheetState.hide()
+                        },
+                        onFollow = {
+                            // todo
+                            bottomSheetState.hide()
+                        },
+                        onIgnore = {
+                            ignoreUserDialogTarget.value = it
+                            bottomSheetState.hide()
+                        },
                         onShare = {
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-                                bottomSheetContent = BottomSheetContent.ShareBookmark
-                                shareBookmarkTarget.value = it
-                                bottomSheetState.show()
-                            }
+                            bottomSheetState.hide()
+                            bottomSheetContent = BottomSheetContent.ShareBookmark
+                            shareBookmarkTarget.value = it
+                            bottomSheetState.show()
                         },
                         onReport = {
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-                                bottomSheetContent = BottomSheetContent.Report
-                                bottomSheetState.show()
-                            }
+                            bottomSheetState.hide()
+                            bottomSheetContent = BottomSheetContent.Report
+                            bottomSheetState.show()
                         }
                     )
                 }

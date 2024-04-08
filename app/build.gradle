@@ -118,7 +118,7 @@ dependencies {
     implementation "androidx.work:work-runtime-ktx:$work_version"
 
     // Hatena Client
-    implementation 'com.github.suihan74:hatenaclient-kotlin:0.0.30'
+    implementation 'com.github.suihan74:hatenaclient-kotlin:0.0.32'
 
     // Mastodon client
     def mastodon4j_version = '1.7.0'

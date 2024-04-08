@@ -299,16 +299,18 @@ private fun BrowserContent(
                 // todo: ブクマメニュー
                 composable("bookmarkMenu") {
                     BookmarkItemMenuContent(
+                        coroutineScope = coroutineScope,
                         item = bookmarkMenuTarget,
-                        sheetState = bottomSheetState,
-                        onShowRecentBookmarks = {},
-                        onShowBookmarksToItem = {},
+                        onShowRecentBookmarks = {
+                            // todo
+                        },
+                        onShowBookmarksToItem = {
+                            // todo
+                        },
                         onShowUserLabelDialog = {
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-                                //bottomSheetContent = BottomSheetContent.UserLabel
-                                bottomSheetState.show()
-                            }
+                            bottomSheetState.hide()
+                            //bottomSheetContent = BottomSheetContent.UserLabel
+                            bottomSheetState.show()
                         },
                         onSelectUrlsMenu = {
                             bottomNavController.navigate("bookmarkUrlsMenu")
@@ -316,9 +318,20 @@ private fun BrowserContent(
                         onSelectTagsMenu = {
                             bottomNavController.navigate("bookmarkTagsMenu")
                         },
-                        onIgnore = {},
+                        onSelectNgWordsMenu = {
+                            // todo
+                        },
+                        onFollow = {
+                            // todo
+                        },
+                        onIgnore = {
+                            // todo
+                        },
                         onShare = {
                             bottomNavController.navigate("shareBookmarkMenu")
+                        },
+                        onReport = {
+                            // todo
                         }
                     )
                 }

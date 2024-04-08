@@ -1,6 +1,7 @@
 package com.suihan74.satena2.scene.bookmarks
 
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
@@ -550,6 +551,7 @@ class BookmarksViewModelImpl @Inject constructor(
             context.showToast(R.string.report_bookmark_success_msg)
         }.onFailure {
             context.showToast(R.string.report_bookmark_failure_msg)
+            Log.e("ReportBookmark", it.stackTraceToString())
             throw it
         }
     }

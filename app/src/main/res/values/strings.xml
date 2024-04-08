@@ -239,6 +239,12 @@
     <string name="report_bookmark_success_msg">通報完了</string>
     <string name="report_bookmark_failure_msg">通報に失敗しました</string>
 
+    <!-- Report.Reason -->
+    <string name="report_reason_spam">スパム行為</string>
+    <string name="report_reason_crime">犯罪予告</string>
+    <string name="report_reason_insult">差別、中傷、嫌がらせ</string>
+    <string name="report_reason_others">その他</string>
+
     <!-- ====================================================================== -->
     <!-- PostBookmarkActivity -->
 
