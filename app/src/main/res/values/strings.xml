@@ -442,6 +442,13 @@
     <string name="ng_word_setting_target_desc">ミュート対象</string>
     <string name="ng_word_setting_target_entry">エントリ</string>
     <string name="ng_word_setting_target_bookmark">ブコメ</string>
+
+    <string name="ng_word_setting_placeholder_for_text">非表示対象のキーワード</string>
+    <string name="ng_word_setting_desc_for_text">↑の文字列を含むエントリ(orブコメ)を非表示にする</string>
+
+    <string name="ng_word_setting_placeholder_for_url">非表示対象のURL</string>
+    <string name="ng_word_setting_desc_for_url">↑から始まるURLのエントリを非表示にする</string>
+
     <string name="ng_word_setting_msg_insert_success">「%s」を非表示にしました</string>
     <string name="ng_word_setting_msg_insert_duplication_error">重複する項目です</string>
     <string name="ng_word_setting_msg_insert_empty_error">クエリが一文字も入力されていません</string>

@@ -2,7 +2,13 @@ package com.suihan74.satena2.scene.preferences.page.ngWords.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Text
@@ -10,6 +16,7 @@ import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,26 +45,6 @@ import com.suihan74.satena2.utility.focusKeyboardRequester
 import com.suihan74.satena2.utility.rememberMutableTextFieldValue
 
 /**
- * URLテキストフィールドの初期選択範囲を作成する
- *
- * deleteキーいっぱつで選択範囲を一括で消せるようにするための処置
- *
- * TwitterやNoteの場合は"twitter.com/userName"より後の部分にする
- */
-private fun makeUrlInitialSelection(query: String) : TextRange {
-    val domains = listOf(
-        "twitter.com/", "note.com/"
-    )
-    val separatorIdx =
-        domains.firstOrNull { query.startsWith(it) }
-            ?.let { query.indexOf('/', startIndex = it.length) }
-            ?: query.indexOf('/')
-
-    return if (separatorIdx < 0) TextRange(0, query.length)
-    else TextRange(separatorIdx + if (separatorIdx == query.lastIndex) 0 else 1, query.length)
-}
-
-/**
  * 非表示設定を追加/更新するためのダイアログ
  *
  * @param item 編集元の非表示設定（これを渡すと更新モードで表示する）
@@ -78,7 +65,7 @@ fun NgWordEditionDialog(
     val urlInitialSelection = remember { makeUrlInitialSelection(item?.query ?: initialUrl) }
     val urlQuery = rememberMutableTextFieldValue(text = item?.query ?: initialUrl, selection = urlInitialSelection)
     val textQuery = rememberMutableTextFieldValue(text = item?.query ?: initialText)
-    val selectedTabIndex = remember { mutableStateOf(initialTabIndex) }
+    val selectedTabIndex = remember { mutableIntStateOf(initialTabIndex) }
     val asRegexChecked = remember { mutableStateOf(item?.asRegex ?: false) }
     val ignoreEntryChecked = remember { mutableStateOf(item?.target?.contains(IgnoreTarget.ENTRY) ?: true) }
     val ignoreCommentChecked = remember { mutableStateOf(item?.target?.contains(IgnoreTarget.BOOKMARK) ?: true) }
@@ -87,7 +74,7 @@ fun NgWordEditionDialog(
         else R.string.ng_word_setting_dialog_title_edition
     }
 
-    when (selectedTabIndex.value) {
+    when (selectedTabIndex.intValue) {
         IgnoredEntryType.TEXT.ordinal -> {
             NgWordEditionDialogImpl(
                 title = stringResource(titleTextId),
@@ -185,7 +172,7 @@ private fun NgWordEditionDialogImpl(
                         .padding(bottom = 12.dp)
                 ) {
                     MultiToggleButton(
-                        items = IgnoredEntryType.values().map { it.name },
+                        items = IgnoredEntryType.entries.map { it.name },
                         selectedIndex = selectedTabIndex,
                         colors = themedMultiToggleButtonColors(),
                         horizontalPadding = 40.dp
@@ -220,7 +207,7 @@ private fun DialogContentForText(
         TextField(
             value = textFieldValue.value,
             onValueChange = { textFieldValue.value = it },
-            placeholder = { Text("非表示対象のキーワード") },
+            placeholder = { Text(stringResource(R.string.ng_word_setting_placeholder_for_text)) },
             colors = TextFieldDefaults.textFieldColors(
                 textColor = CurrentTheme.onBackground,
                 placeholderColor = CurrentTheme.grayTextColor,
@@ -235,7 +222,7 @@ private fun DialogContentForText(
                 .focusRequester(focusRequester)
         )
         Text(
-            text = "↑の文字列を含むエントリ(orブコメ)を非表示にする",
+            text = stringResource(R.string.ng_word_setting_desc_for_text),
             color = CurrentTheme.onBackground
         )
         Row(
@@ -316,7 +303,7 @@ private fun DialogContentForUrl(urlQuery: MutableState<TextFieldValue>) {
                 focusedIndicatorColor = CurrentTheme.primary,
                 trailingIconColor = CurrentTheme.primary
             ),
-            placeholder = { Text("非表示対象のURL") },
+            placeholder = { Text(stringResource(R.string.ng_word_setting_placeholder_for_url)) },
             maxLines = 3,
             keyboardOptions = keyboardOptions,
             modifier = Modifier
@@ -324,10 +311,32 @@ private fun DialogContentForUrl(urlQuery: MutableState<TextFieldValue>) {
                 .focusRequester(focusRequester)
         )
         Text(
-            text = "↑から始まるURLのエントリを非表示にする",
+            text = stringResource(R.string.ng_word_setting_desc_for_url),
             color = CurrentTheme.onBackground
         )
     }
+}
+
+// ------ //
+
+/**
+ * URLテキストフィールドの初期選択範囲を作成する
+ *
+ * deleteキーいっぱつで選択範囲を一括で消せるようにするための処置
+ *
+ * TwitterやNoteの場合は"twitter.com/userName"より後の部分にする
+ */
+private fun makeUrlInitialSelection(query: String) : TextRange {
+    val domains = listOf(
+        "twitter.com/", "note.com/"
+    )
+    val separatorIdx =
+        domains.firstOrNull { query.startsWith(it) }
+            ?.let { query.indexOf('/', startIndex = it.length) }
+            ?: query.indexOf('/')
+
+    return if (separatorIdx < 0) TextRange(0, query.length)
+    else TextRange(separatorIdx + if (separatorIdx == query.lastIndex) 0 else 1, query.length)
 }
 
 // ------ //
