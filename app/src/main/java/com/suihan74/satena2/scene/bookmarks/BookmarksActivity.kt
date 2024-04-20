@@ -536,7 +536,10 @@ private fun BookmarksScene(
         CustomDialog(
             title = {
                 Text(
-                    if (target.ignoredUser) "ユーザー非表示を解除" else "ユーザー非表示"
+                    stringResource(
+                        if (target.ignoredUser) R.string.unmute_user_dialog_title
+                        else R.string.mute_user_dialog_title
+                    )
                 )
             },
             negativeButton = DialogButton(stringResource(R.string.cancel)) {
@@ -553,8 +556,11 @@ private fun BookmarksScene(
             Column {
                 BookmarkItem(item = target, clickable = false)
                 Text(
-                    if (target.ignoredUser) "id:${target.bookmark.user}の非表示を解除します。よろしいですか？"
-                    else "id:${target.bookmark.user}を非表示にします。よろしいですか？"
+                    stringResource(
+                        if (target.ignoredUser) R.string.unmute_user_dialog_confirm_msg
+                        else R.string.mute_user_dialog_confirm_msg,
+                        target.bookmark.user
+                    )
                 )
             }
         }

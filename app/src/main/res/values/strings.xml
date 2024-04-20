@@ -226,10 +226,16 @@
     <string name="bookmark_menu_report">通報</string>
     <string name="bookmark_menu_manage_user_labels">ユーザーラベル</string>
 
-    <string name="bookmark_mute_user_succeeded_msg">id:%sを非表示しました</string>
-    <string name="bookmark_mute_user_failure_msg">ユーザー非表示失敗</string>
-    <string name="bookmark_unmute_user_succeeded_msg">id:%sの非表示を解除しました</string>
-    <string name="bookmark_unmute_user_failure_msg">ユーザー非表示解除失敗</string>
+    <!-- ユーザー非表示 -->
+    <string name="mute_user_dialog_title">ユーザー非表示</string>
+    <string name="unmute_user_dialog_title">ユーザー非表示を解除</string>
+    <string name="mute_user_dialog_confirm_msg">id:%sを非表示にします。よろしいですか？</string>
+    <string name="unmute_user_dialog_confirm_msg">id:%sの非表示を解除します。よろしいですか？</string>
+
+    <string name="mute_user_succeeded_msg">id:%sを非表示しました</string>
+    <string name="mute_user_failure_msg">ユーザー非表示失敗</string>
+    <string name="unmute_user_succeeded_msg">id:%sの非表示を解除しました</string>
+    <string name="unmute_user_failure_msg">ユーザー非表示解除失敗</string>
 
     <!-- ReportBookmarkContent -->
     <string name="report_bookmark_title">ブックマークを通報</string>

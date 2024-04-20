@@ -672,10 +672,10 @@ class BookmarksViewModelImpl @Inject constructor(
                 repository.unIgnoreUser(user)
             }.onSuccess {
                 context.showToast(
-                    text = context.getString(R.string.bookmark_unmute_user_succeeded_msg, user)
+                    text = context.getString(R.string.unmute_user_succeeded_msg, user)
                 )
             }.onFailure {
-                context.showToast(R.string.bookmark_unmute_user_failure_msg)
+                context.showToast(R.string.unmute_user_failure_msg)
             }
         }
         else {
@@ -683,10 +683,10 @@ class BookmarksViewModelImpl @Inject constructor(
                 repository.ignoreUser(user)
             }.onSuccess {
                 context.showToast(
-                    text = context.getString(R.string.bookmark_mute_user_succeeded_msg, user)
+                    text = context.getString(R.string.mute_user_succeeded_msg, user)
                 )
             }.onFailure {
-                context.showToast(R.string.bookmark_mute_user_failure_msg)
+                context.showToast(R.string.mute_user_failure_msg)
             }
         }
     }
