@@ -298,15 +298,17 @@ private fun EntriesScene(
                         onDeleteBookmark = { viewModel.removeBookmark(it) }
                     )
 
-                    NgWordEditionDialog(
-                        initialText = menuTargetItem!!.entry.title,
-                        initialUrl = menuTargetItem!!.entry.url.trimScheme(),
-                        isError = { text, asRegex -> viewModel.isNgRegexError(text, asRegex) },
-                        visibility = ngWordEditionDialogVisible,
-                        properties = viewModel.dialogProperties()
-                    ) {
-                        viewModel.insertNgWord(it).onTrue {
-                            bottomSheetState.hide()
+                    ngWordEditionDialogVisible.value.onTrue {
+                        NgWordEditionDialog(
+                            initialText = menuTargetItem!!.entry.title,
+                            initialUrl = menuTargetItem!!.entry.url.trimScheme(),
+                            isError = { text, asRegex -> viewModel.isNgRegexError(text, asRegex) },
+                            onDismiss = { ngWordEditionDialogVisible.value = false },
+                            properties = viewModel.dialogProperties()
+                        ) {
+                            viewModel.insertNgWord(it).onTrue {
+                                bottomSheetState.hide()
+                            }
                         }
                     }
                 }

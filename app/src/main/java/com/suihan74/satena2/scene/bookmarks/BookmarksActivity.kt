@@ -53,6 +53,7 @@ import com.suihan74.satena2.compose.OrientatedModalDrawer
 import com.suihan74.satena2.compose.VerticalGradientEdge
 import com.suihan74.satena2.compose.dialog.CustomDialog
 import com.suihan74.satena2.compose.dialog.DialogButton
+import com.suihan74.satena2.model.ignoredEntry.IgnoredEntryType
 import com.suihan74.satena2.scene.entries.Category
 import com.suihan74.satena2.scene.entries.DisplayEntry
 import com.suihan74.satena2.scene.entries.EntryActionHandler
@@ -192,6 +193,9 @@ private fun BookmarksScene(
     // エントリの既読マークを使用するかのフラグ
     val entryReadMarkVisible by viewModel.recordReadEntriesEnabled.collectAsState()
 
+    // ブクマのNGワード設定編集対象
+    var ngWordTarget by remember { mutableStateOf<DisplayBookmark?>(null) }
+
     val onShowEntryMenu: (DisplayEntry)->Unit = {
         entryMenuTarget = it
         bottomSheetContent = BottomSheetContent.EntryMenu
@@ -229,7 +233,7 @@ private fun BookmarksScene(
 
                 // エントリメニュー
                 BottomSheetContent.EntryMenu -> {
-                    val ngWordEditionDialogVisible = remember { mutableStateOf(false) }
+                    var ngWordEditionDialogVisible by remember { mutableStateOf(false) }
                     EntryItemMenuContent(
                         item = entryMenuTarget,
                         sheetState = bottomSheetState,
@@ -243,22 +247,24 @@ private fun BookmarksScene(
                         onNavigateSiteCategory = { entryActionHandler.navigateSiteCategory(it.entry.rootUrl, navController) },
                         onFavorite = { /* todo */ },
                         onUnFavorite = { /* todo */ },
-                        onCreateNgWord = { ngWordEditionDialogVisible.value = true },
+                        onCreateNgWord = { ngWordEditionDialogVisible = true },
                         onRead = { entry, isPrivate -> entryActionHandler.readEntry(entry, isPrivate) },
                         onReadLater = { entry, isPrivate -> entryActionHandler.readLaterEntry(entry, isPrivate) },
                         onDeleteReadMark = { entryActionHandler.removeReadMark(it) },
                         onDeleteBookmark = { entryActionHandler.removeBookmark(it) }
                     )
 
-                    NgWordEditionDialog(
-                        initialText = entryMenuTarget!!.entry.title,
-                        initialUrl = entryMenuTarget!!.entry.url.trimScheme(),
-                        isError = { text, asRegex -> ngWordsViewModel.isNgRegexError(text, asRegex) },
-                        visibility = ngWordEditionDialogVisible,
-                        properties = viewModel.dialogProperties()
-                    ) {
-                        ngWordsViewModel.insert(it.toIgnoredEntry()).onTrue {
-                            bottomSheetState.hide()
+                    ngWordEditionDialogVisible.onTrue {
+                        NgWordEditionDialog(
+                            initialText = entryMenuTarget!!.entry.title,
+                            initialUrl = entryMenuTarget!!.entry.url.trimScheme(),
+                            isError = { text, asRegex -> ngWordsViewModel.isNgRegexError(text, asRegex) },
+                            properties = viewModel.dialogProperties(),
+                            onDismiss = { ngWordEditionDialogVisible = false }
+                        ) {
+                            ngWordsViewModel.insert(it.toIgnoredEntry()).onTrue {
+                                bottomSheetState.hide()
+                            }
                         }
                     }
                 }
@@ -297,7 +303,7 @@ private fun BookmarksScene(
                             bottomSheetState.show()
                         },
                         onSelectNgWordsMenu = {
-                            // todo
+                            ngWordTarget = it
                             bottomSheetState.hide()
                         },
                         onFollow = {
@@ -528,6 +534,21 @@ private fun BookmarksScene(
             coroutineScope.launch {
                 bottomSheetState.hide()
             }
+        }
+    }
+
+    // NGワード追加
+    ngWordTarget?.let { target ->
+        NgWordEditionDialog(
+            initialText = target.bookmark.comment,
+            initialUrl = target.bookmark.link,
+            initialTabIndex = IgnoredEntryType.TEXT.ordinal,
+            isError = { text, asRegex -> ngWordsViewModel.isNgRegexError(text, asRegex) },
+            properties = viewModel.dialogProperties(),
+            onDismiss = { ngWordTarget = null }
+        ) {
+            ngWordsViewModel.insert(it.toIgnoredEntry())
+
         }
     }
 

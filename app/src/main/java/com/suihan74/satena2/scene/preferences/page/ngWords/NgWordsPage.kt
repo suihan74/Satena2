@@ -23,12 +23,12 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.AnimatedListItem
-import com.suihan74.satena2.compose.emptyFooter
 import com.suihan74.satena2.compose.MultiToggleButton
 import com.suihan74.satena2.compose.combinedClickable
 import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
+import com.suihan74.satena2.compose.emptyFooter
 import com.suihan74.satena2.model.ignoredEntry.IgnoreTarget
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntry
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntryType
@@ -159,8 +159,8 @@ private fun Dialogs(
             item = item,
             initialTabIndex = selectedTabIndex,
             isError = { text, asRegex -> viewModel.isNgRegexError(text, asRegex) },
-            visibility = isNgWordSettingDialogVisible,
-            properties = viewModel.dialogProperties()
+            properties = viewModel.dialogProperties(),
+            onDismiss = { isNgWordSettingDialogVisible.value = false }
         ) {
             if (item == null) viewModel.insertNgSetting(it)
             else viewModel.updateNgSetting(item, it)

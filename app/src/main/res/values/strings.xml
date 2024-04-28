@@ -454,6 +454,12 @@
     <string name="ng_word_setting_msg_insert_empty_error">クエリが一文字も入力されていません</string>
     <string name="ng_word_setting_msg_insert_regex_error">正規表現が間違っています</string>
 
+    <string name="ng_word_setting_msg_delete_success">NGワードを削除しました</string>
+    <string name="ng_word_setting_msg_delete_failure">NGワード削除失敗</string>
+
+    <string name="ng_word_setting_msg_update_success">NGワードを更新しました</string>
+    <string name="ng_word_setting_msg_others_error">NGワード更新失敗</string>
+
     <!-- 設定「テーマ」ページのコンテンツ -->
     <string name="pref_theme_background">背景</string>
     <string name="pref_theme_on_background">文字</string>

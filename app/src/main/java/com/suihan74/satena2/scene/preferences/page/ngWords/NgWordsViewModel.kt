@@ -1,7 +1,6 @@
 package com.suihan74.satena2.scene.preferences.page.ngWords
 
 import android.content.Context
-import android.widget.Toast
 import androidx.lifecycle.viewModelScope
 import com.suihan74.satena2.R
 import com.suihan74.satena2.model.ignoredEntry.IgnoreTarget
@@ -14,6 +13,7 @@ import com.suihan74.satena2.scene.preferences.page.PreferencePageViewModel
 import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionResult
 import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionResult.Companion.update
 import com.suihan74.satena2.utility.extension.alsoAsMutable
+import com.suihan74.satena2.utility.extension.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -37,30 +37,14 @@ interface NgWordsUpdater {
     /**
      * 挿入・更新時のエラーハンドラ
      */
-    fun handleUpdateNgWordErrors(context: Context, e: Throwable) {
-        when (e) {
-            is NgWordDuplicationError -> {
-                Toast.makeText(
-                    context,
-                    R.string.ng_word_setting_msg_insert_duplication_error,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            is EmptyNgQueryError -> {
-                Toast.makeText(
-                    context,
-                    R.string.ng_word_setting_msg_insert_empty_error,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            is IllegalArgumentException -> {
-                Toast.makeText(
-                    context,
-                    R.string.ng_word_setting_msg_insert_regex_error,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+    suspend fun handleUpdateNgWordErrors(context: Context, e: Throwable) {
+        val textId = when (e) {
+            is NgWordDuplicationError -> R.string.ng_word_setting_msg_insert_duplication_error
+            is EmptyNgQueryError -> R.string.ng_word_setting_msg_insert_empty_error
+            is IllegalArgumentException -> R.string.ng_word_setting_msg_insert_regex_error
+            else -> R.string.ng_word_setting_msg_others_error
         }
+        context.showToast(textId)
     }
 }
 
@@ -123,7 +107,7 @@ interface NgWordsViewModel : IPreferencePageViewModel, NgWordsUpdater {
 @HiltViewModel
 class NgWordsViewModelImpl @Inject constructor(
     private val repository : NgWordsRepository,
-    private val prefsRepository : PreferencesRepository
+    prefsRepository : PreferencesRepository
 ) :
     NgWordsViewModel,
     PreferencePageViewModel(prefsRepository.dataStore)
@@ -153,7 +137,13 @@ class NgWordsViewModelImpl @Inject constructor(
                     throw IllegalArgumentException()
                 }
                 repository.insert(entry)
-            }.onFailure { handleUpdateNgWordErrors(context, it) }
+            }.onSuccess {
+                context.showToast(
+                    context.getString(R.string.ng_word_setting_msg_insert_success, entry.query)
+                )
+            }.onFailure {
+                handleUpdateNgWordErrors(context, it)
+            }
         return result.isSuccess
     }
 
@@ -164,19 +154,21 @@ class NgWordsViewModelImpl @Inject constructor(
                     throw IllegalArgumentException()
                 }
                 repository.update(entry)
-            }.onFailure { handleUpdateNgWordErrors(context, it) }
+            }.onSuccess {
+                context.showToast(R.string.ng_word_setting_msg_update_success)
+            }.onFailure {
+                handleUpdateNgWordErrors(context, it)
+            }
         return result.isSuccess
     }
 
     override suspend fun delete(entry: IgnoredEntry): Boolean {
         runCatching {
             repository.delete(entry)
+        }.onSuccess {
+            context.showToast(R.string.ng_word_setting_msg_delete_success)
         }.onFailure {
-            Toast.makeText(
-                context,
-                "何かあって削除失敗",  // TODO
-                Toast.LENGTH_SHORT
-            ).show()
+            context.showToast(R.string.ng_word_setting_msg_delete_failure)
         }
         return true
     }

@@ -52,16 +52,14 @@ import com.suihan74.satena2.utility.rememberMutableTextFieldValue
 @Composable
 fun NgWordEditionDialog(
     item: IgnoredEntry? = null,
-    visibility: MutableState<Boolean>,
     initialText: String = "",
     initialUrl: String = "",
     initialTabIndex: Int = item?.type?.ordinal ?: 0,
     properties: DialogProperties = DialogProperties(),
     isError: (String, Boolean) -> Boolean = { _, _ -> false },
+    onDismiss: ()->Unit,
     onRegistration: (suspend (NgWordEditionResult)->Boolean)? = null
 ) {
-    if (!visibility.value) return
-
     val urlInitialSelection = remember { makeUrlInitialSelection(item?.query ?: initialUrl) }
     val urlQuery = rememberMutableTextFieldValue(text = item?.query ?: initialUrl, selection = urlInitialSelection)
     val textQuery = rememberMutableTextFieldValue(text = item?.query ?: initialText)
@@ -86,8 +84,8 @@ fun NgWordEditionDialog(
                 asRegexChecked = asRegexChecked.value,
                 item = item,
                 properties = properties,
-                visibility = visibility,
-                onRegistration = onRegistration
+                onRegistration = onRegistration,
+                onDismiss = onDismiss
             ) {
                 DialogContentForText(
                     textQuery,
@@ -110,8 +108,8 @@ fun NgWordEditionDialog(
                 asRegexChecked = asRegexChecked.value,
                 item = item,
                 properties = properties,
-                visibility = visibility,
-                onRegistration = onRegistration
+                onRegistration = onRegistration,
+                onDismiss = onDismiss
             ) {
                 DialogContentForUrl(urlQuery)
             }
@@ -129,9 +127,9 @@ private fun NgWordEditionDialogImpl(
     ignoreCommentChecked: Boolean,
     asRegexChecked: Boolean,
     properties: DialogProperties,
-    visibility: MutableState<Boolean>,
     item: IgnoredEntry? = null,
     onRegistration: (suspend (NgWordEditionResult)->Boolean)? = null,
+    onDismiss: ()->Unit,
     content: @Composable ()->Unit = {}
 ) {
     CustomDialog(
@@ -149,14 +147,14 @@ private fun NgWordEditionDialogImpl(
             val result = onRegistration?.invoke(args) ?: true
 
             if (result) {
-                visibility.value = false
+                onDismiss()
             }
         },
         negativeButton = dialogButton(R.string.cancel) {
-            visibility.value = false
+            onDismiss()
         },
         colors = themedCustomDialogColors(),
-        onDismissRequest = { visibility.value = false },
+        onDismissRequest = onDismiss,
         properties = properties,
     ) {
         Column(
@@ -347,7 +345,7 @@ private fun InsertModePreview() {
     val visibility = remember { mutableStateOf(true) }
     Box(Modifier.fillMaxSize()) {
         NgWordEditionDialog(
-            visibility = visibility
+            onDismiss = { visibility.value = false }
         )
     }
 }
@@ -359,7 +357,7 @@ private fun EditModePreview() {
     Box(Modifier.fillMaxSize()) {
         NgWordEditionDialog(
             item = IgnoredEntry.createDummy(),
-            visibility = visibility
+            onDismiss = { visibility.value = false }
         )
     }
 }
