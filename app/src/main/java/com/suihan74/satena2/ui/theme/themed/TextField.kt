@@ -25,3 +25,31 @@ fun themedTextFieldColors(
     unfocusedLabelColor = unfocusedLabelColor,
     trailingIconColor = trailingIconColor
 )
+
+@Composable
+fun themedTextFieldColors3(
+    focusedTextColor: Color = CurrentTheme.onBackground,
+    unfocusedTextColor: Color = CurrentTheme.onBackground,
+    containerColor: Color = CurrentTheme.background,
+    placeholderColor: Color = CurrentTheme.grayTextColor,
+    cursorColor: Color = CurrentTheme.primary,
+    focusedIndicatorColor: Color = CurrentTheme.primary,
+    unfocusedIndicatorColor: Color = CurrentTheme.primary.copy(alpha = TextFieldDefaults.UnfocusedIndicatorLineOpacity),
+    focusedLabelColor: Color = CurrentTheme.primary,
+    unfocusedLabelColor: Color = CurrentTheme.grayTextColor,
+    focusedLeadingIconColor: Color = CurrentTheme.primary,
+    unfocusedLeadingIconColor: Color = CurrentTheme.primary,
+) = androidx.compose.material3.TextFieldDefaults.colors(
+    focusedTextColor = focusedTextColor,
+    unfocusedTextColor = unfocusedTextColor,
+    focusedContainerColor = containerColor,
+    unfocusedContainerColor = containerColor,
+    disabledContainerColor = containerColor,
+    cursorColor = cursorColor,
+    focusedIndicatorColor = focusedIndicatorColor,
+    unfocusedIndicatorColor = unfocusedIndicatorColor,
+    focusedLeadingIconColor = focusedLeadingIconColor,
+    unfocusedLeadingIconColor = unfocusedLeadingIconColor,
+    focusedLabelColor = focusedLabelColor,
+    unfocusedLabelColor = unfocusedLabelColor,
+)

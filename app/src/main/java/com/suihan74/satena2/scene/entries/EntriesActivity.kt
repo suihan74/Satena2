@@ -41,6 +41,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -177,6 +178,7 @@ private fun EntriesScene(
     onClickCategoryItem : suspend (Category) -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerAlignment by viewModel.drawerAlignment.collectAsState(initial = Alignment.Start)
@@ -234,6 +236,14 @@ private fun EntriesScene(
 
     // 既読マークを使用するかのフラグ
     val entryReadMarkVisible by viewModel.recordReadEntriesEnabled.collectAsState()
+
+    // ボトムシートの開閉と同時にキーボードを閉じる
+    LaunchedEffect(Unit) {
+        snapshotFlow { bottomSheetState.isVisible }
+            .collect {
+                softwareKeyboardController?.hide()
+            }
+    }
 
     ModalBottomSheetLayout(
         sheetState = bottomSheetState,

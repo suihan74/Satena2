@@ -1,18 +1,19 @@
 package com.suihan74.satena2.scene.entries.bottomSheet
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -20,13 +21,23 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.DateRangePickerDefaults
+import androidx.compose.material3.DisplayMode
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -44,16 +55,21 @@ import androidx.compose.ui.window.DialogProperties
 import com.suihan74.hatena.model.entry.SearchType
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.BottomSheetMenuItem
+import com.suihan74.satena2.compose.dialog.CustomDialog
 import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.NumberPickerDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
+import com.suihan74.satena2.ui.theme.themed.themedDatePickerColors
 import com.suihan74.satena2.ui.theme.themed.themedTextFieldColors
-import com.suihan74.satena2.utility.focusKeyboardRequester
 import com.suihan74.satena2.utility.hatena.textId
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * 検索設定
@@ -75,7 +91,26 @@ data class SearchSetting(
 
 // ------ //
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
+object SearchSettingSelectableDates : SelectableDates {
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+        val now = LocalDateTime.now()
+        val tomorrowTimeMillis = now.plusDays(1).let {
+            LocalDateTime.of(it.year, it.month, it.dayOfMonth, 0, 0, 0)
+                .toEpochSecond(ZoneOffset.UTC) * 1000
+        }
+        return utcTimeMillis < tomorrowTimeMillis
+    }
+
+    override fun isSelectableYear(year: Int): Boolean {
+        val now = LocalDateTime.now()
+        return year >= 2005 && year <= now.year
+    }
+}
+
+// ------ //
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchSettingContent(
     value: SearchSetting,
@@ -94,24 +129,42 @@ fun SearchSettingContent(
         )
     ) }
 
+    val searchTypeDialogVisible = remember { mutableStateOf(false) }
+    val bookmarksCountDialogVisible = remember { mutableStateOf(false) }
+
+    var datePickerVisible by remember { mutableStateOf(false) }
+    val datePickerState = rememberDateRangePickerState(
+        yearRange = 2005..LocalDateTime.now().year,
+        selectableDates = SearchSettingSelectableDates
+    )
+    var pickedDateStart by remember { mutableStateOf<ZonedDateTime?>(null) }
+    var pickedDateEnd by remember { mutableStateOf<ZonedDateTime?>(null) }
+    val datePickerText =
+        if (pickedDateStart == null || pickedDateEnd == null) stringResource(R.string.search_setting_sheet_date_range_none)
+        else {
+            val f = DateTimeFormatter.ofPattern("uuuu/M/d")
+            val startDate = f.format(pickedDateStart)
+            val endDate = f.format(pickedDateEnd)
+            "$startDate - $endDate"
+        }
+
     fun searchAction() {
         loading.value = true
         val searchSetting = SearchSetting(
             query = textFieldValue.value.text,
             searchType = searchType.value,
             bookmarksCount = bookmarksCount.intValue,
+            dateBegin = pickedDateStart?.toInstant(),
+            dateEnd = pickedDateEnd?.toInstant(),
             safe = safe.value
         )
         onSearch(searchSetting)
         loading.value = false
     }
 
-    val focusRequester = focusKeyboardRequester()
+    val focusRequester = remember { FocusRequester() }
     val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search)
     val keyboardActions = KeyboardActions(onSearch = { searchAction() })
-
-    val searchTypeDialogVisible = remember { mutableStateOf(false) }
-    val bookmarksCountDialogVisible = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         loading.value = false
@@ -156,11 +209,17 @@ fun SearchSettingContent(
                 )
             }
             BottomSheetMenuItem(
-                onClick = { /* todo */ }
+                onClick = {
+                    datePickerState.displayMode = DisplayMode.Picker
+                    datePickerState.setSelection(
+                        startDateMillis = pickedDateStart?.let { it.toEpochSecond() * 1000 },
+                        endDateMillis = pickedDateEnd?.let { it.toEpochSecond() * 1000 }
+                    )
+                    datePickerVisible = true
+                }
             ) {
                 Text(
-                    // todo
-                    stringResource(R.string.search_setting_sheet_date_range_label)
+                    stringResource(R.string.search_setting_sheet_date_range_label, datePickerText)
                 )
             }
             BottomSheetMenuItem(
@@ -208,7 +267,7 @@ fun SearchSettingContent(
 
     if (searchTypeDialogVisible.value) {
         MenuDialog(
-            titleText = stringResource(R.string.search_setting_sheet_search_type_label),
+            titleText = stringResource(R.string.search_setting_sheet_search_type_title),
             menuItems = SearchType.entries
                 .map {
                     menuDialogItem(textId = it.textId) {
@@ -228,7 +287,7 @@ fun SearchSettingContent(
         NumberPickerDialog(
             range = IntRange(0, 1000),
             current = countValue,
-            titleText = stringResource(R.string.search_setting_sheet_bookmarks_count_label),
+            titleText = stringResource(R.string.search_setting_sheet_bookmarks_count_title),
             positiveButton = dialogButton(R.string.ok) {
                 bookmarksCount.intValue = countValue.intValue
                 bookmarksCountDialogVisible.value = false
@@ -238,6 +297,58 @@ fun SearchSettingContent(
             colors = themedCustomDialogColors(),
             properties = dialogProperties
         )
+    }
+
+    if (datePickerVisible) {
+        CustomDialog(
+            colors = themedCustomDialogColors(),
+            properties = dialogProperties,
+            title = { Spacer(Modifier.height(12.dp)) },
+            onDismissRequest = { datePickerVisible = false },
+            positiveButton = dialogButton(textId = R.string.ok) {
+                if (datePickerState.selectedStartDateMillis == null) {
+                    pickedDateStart = null
+                    pickedDateEnd = null
+                }
+                else {
+                    pickedDateStart =
+                        ZonedDateTime.ofInstant(
+                            Instant.ofEpochSecond(datePickerState.selectedStartDateMillis!! / 1000),
+                            ZoneOffset.UTC
+                        )
+                    pickedDateEnd =
+                        datePickerState.selectedEndDateMillis ?.let {
+                            ZonedDateTime.ofInstant(
+                                Instant.ofEpochSecond(it / 1000),
+                                ZoneOffset.UTC
+                            )
+                        } ?: pickedDateStart
+                }
+                datePickerVisible = false
+            },
+            negativeButton = dialogButton(textId = R.string.cancel) {
+                datePickerVisible = false
+            },
+            neutralButton = dialogButton(text = "リセット") {
+                datePickerState.setSelection(null, null)
+            }
+        ) {
+            DateRangePicker(
+                colors = themedDatePickerColors(),
+                state = datePickerState,
+                modifier = Modifier.heightIn(max = 450.dp),
+                title = null,
+                headline = {
+                    DateRangePickerDefaults.DateRangePickerHeadline(
+                        selectedStartDateMillis = datePickerState.selectedStartDateMillis,
+                        selectedEndDateMillis = datePickerState.selectedEndDateMillis,
+                        displayMode = datePickerState.displayMode,
+                        dateFormatter = remember { DatePickerDefaults.dateFormatter(selectedDateSkeleton = "yy/M/d)") },
+                        modifier = Modifier.padding(PaddingValues(start = 24.dp, end = 12.dp, bottom = 12.dp))
+                    )
+                }
+            )
+        }
     }
 }
 
