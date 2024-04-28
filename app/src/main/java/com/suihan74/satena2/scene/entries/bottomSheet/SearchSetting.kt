@@ -6,7 +6,14 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,6 +22,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,9 +31,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,8 +51,8 @@ import com.suihan74.satena2.compose.dialog.menuDialogItem
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
 import com.suihan74.satena2.ui.theme.themed.themedTextFieldColors
-import com.suihan74.satena2.utility.hatena.textId
 import com.suihan74.satena2.utility.focusKeyboardRequester
+import com.suihan74.satena2.utility.hatena.textId
 import java.time.Instant
 
 /**
@@ -74,7 +85,7 @@ fun SearchSettingContent(
     val loading = remember { mutableStateOf(true) }
 
     val searchType = remember(value) { mutableStateOf(value.searchType) }
-    val bookmarksCount = remember(value) { mutableStateOf(value.bookmarksCount) }
+    val bookmarksCount = remember(value) { mutableIntStateOf(value.bookmarksCount) }
     val safe = remember(value) { mutableStateOf(value.safe) }
     val textFieldValue = remember(value) { mutableStateOf(
         TextFieldValue(
@@ -88,7 +99,7 @@ fun SearchSettingContent(
         val searchSetting = SearchSetting(
             query = textFieldValue.value.text,
             searchType = searchType.value,
-            bookmarksCount = bookmarksCount.value,
+            bookmarksCount = bookmarksCount.intValue,
             safe = safe.value
         )
         onSearch(searchSetting)
@@ -130,25 +141,27 @@ fun SearchSettingContent(
             BottomSheetMenuItem(
                 onClick = { searchTypeDialogVisible.value = true }
             ) {
-                Row {
-                    Text(stringResource(R.string.search_setting_sheet_search_type_label) + " : ")
-                    Text(stringResource(searchType.value.textId))
-                }
+                Text(
+                    stringResource(
+                        R.string.search_setting_sheet_search_type_label,
+                        stringResource(searchType.value.textId)
+                    )
+                )
             }
             BottomSheetMenuItem(
                 onClick = { bookmarksCountDialogVisible.value = true }
             ) {
-                Row {
-                    Text(stringResource(R.string.search_setting_sheet_bookmarks_count_label) + " : ")
-                    Text(text = bookmarksCount.value.toString())
-                }
+                Text(
+                    stringResource(R.string.search_setting_sheet_bookmarks_count_label, bookmarksCount.intValue)
+                )
             }
             BottomSheetMenuItem(
                 onClick = { /* todo */ }
             ) {
-                Row {
-                    Text(stringResource(R.string.search_setting_sheet_date_range_label) + " : ")
-                }
+                Text(
+                    // todo
+                    stringResource(R.string.search_setting_sheet_date_range_label)
+                )
             }
             BottomSheetMenuItem(
                 onClick = { safe.value = !safe.value }
@@ -157,10 +170,15 @@ fun SearchSettingContent(
                     if (safe.value) R.string.on to CurrentTheme.primary
                     else R.string.off to CurrentTheme.onBackground
                 Row {
-                    Text(stringResource(R.string.search_setting_sheet_safe_label) + " : ")
                     Text(
-                        text = stringResource(textId),
-                        color = color
+                        buildAnnotatedString {
+                            append(stringResource(R.string.search_setting_sheet_safe_label))
+                            withStyle(
+                                SpanStyle(color = color)
+                            ) {
+                                append(stringResource(textId))
+                            }
+                        }
                     )
                 }
             }
@@ -191,7 +209,7 @@ fun SearchSettingContent(
     if (searchTypeDialogVisible.value) {
         MenuDialog(
             titleText = stringResource(R.string.search_setting_sheet_search_type_label),
-            menuItems = SearchType.values()
+            menuItems = SearchType.entries
                 .map {
                     menuDialogItem(textId = it.textId) {
                         searchType.value = it
@@ -206,13 +224,13 @@ fun SearchSettingContent(
     }
 
     if (bookmarksCountDialogVisible.value) {
-        val countValue = remember(bookmarksCount) { mutableStateOf(bookmarksCount.value) }
+        val countValue = remember(bookmarksCount) { mutableIntStateOf(bookmarksCount.intValue) }
         NumberPickerDialog(
             range = IntRange(0, 1000),
             current = countValue,
             titleText = stringResource(R.string.search_setting_sheet_bookmarks_count_label),
             positiveButton = dialogButton(R.string.ok) {
-                bookmarksCount.value = countValue.value
+                bookmarksCount.intValue = countValue.intValue
                 bookmarksCountDialogVisible.value = false
             },
             negativeButton = dialogButton(R.string.cancel) { bookmarksCountDialogVisible.value = false },

@@ -178,10 +178,10 @@
     <!-- SearchSettingContent -->
     <string name="search_setting_sheet_title">検索設定</string>
     <string name="search_setting_sheet_query_placeholder">検索キーワード</string>
-    <string name="search_setting_sheet_search_type_label">検索対象</string>
-    <string name="search_setting_sheet_bookmarks_count_label">ブクマ数</string>
-    <string name="search_setting_sheet_date_range_label">期間指定</string>
-    <string name="search_setting_sheet_safe_label">セーフサーチ</string>
+    <string name="search_setting_sheet_search_type_label">検索対象 : %s</string>
+    <string name="search_setting_sheet_bookmarks_count_label">ブクマ数 : %d</string>
+    <string name="search_setting_sheet_date_range_label">"期間指定 : "</string>
+    <string name="search_setting_sheet_safe_label">"セーフサーチ : "</string>
 
     <!-- ExcludedEntriesList -->
     <string name="excluded_entries_list_title">除外エントリ</string>
