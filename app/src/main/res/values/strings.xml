@@ -255,6 +255,12 @@
     <string name="report_reason_insult">差別、中傷、嫌がらせ</string>
     <string name="report_reason_others">その他</string>
 
+    <!-- CustomTabSetting -->
+    <string name="bookmark_custom_tab_setting_title">カスタム設定</string>
+    <string name="bookmark_custom_tab_setting_no_labels_users_shown">ラベルがついていないユーザー</string>
+    <string name="bookmark_custom_tab_setting_no_comments_shown">無言ブクマ</string>
+    <string name="bookmark_custom_tab_setting_ignored_users_shown">非表示ユーザー</string>
+
     <!-- ====================================================================== -->
     <!-- PostBookmarkActivity -->
 

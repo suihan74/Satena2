@@ -40,11 +40,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
@@ -127,12 +129,22 @@ interface BookmarksViewModel : DialogPropertiesProvider {
      */
     val followingBookmarksFlow : StateFlow<List<DisplayBookmark>>
 
+    /**
+     * 「カスタム」ブクマリスト
+     */
+    val customBookmarksFlow : StateFlow<List<DisplayBookmark>>
+
+    /**
+     * 「カスタム」タブの表示対象
+     */
+    val customTabSettingFlow : StateFlow<CustomTabSetting>
+
     // ------ //
 
     /**
      * すべてのユーザーラベル
      */
-    val allUserListsFlow : Flow<List<Label>>
+    val allUserLabelsFlow : StateFlow<List<Label>>
 
     // ------ //
 
@@ -184,6 +196,11 @@ interface BookmarksViewModel : DialogPropertiesProvider {
      * ブクマを通報する
      */
     suspend fun report(report: Report)
+
+    /**
+     * 「カスタム」タブの設定を更新する
+     */
+    fun updateCustomTabSetting(setting: CustomTabSetting)
 
     // ------ //
 
@@ -372,12 +389,24 @@ class BookmarksViewModelImpl @Inject constructor(
      */
     override val followingBookmarksFlow = MutableStateFlow(emptyList<DisplayBookmark>())
 
+    /**
+     * 「カスタム」ブクマリスト
+     */
+    override val customBookmarksFlow = MutableStateFlow(emptyList<DisplayBookmark>())
+
+    /**
+     * 「カスタム」タブの表示対象
+     */
+    override val customTabSettingFlow = repository.customTabSettingFlow
+
     // ------ //
 
     /**
      * すべてのユーザーラベル
      */
-    override val allUserListsFlow by lazy { userLabelRepo.allUserLabelsFlow }
+    override val allUserLabelsFlow = userLabelRepo.allUserLabelsFlow.stateIn(
+        viewModelScope, SharingStarted.Lazily, emptyList()
+    )
 
     // ------ //
 
@@ -408,6 +437,10 @@ class BookmarksViewModelImpl @Inject constructor(
 
         combine(repository.followingBookmarksFlow, searchQueryFlow) { list, q ->
             followingBookmarksFlow.value = queryFilterBookmarks(list, q)
+        }.launchIn(viewModelScope)
+
+        combine(repository.customBookmarksFlow, searchQueryFlow) { list, q ->
+            customBookmarksFlow.value = queryFilterBookmarks(list, q)
         }.launchIn(viewModelScope)
 
         // タブ長押しで初期タブを変更
@@ -553,6 +586,19 @@ class BookmarksViewModelImpl @Inject constructor(
             context.showToast(R.string.report_bookmark_failure_msg)
             Log.e("ReportBookmark", it.stackTraceToString())
             throw it
+        }
+    }
+
+    /**
+     * 「カスタム」タブの設定を更新する
+     */
+    override fun updateCustomTabSetting(setting: CustomTabSetting) {
+        viewModelScope.launch {
+            prefsRepo.dataStore.updateData {
+                it.copy(
+                    bookmarkCustomTabSetting = setting
+                )
+            }
         }
     }
 
@@ -855,9 +901,13 @@ class FakeBookmarksViewModel : BookmarksViewModel {
 
     override val followingBookmarksFlow = MutableStateFlow(emptyList<DisplayBookmark>())
 
+    override val customBookmarksFlow = MutableStateFlow(emptyList<DisplayBookmark>())
+
+    override val customTabSettingFlow = MutableStateFlow(CustomTabSetting())
+
     // ------ //
 
-    override val allUserListsFlow = MutableStateFlow(emptyList<Label>())
+    override val allUserLabelsFlow = MutableStateFlow(emptyList<Label>())
 
     // ------ //
 
@@ -939,6 +989,9 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     }
 
     override suspend fun report(report: Report) {
+    }
+
+    override fun updateCustomTabSetting(setting: CustomTabSetting) {
     }
 
     // ------ //

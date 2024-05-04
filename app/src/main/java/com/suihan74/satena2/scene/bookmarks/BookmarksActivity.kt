@@ -97,7 +97,9 @@ private enum class BottomSheetContent {
     /** ブクマに含まれるタグ一覧 */
     Tags,
     /** ブクマを通報 */
-    Report
+    Report,
+    /** 「カスタム」タブの表示対象 */
+    CustomTabSetting
 }
 
 // ------ //
@@ -195,6 +197,9 @@ private fun BookmarksScene(
 
     // ブクマのNGワード設定編集対象
     var ngWordTarget by remember { mutableStateOf<DisplayBookmark?>(null) }
+
+    val initialSetting by viewModel.customTabSettingFlow.collectAsState()
+    val labels by viewModel.allUserLabelsFlow.collectAsState()
 
     val onShowEntryMenu: (DisplayEntry)->Unit = {
         entryMenuTarget = it
@@ -344,7 +349,7 @@ private fun BookmarksScene(
                         Box(Modifier.height(1.dp))
                     }
                     else {
-                        val labels by viewModel.allUserListsFlow.collectAsState(initial = emptyList())
+                        val labels by viewModel.allUserLabelsFlow.collectAsState(initial = emptyList())
                         val userAndLabels by viewModel.userLabelsFlow(user).collectAsState(initial = null)
                         UserLabelDialog(
                             labels = labels,
@@ -417,6 +422,19 @@ private fun BookmarksScene(
                         )
                     }
                 }
+
+                // 「カスタム」タブの表示対象を設定
+                BottomSheetContent.CustomTabSetting -> {
+                    CustomTabSettingContent(
+                        initialSetting = initialSetting,
+                        allLabels = labels
+                    ) {
+                        viewModel.updateCustomTabSetting(it)
+                        coroutineScope.launch {
+                            bottomSheetState.hide()
+                        }
+                    }
+                }
             }
         }
     ) {
@@ -481,6 +499,12 @@ private fun BookmarksScene(
                             coroutineScope.launch {
                                 bottomSheetContent = BottomSheetContent.BookmarkMenu
                                 bottomMenuTarget = it
+                                bottomSheetState.show()
+                            }
+                        },
+                        onOpenBottomSetting = {
+                            coroutineScope.launch {
+                                bottomSheetContent = BottomSheetContent.CustomTabSetting
                                 bottomSheetState.show()
                             }
                         }

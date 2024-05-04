@@ -1,14 +1,21 @@
 package com.suihan74.satena2.scene.bookmarks
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.*
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.BottomAppBar
 import androidx.compose.runtime.Composable
@@ -37,6 +44,7 @@ fun BottomMenu(
     signedIn: Boolean,
     initialSearchQuery: String,
     onNavigateMyBookmark: ()->Unit,
+    onOpenSetting: () -> Unit,
     onSearch: (String)->Unit,
 ) {
     val bottomBarNavController = rememberNavController()
@@ -66,6 +74,7 @@ fun BottomMenu(
                 MainContent(
                     pagerState = pagerState,
                     searchQuery = initialSearchQuery,
+                    onOpenSetting = onOpenSetting,
                     onSearch = onSearch,
                     onOpenScrollMenu = { bottomBarNavController.navigate("scroll") },
                     onOpenSearchContent = { bottomBarNavController.navigate("search") }
@@ -108,6 +117,7 @@ fun BottomMenu(
 private fun MainContent(
     pagerState: PagerState,
     searchQuery: String,
+    onOpenSetting: ()->Unit,
     onSearch: (String)->Unit,
     onOpenScrollMenu: ()->Unit,
     onOpenSearchContent: ()->Unit
@@ -140,7 +150,7 @@ private fun MainContent(
             BottomMenuItemButton(
                 iconId = R.drawable.ic_settings,
                 textId = R.string.preferences,
-                onClick = { /* todo */ }
+                onClick = onOpenSetting
             )
         }
         BottomMenuItemButton(

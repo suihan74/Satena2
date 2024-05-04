@@ -1,6 +1,12 @@
 package com.suihan74.satena2.model.userLabel
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -137,9 +143,28 @@ interface UserLabelDao {
 
     @Transaction
     @Query("""
+        SELECT * FROM user_label
+        WHERE id IN (:labelIds)
+    """)
+    suspend fun getLabelAndUsers(labelIds: List<Long>): List<LabelAndUsers>
+
+    @Transaction
+    @Query("""
         SELECT * FROM user_label_user
         WHERE name = :userName
         LIMIT 1
     """)
     fun getUserAndLabels(userName: String): Flow<UserAndLabels?>
+
+    /**
+     * ユーザーにひとつでもラベルがついているか確認する
+     */
+    @Query("""
+        SELECT EXISTS(
+            SELECT * FROM user_label_relation
+            INNER JOIN user_label_user ON user_id = user_label_user.id
+            WHERE user_label_user.name = :userName
+        )
+    """)
+    suspend fun isLabeledUser(userName: String) : Boolean
 }

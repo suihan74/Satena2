@@ -30,6 +30,18 @@ interface UserLabelRepository {
     // ------ //
 
     /**
+     * 引数のラベルIDリストに対応するラベルを取得する
+     */
+    suspend fun getLabeledUsers(labelIds: List<Long>) : List<LabelAndUsers>
+
+    /**
+     * 指定ユーザーにひとつでもラベルがついているか確認する
+     */
+    suspend fun isLabeledUser(userName: String) : Boolean
+
+    // ------ //
+
+    /**
      * ラベルを追加
      */
     suspend fun createLabel(label: Label) : Label
@@ -75,6 +87,22 @@ class UserLabelRepositoryImpl(
      */
     override fun userLabelsFlow(user: String) : Flow<UserAndLabels?> {
         return dao.getUserAndLabels(user)
+    }
+
+    // ------ //
+
+    /**
+     * 引数のラベルIDリストに対応するラベルを取得する
+     */
+    override suspend fun getLabeledUsers(labelIds: List<Long>) : List<LabelAndUsers> {
+        return dao.getLabelAndUsers(labelIds)
+    }
+
+    /**
+     * 指定ユーザーにひとつでもラベルがついているか確認する
+     */
+    override suspend fun isLabeledUser(userName: String) : Boolean {
+        return dao.isLabeledUser(userName)
     }
 
     // ------ //

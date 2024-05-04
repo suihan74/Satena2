@@ -9,6 +9,7 @@ import com.suihan74.satena2.model.mastodon.MastodonAccessToken
 import com.suihan74.satena2.model.mastodon.TootVisibility
 import com.suihan74.satena2.model.misskey.NoteVisibility
 import com.suihan74.satena2.scene.bookmarks.BookmarksTab
+import com.suihan74.satena2.scene.bookmarks.CustomTabSetting
 import com.suihan74.satena2.scene.entries.BottomMenuItem
 import com.suihan74.satena2.scene.entries.Category
 import com.suihan74.satena2.scene.entries.ClickEntryAction
@@ -158,6 +159,9 @@ data class Preferences(
 
     /** ブクマ: タブ長押しで初期タブを変更する */
     val bookmarkChangeInitialTabByLongClick : Boolean = true,
+
+    /** ブクマ: 「カスタム」タブの表示対象設定 */
+    val bookmarkCustomTabSetting: CustomTabSetting = CustomTabSetting(),
 
     // ------ //
 

@@ -1,6 +1,7 @@
 package com.suihan74.satena2.scene.bookmarks
 
 import android.util.Log
+import androidx.datastore.core.DataStore
 import com.suihan74.hatena.HatenaClient
 import com.suihan74.hatena.model.account.Notice
 import com.suihan74.hatena.model.bookmark.Bookmark
@@ -17,6 +18,7 @@ import com.suihan74.hatena.model.entry.RelatedEntriesResponse
 import com.suihan74.hatena.model.star.StarCount
 import com.suihan74.hatena.model.star.StarsEntry
 import com.suihan74.satena2.model.AppDatabase
+import com.suihan74.satena2.model.dataStore.Preferences
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntry
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAccountRepository
 import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelRepository
@@ -85,6 +87,16 @@ interface BookmarksRepository {
      */
     val followingBookmarksFlow : StateFlow<List<DisplayBookmark>>
 
+    /**
+     * 「カスタム」ブクマリスト
+     */
+    val customBookmarksFlow : StateFlow<List<DisplayBookmark>>
+
+    /**
+     * 「カスタム」タブの表示対象設定
+     */
+    val customTabSettingFlow : StateFlow<CustomTabSetting>
+
     // ------ //
 
     fun initialize(coroutineScope: CoroutineScope)
@@ -151,6 +163,7 @@ interface BookmarksRepository {
 // TODO: hatenaClientのサインイン状態変更中にブクマ等読み込みが起こらないようにする
 class BookmarksRepositoryImpl @Inject constructor(
     appDatabase: AppDatabase,
+    private val dataStore: DataStore<Preferences>,
     private val hatenaRepo: HatenaAccountRepository,
     private val userLabelRepo: UserLabelRepository
 ) : BookmarksRepository {
@@ -224,6 +237,16 @@ class BookmarksRepositoryImpl @Inject constructor(
      */
     override val followingBookmarksFlow = MutableStateFlow(emptyList<DisplayBookmark>())
 
+    /**
+     * 「カスタム」ブクマリスト
+     */
+    override val customBookmarksFlow = MutableStateFlow(emptyList<DisplayBookmark>())
+
+    /**
+     * 「カスタム」タブの表示対象設定
+     */
+    override val customTabSettingFlow = MutableStateFlow(CustomTabSetting())
+
     // ------ //
 
     /**
@@ -234,8 +257,20 @@ class BookmarksRepositoryImpl @Inject constructor(
     // ------ //
 
     override fun initialize(coroutineScope: CoroutineScope) {
+        dataStore.data
+            .onEach {
+                filtersMutex.withLock {
+                    customTabSettingFlow.value = it.bookmarkCustomTabSetting
+                }
+            }
+            .launchIn(coroutineScope)
+
         hatenaRepo.ngUsers
-            .onEach { ignoredUsersFlow.value = it.toSet() }
+            .onEach {
+                filtersMutex.withLock {
+                    ignoredUsersFlow.value = it.toSet()
+                }
+            }
             .launchIn(coroutineScope)
 
         filtersFlow
@@ -251,8 +286,9 @@ class BookmarksRepositoryImpl @Inject constructor(
             entityFlow,
             filtersFlow,
             ignoredUsersFlow,
-            hatenaRepo.loadingNgUsers
-        ) { entity, _, _, loadingNgUsers ->
+            hatenaRepo.loadingNgUsers,
+            customTabSettingFlow
+        ) { entity, _, _, loadingNgUsers, _ ->
             if (loadingNgUsers) return@combine  // NGユーザー読み込み完了前にブクマリストを表示しないようにする
             val entry = entity.entry
             val bookmarks = entity.bookmarks
@@ -262,6 +298,7 @@ class BookmarksRepositoryImpl @Inject constructor(
             allBookmarksFlow.value = toDisplayList(entry, bookmarks, BookmarksTab.ALL)
             popularBookmarksFlow.value = toDisplayList(entry, scoredBookmarks, BookmarksTab.DIGEST)
             followingBookmarksFlow.value = toDisplayList(entry, favoriteBookmarks, BookmarksTab.DIGEST)
+            customBookmarksFlow.value = toDisplayList(entry, bookmarks, BookmarksTab.CUSTOM)
         }
         .launchIn(coroutineScope)
 
@@ -690,8 +727,6 @@ class BookmarksRepositoryImpl @Inject constructor(
         val ignoredUsers = ignoredUsersFlow.value
 
         return when (tab) {
-            // todo: BookmarksTab.CUSTOM
-
             BookmarksTab.DIGEST -> {
                 // todo: フィルタするかどうかを選べるようにする
                 filtersMutex.withLock {
@@ -716,6 +751,27 @@ class BookmarksRepositoryImpl @Inject constructor(
                             val notBlankComment = b.comment.isNotBlank()
                             val notMuted = filters.none { it.match(b) }
                             isMyBookmark || notNgUser && notBlankComment && notMuted
+                        }
+                        .map { b -> b.toDisplayBookmark(eid) }
+                }
+            }
+
+            BookmarksTab.CUSTOM -> {
+                filtersMutex.withLock {
+                    val s = customTabSettingFlow.value
+                    val enabledLabels = userLabelRepo.getLabeledUsers(s.enableLabelIds.toList())
+                    val enabledUsers = enabledLabels.flatMap { it.users }.map { it.name }.toSet()
+
+                    bookmarks
+                        .filter { b ->
+                            if (b.user == accountName) return@filter true
+                            if (!s.areIgnoresShown && ignoredUsers.contains(b.user)) return@filter false
+                            if (!s.areNoCommentsShown && b.comment.isBlank()) return@filter false
+                            if (!s.areIgnoresShown && filters.any { it.match(b) }) return@filter false
+
+                            val labeled = userLabelRepo.isLabeledUser(b.user)
+                            if (labeled) enabledUsers.contains(b.user)
+                            else return@filter s.areNoLabelsShown
                         }
                         .map { b -> b.toDisplayBookmark(eid) }
                 }
