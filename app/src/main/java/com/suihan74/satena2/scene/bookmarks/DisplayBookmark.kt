@@ -47,7 +47,11 @@ data class DisplayBookmark(
     /**
      * ユーザーラベル
      */
-    val labels : Flow<UserAndLabels?> = MutableStateFlow(null)
+    val labels : Flow<UserAndLabels?> = MutableStateFlow(null),
+    /**
+     * ログインしているユーザーの投稿であるか
+     */
+    val isMyBookmark : Boolean = false
 ) {
     data class Link(
         val url : String,

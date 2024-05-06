@@ -229,6 +229,13 @@
     <string name="bookmark_menu_add_ng_word">NGワード追加</string>
     <string name="bookmark_menu_report">通報</string>
     <string name="bookmark_menu_manage_user_labels">ユーザーラベル</string>
+    <string name="bookmark_menu_delete_my_bookmark">ブクマを削除する</string>
+
+    <!-- ブクマ削除 -->
+    <string name="bookmark_deletion_dialog_title">ブクマ削除</string>
+    <string name="bookmark_deletion_dialog_confirm_msg">ブックマークを削除します。よろしいですか？</string>
+    <string name="bookmark_deletion_succeeded_msg">ブックマークを削除しました</string>
+    <string name="bookmark_deletion_failure_msg">ブックマーク削除に失敗しました</string>
 
     <!-- ユーザー非表示 -->
     <string name="mute_user_dialog_title">ユーザー非表示</string>
@@ -279,7 +286,7 @@
     <string name="post_tooltip_private">非公開でブクマする</string>
     <string name="post_tooltip_tags">タグを追加</string>
     <string name="post_placeholder_tag_text_field">入力したタグを挿入します</string>
-    <string name="post_confirm_message">下記の内容で投稿します。よろしいですか？</string>
+    <string name="post_confirm_message">上記の内容で投稿します。よろしいですか？</string>
 
     <!-- メッセージ -->
     <string name="post_too_long_comment_msg">コメントが長すぎます</string>

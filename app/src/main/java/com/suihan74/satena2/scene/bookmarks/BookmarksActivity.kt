@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.ExperimentalMaterialApi
@@ -40,6 +41,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -52,6 +55,7 @@ import com.suihan74.satena2.compose.LocalLongClickVibrationDuration
 import com.suihan74.satena2.compose.OrientatedModalDrawer
 import com.suihan74.satena2.compose.VerticalGradientEdge
 import com.suihan74.satena2.compose.dialog.CustomDialog
+import com.suihan74.satena2.compose.dialog.CustomDialogDefaults
 import com.suihan74.satena2.compose.dialog.DialogButton
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntryType
 import com.suihan74.satena2.scene.entries.Category
@@ -187,8 +191,9 @@ private fun BookmarksScene(
     val entity by viewModel.entityFlow.collectAsState(initial = Entity.EMPTY)
 
     var bottomMenuTarget by remember { mutableStateOf<DisplayBookmark?>(null) }
-    val ignoreUserDialogTarget = remember { mutableStateOf<DisplayBookmark?>(null) }
-    val shareBookmarkTarget = remember { mutableStateOf<DisplayBookmark?>(null) }
+    var ignoreUserDialogTarget by remember { mutableStateOf<DisplayBookmark?>(null) }
+    var shareBookmarkTarget by remember { mutableStateOf<DisplayBookmark?>(null) }
+    var deletingMyBookmark by remember { mutableStateOf<DisplayBookmark?>(null) }
 
     var entryMenuTarget by remember { mutableStateOf<DisplayEntry?>(null) }
 
@@ -316,19 +321,23 @@ private fun BookmarksScene(
                             bottomSheetState.hide()
                         },
                         onIgnore = {
-                            ignoreUserDialogTarget.value = it
+                            ignoreUserDialogTarget = it
                             bottomSheetState.hide()
                         },
                         onShare = {
                             bottomSheetState.hide()
                             bottomSheetContent = BottomSheetContent.ShareBookmark
-                            shareBookmarkTarget.value = it
+                            shareBookmarkTarget = it
                             bottomSheetState.show()
                         },
                         onReport = {
                             bottomSheetState.hide()
                             bottomSheetContent = BottomSheetContent.Report
                             bottomSheetState.show()
+                        },
+                        onDeleteMyBookmark = {
+                            deletingMyBookmark = it
+                            bottomSheetState.hide()
                         }
                     )
                 }
@@ -336,7 +345,7 @@ private fun BookmarksScene(
                 // ブクマ共有メニュー
                 BottomSheetContent.ShareBookmark -> {
                     Column(Modifier.height(300.dp)) {
-                        shareBookmarkTarget.value?.let {
+                        shareBookmarkTarget?.let {
                             BookmarkSharingContent(bookmark = it.bookmark)
                         }
                     }
@@ -573,45 +582,114 @@ private fun BookmarksScene(
             onDismiss = { ngWordTarget = null }
         ) {
             ngWordsViewModel.insert(it.toIgnoredEntry())
-
         }
     }
 
     // ユーザーの非表示ON/OFF
-    ignoreUserDialogTarget.value?.let { target ->
-        CustomDialog(
-            title = {
-                Text(
-                    stringResource(
-                        if (target.ignoredUser) R.string.unmute_user_dialog_title
-                        else R.string.mute_user_dialog_title
-                    )
-                )
-            },
-            negativeButton = DialogButton(stringResource(R.string.cancel)) {
-                ignoreUserDialogTarget.value = null
-            },
-            positiveButton = DialogButton(stringResource(R.string.ok)) {
-                viewModel.toggleIgnore(target.bookmark.user)
-                ignoreUserDialogTarget.value = null
-            },
-            colors = themedCustomDialogColors(),
-            onDismissRequest = { ignoreUserDialogTarget.value = null },
-            properties = viewModel.dialogProperties()
-        ) {
-            Column {
-                BookmarkItem(item = target, clickable = false)
-                Text(
-                    stringResource(
-                        if (target.ignoredUser) R.string.unmute_user_dialog_confirm_msg
-                        else R.string.mute_user_dialog_confirm_msg,
-                        target.bookmark.user
-                    )
-                )
-            }
+    IgnoringUserConfirmDialog(
+        target = ignoreUserDialogTarget,
+        properties = viewModel.dialogProperties(),
+        onDismissRequest = { ignoreUserDialogTarget = null },
+        onConfirmed = { viewModel.toggleIgnore(it.bookmark.user) }
+    )
+
+    // ブクマを削除する
+    BookmarkDeletionConfirmDialog(
+        target = deletingMyBookmark,
+        properties = viewModel.dialogProperties(),
+        onDismissRequest = { deletingMyBookmark = null },
+        onConfirmed = { viewModel.deleteMyBookmark() }
+    )
+}
+
+// ------ //
+
+@Composable
+private fun BookmarkActionConfirmDialog(
+    target: DisplayBookmark?,
+    properties: DialogProperties,
+    title: String,
+    message: String,
+    onDismissRequest: ()->Unit,
+    onConfirmed: suspend (DisplayBookmark)->Unit
+) {
+    if (target == null) return
+    CustomDialog(
+        titleText = title,
+        negativeButton = DialogButton(stringResource(R.string.cancel)) {
+            onDismissRequest()
+        },
+        positiveButton = DialogButton(stringResource(R.string.ok)) {
+            onConfirmed(target)
+            onDismissRequest()
+        },
+        colors = themedCustomDialogColors(),
+        onDismissRequest = { onDismissRequest() },
+        properties = properties
+    ) {
+        Column {
+            BookmarkItem(item = target, clickable = false)
+            Text(
+                text = message,
+                fontSize = 14.sp,
+                color = CurrentTheme.onBackground,
+                modifier = Modifier.padding(horizontal = CustomDialogDefaults.DEFAULT_TITLE_HORIZONTAL_PADDING)
+            )
         }
     }
 }
+
+/**
+ * ユーザー非表示の確認ダイアログ
+ */
+@Composable
+private fun IgnoringUserConfirmDialog(
+    target: DisplayBookmark?,
+    properties: DialogProperties,
+    onDismissRequest: ()->Unit,
+    onConfirmed: suspend (DisplayBookmark)->Unit
+) {
+    if (target == null) return
+    BookmarkActionConfirmDialog(
+        target = target,
+        properties = properties,
+        title =
+            stringResource(
+                if (target.ignoredUser) R.string.unmute_user_dialog_title
+                else R.string.mute_user_dialog_title
+            ),
+        message =
+            stringResource(
+                if (target.ignoredUser) R.string.unmute_user_dialog_confirm_msg
+                else R.string.mute_user_dialog_confirm_msg,
+                target.bookmark.user
+            ),
+        onDismissRequest = onDismissRequest,
+        onConfirmed = onConfirmed
+    )
+}
+
+/**
+ * ブクマ削除の確認ダイアログ
+ */
+@Composable
+private fun BookmarkDeletionConfirmDialog(
+    target: DisplayBookmark?,
+    properties: DialogProperties,
+    onDismissRequest: ()->Unit,
+    onConfirmed: suspend (DisplayBookmark)->Unit
+) {
+    BookmarkActionConfirmDialog(
+        target = target,
+        properties = properties,
+        title = stringResource(R.string.bookmark_deletion_dialog_title),
+        message = stringResource(R.string.bookmark_deletion_dialog_confirm_msg),
+        onDismissRequest = onDismissRequest,
+        onConfirmed = onConfirmed
+    )
+}
+
+// ------ //
 
 @Preview
 @Composable

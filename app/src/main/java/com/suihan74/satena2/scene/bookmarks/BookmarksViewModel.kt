@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import javax.inject.Inject
 
@@ -201,6 +202,11 @@ interface BookmarksViewModel : DialogPropertiesProvider {
      * 「カスタム」タブの設定を更新する
      */
     fun updateCustomTabSetting(setting: CustomTabSetting)
+
+    /**
+     * 自分のブクマを削除する
+     */
+    suspend fun deleteMyBookmark() : Boolean
 
     // ------ //
 
@@ -602,6 +608,21 @@ class BookmarksViewModelImpl @Inject constructor(
         }
     }
 
+    /**
+     * 自分のブクマを削除する
+     */
+    override suspend fun deleteMyBookmark() : Boolean {
+        return withContext(viewModelScope.coroutineContext) {
+            runCatching {
+                repository.deleteMyBookmark()
+            }.onSuccess {
+                context.showToast(R.string.bookmark_deletion_succeeded_msg)
+            }.onFailure {
+                context.showToast(R.string.bookmark_deletion_failure_msg)
+            }.isSuccess
+        }
+    }
+
     // ------ //
 
     /**
@@ -989,6 +1010,10 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     }
 
     override suspend fun report(report: Report) {
+    }
+
+    override suspend fun deleteMyBookmark() : Boolean {
+        return true
     }
 
     override fun updateCustomTabSetting(setting: CustomTabSetting) {

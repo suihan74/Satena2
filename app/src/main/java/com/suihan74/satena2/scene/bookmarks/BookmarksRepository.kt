@@ -119,7 +119,7 @@ interface BookmarksRepository {
     /**
      * ブクマ結果をリストに反映する
      */
-    suspend fun updateMyBookmark(bookmarkResult: BookmarkResult)
+    suspend fun updateMyBookmark(bookmarkResult: BookmarkResult?)
 
     /**
      * ユーザーを非表示にする
@@ -140,6 +140,13 @@ interface BookmarksRepository {
      * ブクマを通報する
      */
     suspend fun report(report: Report)
+
+    /**
+     * 自身のブクマを削除する
+     */
+    suspend fun deleteMyBookmark()
+
+    // ------ //
 
     /**
      * 指定の[Bookmark]から表示用の[DisplayBookmark]を作成する
@@ -605,24 +612,38 @@ class BookmarksRepositoryImpl @Inject constructor(
     /**
      * ブクマ結果をリストに反映する
      */
-    override suspend fun updateMyBookmark(bookmarkResult: BookmarkResult) = coroutineScope {
-        val user = bookmarkResult.user
-        val bookmark = bookmarkResult.toBookmark()
+    override suspend fun updateMyBookmark(bookmarkResult: BookmarkResult?) = coroutineScope {
         val prevEntity = entityFlow.value
+        val user = hatenaRepo.account.value?.name ?: return@coroutineScope
+        val bookmark = bookmarkResult?.toBookmark()
         val tasks = listOf(
             async {
                 prevEntity.bookmarksDigest.copy(
-                    scoredBookmarks = prevEntity.bookmarksDigest.scoredBookmarks.map {
+                    scoredBookmarks = prevEntity.bookmarksDigest.scoredBookmarks.mapNotNull {
                         if (it.user == user) bookmark
                         else it
                     }
                 )
             },
             async {
-                prevEntity.bookmarks.map {
+                prevEntity.bookmarks.mapNotNull {
                     if (it.user == user) bookmark
                     else it
                 }
+            },
+            async {
+                prevEntity.bookmarksEntry.copy(
+                    bookmarks = prevEntity.bookmarksEntry.bookmarks.mapNotNull {
+                        if (it.user == user) {
+                            bookmark?.let { b ->
+                                BookmarksEntry.Bookmark(
+                                    user = user, comment = b.comment, tags = b.tags, timestamp = b.timestamp
+                                )
+                            }
+                        }
+                        else it
+                    }
+                )
             }
         )
         tasks.awaitAll()
@@ -639,7 +660,7 @@ class BookmarksRepositoryImpl @Inject constructor(
         @Suppress("UNCHECKED_CAST")
         val entity = prevEntity.copy(
             entry = entry,
-            bookmarksEntry = prevEntity.bookmarksEntry,
+            bookmarksEntry = tasks[2].await() as BookmarksEntry,
             bookmarksDigest = tasks[0].await() as BookmarksDigest,
             bookmarks = tasks[1].await() as List<Bookmark>
         )
@@ -846,6 +867,7 @@ class BookmarksRepositoryImpl @Inject constructor(
             urls = urls,
             labels = labels,
             starsEntry = starsEntry,
+            isMyBookmark = hatenaRepo.account.value?.let { it.name == this.user } ?: false
         )
     }
 
@@ -878,6 +900,18 @@ class BookmarksRepositoryImpl @Inject constructor(
     override suspend fun report(report: Report) {
         hatenaRepo.withSignedClient { client ->
             client.bookmark.report(report)
+        }
+    }
+
+    /**
+     * 自身のブクマを削除する
+     */
+    override suspend fun deleteMyBookmark() {
+        hatenaRepo.withSignedClient { client ->
+            client.bookmark.deleteBookmark(entityFlow.value.requestUrl)
+            myBookmarkFlow.value = null
+            updateMyBookmark(null)
+            // todo: starsMapからも除去する
         }
     }
 

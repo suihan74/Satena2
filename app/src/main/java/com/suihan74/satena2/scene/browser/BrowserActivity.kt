@@ -332,6 +332,9 @@ private fun BrowserContent(
                         },
                         onReport = {
                             // todo
+                        },
+                        onDeleteMyBookmark = {
+                            // todo
                         }
                     )
                 }

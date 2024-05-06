@@ -36,7 +36,8 @@ fun BookmarkItemMenuContent(
     onShare: suspend (DisplayBookmark)->Unit,
     onFollow: suspend (DisplayBookmark)->Unit,
     onIgnore: suspend (DisplayBookmark)->Unit,
-    onReport: suspend (DisplayBookmark)->Unit
+    onReport: suspend (DisplayBookmark)->Unit,
+    onDeleteMyBookmark: suspend (DisplayBookmark)->Unit
 ) {
     if (item == null) {
         Box(Modifier.fillMaxHeight())
@@ -90,22 +91,24 @@ fun BookmarkItemMenuContent(
                     }
                 }
             }
-            item {
-                BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_follow)) {
-                    coroutineScope.launch {
-                        onFollow(item)
+            if (!item.isMyBookmark) {
+                item {
+                    BottomSheetMenuItem(text = stringResource(R.string.bookmark_menu_follow)) {
+                        coroutineScope.launch {
+                            onFollow(item)
+                        }
                     }
                 }
-            }
-            item {
-                BottomSheetMenuItem(
-                    text = stringResource(
-                        if (item.ignoredUser) R.string.bookmark_menu_unmute
-                        else R.string.bookmark_menu_mute
-                    )
-                ) {
-                    coroutineScope.launch {
-                        onIgnore(item)
+                item {
+                    BottomSheetMenuItem(
+                        text = stringResource(
+                            if (item.ignoredUser) R.string.bookmark_menu_unmute
+                            else R.string.bookmark_menu_mute
+                        )
+                    ) {
+                        coroutineScope.launch {
+                            onIgnore(item)
+                        }
                     }
                 }
             }
@@ -116,13 +119,27 @@ fun BookmarkItemMenuContent(
                     }
                 }
             }
-            item {
-                BottomSheetMenuItem(
-                    text = stringResource(R.string.bookmark_menu_report),
-                    color = Color(0xFD, 0x82, 0x82, 0xFF)
-                ) {
-                    coroutineScope.launch {
-                        onReport(item)
+            if (item.isMyBookmark) {
+                item {
+                    BottomSheetMenuItem(
+                        text = stringResource(R.string.bookmark_menu_delete_my_bookmark),
+                        color = Color(0xFD, 0x82, 0x82, 0xFF)
+                    ) {
+                        coroutineScope.launch {
+                            onDeleteMyBookmark(item)
+                        }
+                    }
+                }
+            }
+            else {
+                item {
+                    BottomSheetMenuItem(
+                        text = stringResource(R.string.bookmark_menu_report),
+                        color = Color(0xFD, 0x82, 0x82, 0xFF)
+                    ) {
+                        coroutineScope.launch {
+                            onReport(item)
+                        }
                     }
                 }
             }
