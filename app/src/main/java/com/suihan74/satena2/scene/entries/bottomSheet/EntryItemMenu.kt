@@ -1,10 +1,21 @@
 package com.suihan74.satena2.scene.entries.bottomSheet
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -12,7 +23,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.suihan74.hatena.model.account.Account
 import com.suihan74.satena2.R
-import com.suihan74.satena2.compose.*
+import com.suihan74.satena2.compose.BottomSheetMenuItem
+import com.suihan74.satena2.compose.CombinedIconButton
+import com.suihan74.satena2.compose.Tooltip
+import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.scene.entries.Category
 import com.suihan74.satena2.scene.entries.DisplayEntry
 import com.suihan74.satena2.scene.entries.EntryItem
@@ -56,6 +71,7 @@ fun EntryItemMenuContent(
         EntryItem(
             item = item,
             readMarkVisible = readMarkVisible,
+            ellipsizeTitle = false
         )
         LazyColumn(
             Modifier.verticalScrollbar(

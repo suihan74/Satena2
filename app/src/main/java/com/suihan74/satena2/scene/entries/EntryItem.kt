@@ -2,9 +2,20 @@ package com.suihan74.satena2.scene.entries
 
 import android.annotation.SuppressLint
 import android.net.Uri
-import android.text.Html
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
@@ -23,7 +34,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImage
@@ -50,6 +65,7 @@ fun EntryItem(
     item: DisplayEntry,
     imageSize: Dp = 80.dp,
     readMarkVisible: Boolean = true,
+    ellipsizeTitle: Boolean = true,
     onClick: ((DisplayEntry)->Unit)? = null,
     onLongClick: ((DisplayEntry)->Unit)? = null,
     onDoubleClick: ((DisplayEntry)->Unit)? = null,
@@ -60,7 +76,7 @@ fun EntryItem(
     onLongClickComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> }
 ) {
     val entry = item.entry
-    val decodedTitle = Html.fromHtml(Uri.decode(entry.title)).toString()
+    val decodedTitle = Uri.decode(entry.title).toString()
     val commentItems = remember(entry) {
         buildList {
             entry.bookmarkedData?.let { add(it) }
@@ -149,8 +165,8 @@ fun EntryItem(
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = CurrentTheme.onBackground,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
+            maxLines =  if (ellipsizeTitle) 3 else Int.MAX_VALUE,
+            overflow = if (ellipsizeTitle) TextOverflow.Ellipsis else TextOverflow.Clip,
             lineHeight = TextUnit(22f, TextUnitType.Sp),
             modifier = Modifier
                 .constrainAs(title) {
@@ -166,7 +182,7 @@ fun EntryItem(
                     width = Dimension.fillToConstraints
                     height = Dimension.wrapContent
                 }
-                .height(with(LocalDensity.current) { (22f * 3.2).sp.toDp() })
+                .heightIn(min = with(LocalDensity.current) { (22f * 3.2).sp.toDp() })
         )
         SubcomposeAsyncImage(
             model = entry.imageUrl,
