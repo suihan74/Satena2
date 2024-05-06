@@ -349,10 +349,10 @@ private fun BookmarksScene(
                         Box(Modifier.height(1.dp))
                     }
                     else {
-                        val labels by viewModel.allUserLabelsFlow.collectAsState(initial = emptyList())
+                        val userLabels by viewModel.allUserLabelsFlow.collectAsState()
                         val userAndLabels by viewModel.userLabelsFlow(user).collectAsState(initial = null)
                         UserLabelDialog(
-                            labels = labels,
+                            labels = userLabels,
                             checkedLabels = userAndLabels?.labels.orEmpty(),
                             onUpdate = {
                                 coroutineScope.launch {
@@ -459,7 +459,8 @@ private fun BookmarksScene(
                         viewModel.upStair()
                     },
                     onShowEntryMenu = onShowEntryMenu,
-                    onShareEntryMenu = onShareEntry
+                    onShareEntryMenu = onShareEntry,
+                    onShowTag = { viewModel.launchEntriesActivityForTag(it) }
                 )
             }
         ) {

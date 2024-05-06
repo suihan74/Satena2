@@ -261,6 +261,10 @@
     <string name="bookmark_custom_tab_setting_no_comments_shown">無言ブクマ</string>
     <string name="bookmark_custom_tab_setting_ignored_users_shown">非表示ユーザー</string>
 
+    <!-- ドロワ -->
+    <string name="bookmark_drawer_tags_title">タグ</string>
+    <string name="bookmark_drawer_related_entries_title">関連エントリ</string>
+
     <!-- ====================================================================== -->
     <!-- PostBookmarkActivity -->
 

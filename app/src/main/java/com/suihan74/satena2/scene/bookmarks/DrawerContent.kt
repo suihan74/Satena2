@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -32,6 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,7 +70,8 @@ fun DrawerContent(
     downStair: ()->Unit,
     upStair: ()->Unit,
     onShowEntryMenu: (DisplayEntry)->Unit,
-    onShareEntryMenu: (DisplayEntry)->Unit
+    onShareEntryMenu: (DisplayEntry)->Unit,
+    onShowTag: (String)->Unit
 ) {
     val entry = remember(entity) { entity.entry }
     val bookmarksEntry = remember(entity) { entity.bookmarksEntry }
@@ -74,6 +80,30 @@ fun DrawerContent(
     val titleScrollableState = rememberScrollState()
     val contentsScrollableState = rememberScrollState()
     val actualUrl = remember(entry) { Uri.decode(entry.actualUrl()) }
+    val relatedTags = remember(entity) { bookmarksEntry.tags.take(10) }
+
+    val inlineContentMap = mapOf(
+        "tagIcon" to InlineTextContent(
+            Placeholder(20.sp, 20.sp, PlaceholderVerticalAlign.Center)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_tag),
+                modifier = Modifier.fillMaxSize(),
+                tint = CurrentTheme.drawerOnBackground,
+                contentDescription = ""
+            )
+        },
+        "relatedEntriesIcon" to InlineTextContent(
+            Placeholder(20.sp, 20.sp, PlaceholderVerticalAlign.Center)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_category_site),
+                modifier = Modifier.fillMaxSize(),
+                tint = CurrentTheme.drawerOnBackground,
+                contentDescription = ""
+            )
+        }
+    )
 
     Column(
         Modifier
@@ -94,7 +124,7 @@ fun DrawerContent(
                         text = entry.title,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = CurrentTheme.onBackground,
+                        color = CurrentTheme.drawerOnBackground,
                         modifier = Modifier
                             .height(64.dp)
                             .verticalScroll(titleScrollableState)
@@ -138,7 +168,7 @@ fun DrawerContent(
                         Icon(
                             painterResource(id = R.drawable.ic_add_star),
                             contentDescription = "star button",
-                            tint = CurrentTheme.onBackground
+                            tint = CurrentTheme.drawerOnBackground
                         )
                     }
                 }
@@ -146,61 +176,111 @@ fun DrawerContent(
                 Text(
                     text = entry.description,
                     fontSize = 12.sp,
-                    color = CurrentTheme.onBackground,
+                    color = CurrentTheme.drawerOnBackground,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
-                Spacer(Modifier.height(8.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
-                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
+                if (relatedTags.isNotEmpty()) {
                     // タグリスト
-                    bookmarksEntry.tags.take(10).forEach { (tag, _/*count*/) ->
-                        Box(
-                            Modifier
-                                .background(
-                                    color = CurrentTheme.primary,
-                                    shape = RoundedCornerShape(8.dp)
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = buildAnnotatedString {
+                            appendInlineContent(id = "tagIcon")
+                            append(stringResource(R.string.bookmark_drawer_tags_title))
+                        },
+                        inlineContent = inlineContentMap,
+                        fontWeight = FontWeight.Bold,
+                        color = CurrentTheme.drawerOnBackground,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
+                        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
+                        relatedTags.forEach { (tag, _/*count*/) ->
+                            Box(
+                                Modifier
+                                    .background(
+                                        color = CurrentTheme.primary,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { onShowTag(tag) }
+                            ) {
+                                Text(
+                                    text = tag,
+                                    fontSize = 13.sp,
+                                    color = CurrentTheme.onPrimary,
+                                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
                                 )
-                                .clickable { /* todo */ }
-                        ) {
-                            Text(
-                                text = tag,
-                                fontSize = 13.sp,
-                                color = CurrentTheme.onPrimary,
-                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-                            )
+                            }
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
-                // 関連エントリ
-                entity.relatedEntries.forEach { item ->
-                    EntryItem(
-                        item = item,
-                        imageSize = 48.dp,
-                        onClick = {
-                            entryActionHandler.onEvent(item, EntryItemEvent.Click, onShowEntryMenu, onShareEntryMenu)
+                if (entity.relatedEntries.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = buildAnnotatedString {
+                            appendInlineContent(id = "relatedEntriesIcon")
+                            append(stringResource(R.string.bookmark_drawer_related_entries_title))
                         },
-                        onLongClick = {
-                            entryActionHandler.onEvent(item, EntryItemEvent.LongClick, onShowEntryMenu, onShareEntryMenu)
-                        },
-                        onDoubleClick = {
-                            entryActionHandler.onEvent(item, EntryItemEvent.DoubleClick, onShowEntryMenu, onShareEntryMenu)
-                        },
-                        onClickEdge = {
-                            entryActionHandler.onEvent(item, EntryItemEvent.ClickEdge, onShowEntryMenu, onShareEntryMenu)
-                        },
-                        onLongClickEdge = {
-                            entryActionHandler.onEvent(item, EntryItemEvent.LongClickEdge, onShowEntryMenu, onShareEntryMenu)
-                        },
-                        onDoubleClickEdge = {
-                            entryActionHandler.onEvent(item, EntryItemEvent.DoubleClickEdge, onShowEntryMenu, onShareEntryMenu)
-                        },
-                        onClickComment = { _, bookmark -> entryActionHandler.onClickComment(item, bookmark) },
-                        onLongClickComment = { _, bookmark -> entryActionHandler.onLongClickComment(item, bookmark) },
+                        inlineContent = inlineContentMap,
+                        fontWeight = FontWeight.Bold,
+                        color = CurrentTheme.drawerOnBackground,
+                        modifier = Modifier.padding(horizontal = 8.dp)
                     )
+                    Spacer(Modifier.height(4.dp))
+                    entity.relatedEntries.forEach { item ->
+                        EntryItem(
+                            item = item,
+                            imageSize = 48.dp,
+                            onClick = {
+                                entryActionHandler.onEvent(
+                                    item, EntryItemEvent.Click, onShowEntryMenu, onShareEntryMenu
+                                )
+                            },
+                            onLongClick = {
+                                entryActionHandler.onEvent(
+                                    item, EntryItemEvent.LongClick, onShowEntryMenu,
+                                    onShareEntryMenu
+                                )
+                            },
+                            onDoubleClick = {
+                                entryActionHandler.onEvent(
+                                    item, EntryItemEvent.DoubleClick, onShowEntryMenu,
+                                    onShareEntryMenu
+                                )
+                            },
+                            onClickEdge = {
+                                entryActionHandler.onEvent(
+                                    item, EntryItemEvent.ClickEdge, onShowEntryMenu,
+                                    onShareEntryMenu
+                                )
+                            },
+                            onLongClickEdge = {
+                                entryActionHandler.onEvent(
+                                    item, EntryItemEvent.LongClickEdge, onShowEntryMenu,
+                                    onShareEntryMenu
+                                )
+                            },
+                            onDoubleClickEdge = {
+                                entryActionHandler.onEvent(
+                                    item, EntryItemEvent.DoubleClickEdge, onShowEntryMenu,
+                                    onShareEntryMenu
+                                )
+                            },
+                            onClickComment = { _, bookmark ->
+                                entryActionHandler.onClickComment(
+                                    item, bookmark
+                                )
+                            },
+                            onLongClickComment = { _, bookmark ->
+                                entryActionHandler.onLongClickComment(
+                                    item, bookmark
+                                )
+                            },
+                        )
+                    }
                 }
             }
 
@@ -289,7 +369,8 @@ private fun DrawerContentPreview() {
             downStair = {},
             upStair = {},
             onShowEntryMenu = {},
-            onShareEntryMenu = {}
+            onShareEntryMenu = {},
+            onShowTag = {}
         )
     }
 }
