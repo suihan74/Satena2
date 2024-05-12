@@ -187,6 +187,7 @@ private fun EntriesScene(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerAlignment by viewModel.drawerAlignment.collectAsState(initial = Alignment.Start)
+    var drawerEnabled by remember { mutableStateOf(true) }
 
     var menuState by remember { mutableStateOf(false) }
     val useBottomMenu by viewModel.useBottomMenu.collectAsState(initial = false)
@@ -419,6 +420,7 @@ private fun EntriesScene(
             isRtl = drawerAlignment == Alignment.End,
             width = 300.dp,
             drawerState = drawerState,
+            gesturesEnabled = drawerEnabled,
             drawerContent = {
                 DrawerContent(viewModel) { category ->
                     coroutineScope.launch {
@@ -495,6 +497,10 @@ private fun EntriesScene(
                 },
                 onClickItemComment = { item, b -> viewModel.onClickComment(item, b) },
                 onLongClickItemComment = { item, b -> viewModel.onLongClickComment(item, b) },
+                onToggleExtraBottomMenu = {
+                    // 追加ボトムメニュー表示中はドロワは封じる
+                    drawerEnabled = !it
+                }
             )
         }
     }
@@ -577,6 +583,7 @@ private fun MainContent(
     onDoubleClickItemEdge: (DisplayEntry)->Unit = {},
     onClickItemComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> },
     onLongClickItemComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> },
+    onToggleExtraBottomMenu: (Boolean)->Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -623,7 +630,11 @@ private fun MainContent(
         snapshotFlow {
             exBottomMenuDraggableState.requireOffset()
         }.collect {
-            fabVisibleState.targetState = it == 0f
+            val next = it == 0f
+            if (fabVisibleState.currentState != next) {
+                fabVisibleState.targetState = next
+                onToggleExtraBottomMenu(!next)
+            }
         }
     }
 
