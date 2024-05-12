@@ -81,7 +81,7 @@ fun OrientatedModalDrawer(
                         VibratorCompat.vibrateOneShot(context, duration = 5L)
                     }
                 }
-            }
+        }
     }
 
     Box(
@@ -135,11 +135,16 @@ fun OrientatedModalDrawer(
                                     if (isRtl) Alignment.CenterEnd
                                     else Alignment.CenterStart
                                 )
-                                .clickable(
-                                    interactionSource = cursorInteractionSource,
-                                    indication = null
-                                ) {}
-                                .systemGestureExclusion()
+                                .let {
+                                    if (gesturesEnabled) {
+                                        it.clickable(
+                                            interactionSource = cursorInteractionSource,
+                                            indication = null
+                                        ) {}
+                                        .systemGestureExclusion()
+                                    }
+                                    else it
+                                }
                         ) {
                             Icon(
                                 painterResource(
