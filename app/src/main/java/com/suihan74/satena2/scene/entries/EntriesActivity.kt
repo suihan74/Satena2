@@ -11,9 +11,14 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +30,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
@@ -33,11 +41,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -45,9 +50,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -80,7 +86,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @AndroidEntryPoint
 class EntriesActivity : ComponentActivity() {
@@ -524,7 +529,7 @@ private fun EntriesScene(
 @Composable
 private fun EntriesScenePreview() {
     val navController = rememberNavController()
-    val categoryTitles = Category.values().map { stringResource(id = it.textId) }
+    val categoryTitles = Category.entries.map { stringResource(id = it.textId) }
 
     EntriesScene(
         viewModel = FakeEntriesViewModel { category ->
@@ -542,6 +547,7 @@ private fun EntriesScenePreview() {
  *
  * [ScaffoldPaddingParameter] (contentのinner padding)を使用するとボトムバーの切り欠き部分が透過されなくなる
  */
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "FlowOperatorInvokedInComposition",
     "RestrictedApi"
 )
@@ -573,36 +579,59 @@ private fun MainContent(
     onLongClickItemComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> },
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+
+    // トップバーのネストスクロール用ビヘイビア
+    val topBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     // カテゴリorターゲットユーザーをタイトルに表示
     val topBarTitle = remember(category, target) { viewModel.topBarTitle(category, target) }
 
     // サブカテゴリがある場合はサブタイトル表示
     val topBarSubTitleForIssue by remember(issue) { mutableStateOf(issue?.name) }
 
-    val density = LocalDensity.current
-    val toolbarHeightPx = with(density) { 56.dp.roundToPx().toFloat() }
-    val toolbarOffsetHeightPx = remember { mutableFloatStateOf(0f) }
-    val toolbarHeight = remember { mutableStateOf(56.dp) }
-    val scrollConnection = object : NestedScrollConnection {
-        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-            val delta = available.y
-            val newOffset = toolbarOffsetHeightPx.floatValue + delta
-            toolbarOffsetHeightPx.floatValue = newOffset.coerceIn(-toolbarHeightPx, 0f)
-            toolbarHeight.value = with(density) { (toolbarHeightPx + toolbarOffsetHeightPx.floatValue * 2).toDp() }
-            return Offset.Zero
+    val listStateMap by rememberSaveable(stateSaver = listStateMapSaver) {
+        mutableStateOf(HashMap())
+    }
+
+    // ボトムバーのスワイプ処理
+    val exBottomMenuDraggableState = remember {
+        AnchoredDraggableState(
+            initialValue = false,
+            anchors = DraggableAnchors {
+                true at 300f  // dp
+                false at 0f
+            },
+            positionalThreshold = { it * .6f },
+            velocityThreshold = { with(density) { 20.dp.toPx() } },
+            animationSpec = tween()
+        )
+    }
+
+    fun hideExtraBottomMenu() {
+        coroutineScope.launch {
+            exBottomMenuDraggableState.anchoredDrag {
+                dragTo(newOffset = 0f)
+            }
         }
     }
 
-    val listStateMap by rememberSaveable(stateSaver = listStateMapSaver) {
-        mutableStateOf(HashMap())
+    // FABの表示状態
+    val fabVisibleState = remember { MutableTransitionState(true) }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            exBottomMenuDraggableState.requireOffset()
+        }.collect {
+            fabVisibleState.targetState = it == 0f
+        }
     }
 
     LaunchedEffect(Unit) {
         // 画面遷移ごとにツールバーを展開し直す
         navController.currentBackStackEntryFlow
             .onEach {
-                toolbarOffsetHeightPx.floatValue = 0f
-                toolbarHeight.value = 56.dp
+                topBarScrollBehavior.state.heightOffset = 0f
             }
             .launchIn(this)
 
@@ -615,81 +644,368 @@ private fun MainContent(
             .launchIn(this)
     }
 
-    Scaffold(
-        topBar = {
-            Column(
-                Modifier.height(toolbarHeight.value)
-            ) {
-                TopAppBar(
-                    backgroundColor = CurrentTheme.titleBarBackground,
-                    title = {
-                        Column(
-                            Modifier.offset {
-                                IntOffset(
-                                    x = 0,
-                                    y = toolbarOffsetHeightPx.floatValue.roundToInt()
-                                )
-                            }
-                        ) {
-                            MarqueeText(
-                                text = topBarTitle,
-                                fontSize = 20.sp,
-                                color = CurrentTheme.titleBarOnBackground,
-                                gradientColor = CurrentTheme.titleBarBackground
-                            )
+    ConstraintLayout(
+        Modifier.fillMaxSize()
+    ) {
+        val (mainRef, exBottomRef) = createRefs()
 
-                            val subTitleText = when (category) {
-                                Category.Search -> {
-                                    val searchSetting by viewModel.searchSettingFlow.collectAsState()
-                                    "${stringResource(searchSetting.searchType.textId)} : ${searchSetting.query}"
-                                }
-                                Category.SearchMyBookmarks -> {
-                                    val searchSetting by viewModel.searchMyBookmarksSettingFlow.collectAsState()
-                                    "${stringResource(searchSetting.searchType.textId)} : ${searchSetting.query}"
-                                }
-                                else -> topBarSubTitleForIssue
-                            }
-                            subTitleText?.let {
+        Scaffold(
+            floatingActionButtonPosition = FabPosition.End,
+            isFloatingActionButtonDocked = true,
+            modifier = Modifier
+                .constrainAs(mainRef) {
+                    linkTo(
+                        top = parent.top,
+                        bottom = exBottomRef.top,
+                        start = parent.start,
+                        end = parent.end,
+                    )
+                    width = Dimension.matchParent
+                    height = Dimension.fillToConstraints
+                }
+                .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
+            topBar = {
+                // 追加ボトムメニュー表示時には
+                // トップバー&コンテンツはクリック防止しつつ、ボトムバーは表示し続ける
+                // という振る舞いを実現するため`TopAppBar`と同サイズのクリックガードで覆うようにする
+                ConstraintLayout(
+                    Modifier.fillMaxWidth()
+                ) {
+                    val (appBarRef, tapGuardRef) = createRefs()
+
+                    TopAppBar(
+                        scrollBehavior = topBarScrollBehavior,
+                        modifier = Modifier
+                            .constrainAs(appBarRef) {
+                                linkTo(
+                                    top = parent.top,
+                                    bottom = parent.bottom,
+                                    start = parent.start,
+                                    end = parent.end,
+                                )
+                                width = Dimension.matchParent
+                                height = Dimension.wrapContent
+                            },
+                        colors = TopAppBarDefaults.topAppBarColors().copy(
+                            containerColor = CurrentTheme.titleBarBackground,
+                            scrolledContainerColor = CurrentTheme.titleBarBackground,
+                            titleContentColor = CurrentTheme.titleBarOnBackground,
+                            navigationIconContentColor = CurrentTheme.titleBarOnBackground,
+                            actionIconContentColor = CurrentTheme.titleBarOnBackground
+                        ),
+                        title = {
+                            Column {
                                 MarqueeText(
-                                    text = it,
-                                    fontSize = 14.sp,
+                                    text = topBarTitle,
+                                    fontSize = 20.sp,
                                     color = CurrentTheme.titleBarOnBackground,
                                     gradientColor = CurrentTheme.titleBarBackground
                                 )
+
+                                val subTitleText = when (category) {
+                                    Category.Search -> {
+                                        val searchSetting by viewModel.searchSettingFlow.collectAsState()
+                                        "${
+                                            stringResource(
+                                                searchSetting.searchType.textId
+                                            )
+                                        } : ${searchSetting.query}"
+                                    }
+
+                                    Category.SearchMyBookmarks -> {
+                                        val searchSetting by viewModel.searchMyBookmarksSettingFlow.collectAsState()
+                                        "${
+                                            stringResource(
+                                                searchSetting.searchType.textId
+                                            )
+                                        } : ${searchSetting.query}"
+                                    }
+
+                                    else -> topBarSubTitleForIssue
+                                }
+                                subTitleText?.let {
+                                    MarqueeText(
+                                        text = it,
+                                        fontSize = 14.sp,
+                                        color = CurrentTheme.titleBarOnBackground,
+                                        gradientColor = CurrentTheme.titleBarBackground
+                                    )
+                                }
+                            }
+                        },
+                        actions = actions@{
+                            if (useBottomMenu) return@actions
+                            IconButton(
+                                onClick = { /* TODO */ }
+                            ) {
+                                Icon(
+                                    Icons.Filled.Search,
+                                    contentDescription = "search",
+                                    tint = CurrentTheme.titleBarOnBackground
+                                )
                             }
                         }
-                    },
-                    actions = actions@{
-                        if (useBottomMenu) return@actions
-                        IconButton(
-                            onClick = { /* TODO */ },
+                    )
+
+                    if (exBottomMenuDraggableState.currentValue) {
+                        Box(
                             modifier = Modifier
-                                .offset { IntOffset(x = 0, y = toolbarOffsetHeightPx.floatValue.roundToInt()) }
+                                .background(CurrentTheme.tapGuard)
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    hideExtraBottomMenu()
+                                }
+                                .constrainAs(tapGuardRef) {
+                                    linkTo(
+                                        top = mainRef.top,
+                                        bottom = mainRef.bottom,
+                                        start = mainRef.start,
+                                        end = mainRef.end
+                                    )
+                                    width = Dimension.fillToConstraints
+                                    height = Dimension.fillToConstraints
+                                }
+                        ) {}
+                    }
+                }
+            },
+            bottomBar = bottomBar@{
+                if (!useBottomMenu) return@bottomBar
+                val bottomMenuItems by viewModel.bottomMenuItems.collectAsState(
+                    initial = emptyList()
+                )
+                val arrangement by viewModel.bottomMenuArrangement.collectAsState(Arrangement.Start)
+                val hatenaAccount by viewModel.hatenaAccount.collectAsState()
+                val issues by viewModel.issuesFlow(category).collectAsState(initial = emptyList())
+                // ボトムメニューがFAB部分を回避するようにパディングを設定
+                // 追加ボトムメニュー表示時にはFABを隠すため0.dpにする
+                val contentPaddingValues = remember(fabVisibleState.currentState) {
+                    PaddingValues(
+                        start = 0.dp,
+                        end = if (fabVisibleState.currentState) 88.dp else 0.dp
+                    )
+                }
+
+                // ボトムメニューを上スワイプで追加ボトムメニュー表示
+                BottomMenu(
+                    modifier = Modifier
+                        .anchoredDraggable(
+                            state = exBottomMenuDraggableState,
+                            orientation = Orientation.Vertical,
+                            reverseDirection = true
+                        ),
+                    items = bottomMenuItems,
+                    itemsArrangement = arrangement,
+                    category = category,
+                    signedIn = hatenaAccount != null,
+                    issues = issues,
+                    contentPaddingValues = contentPaddingValues,
+                    onClickItem = {
+                        hideExtraBottomMenu()
+                        coroutineScope.launch {
+                            viewModel.onClickBottomMenuItem(
+                                item = it,
+                                navController = navController,
+                                onOpenDrawer = { drawerState.open() },
+                                onShowExcludedEntriesBottomSheet = onShowExcludedEntriesBottomSheet
+                            )
+                        }
+                    },
+                    onLongClickItem = {
+                        hideExtraBottomMenu()
+                        coroutineScope.launch {
+                            viewModel.onLongClickBottomMenuItem(
+                                item = it,
+                                onShowBrowserBottomSheet = onShowBrowserBottomSheet
+                            )
+                        }
+                    },
+                    onClickIssuesItem = {
+                        hideExtraBottomMenu()
+                        onOpenIssuesMenu()
+                    },
+                    onClickSearchItem = {
+                        hideExtraBottomMenu()
+                        onOpenSearchSetting()
+                    }
+                )
+            },
+            floatingActionButton = {
+                AnimatedVisibility(
+                    visibleState = fabVisibleState,
+                    enter = scaleIn(
+                        animationSpec = tween(200)
+                    ),
+                    exit = scaleOut(
+                        animationSpec = tween(200)
+                    ),
+                ) {
+                    // FAB部分も上スワイプで追加ボトムメニュー表示する
+                    FloatingActionButton(
+                        backgroundColor = CurrentTheme.primary,
+                        contentColor = CurrentTheme.onPrimary,
+                        onClick = { onChangeMenuState() },
+                        modifier = Modifier
+                            .anchoredDraggable(
+                                state = exBottomMenuDraggableState,
+                                orientation = Orientation.Vertical,
+                                reverseDirection = true
+                            )
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_menu),
+                            contentDescription = "open menu",
+                            colorFilter = ColorFilter.tint(CurrentTheme.onPrimary)
+                        )
+                    }
+                }
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(CurrentTheme.background)
+                    .fillMaxSize()
+            ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = "blank",
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // 初期表示カテゴリなどのロード前に表示しておく画面
+                    composable("blank") {
+                        val initialState by viewModel.initialState.collectAsState(initial = null)
+                        initialState?.let {
+                            viewModel.initialNavigation(it, navController)
+                        }
+
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(CurrentTheme.background)
                         ) {
-                            Icon(
-                                Icons.Filled.Search,
-                                contentDescription = "search",
-                                tint = CurrentTheme.titleBarOnBackground
+                            CircularProgressIndicator(
+                                color = CurrentTheme.primary,
+                                strokeWidth = 4.dp,
+                                modifier = Modifier.align(Alignment.Center)
                             )
                         }
                     }
-                )
-            }
-        },
-        bottomBar = bottomBar@{
-            if (!useBottomMenu) return@bottomBar
-            val bottomMenuItems by viewModel.bottomMenuItems.collectAsState(initial = emptyList())
-            val arrangement by viewModel.bottomMenuArrangement.collectAsState(Arrangement.Start)
-            val hatenaAccount by viewModel.hatenaAccount.collectAsState()
-            val issues by viewModel.issuesFlow(category).collectAsState(initial = emptyList())
+                    // 各カテゴリ画面
+                    composable(
+                        "entries/{category}?target={target}&issue={issue}",
+                        arguments = listOf(
+                            navArgument("category") { type = NavType.StringType },
+                            navArgument("target") { type = NavType.StringType; defaultValue = "" },
+                            navArgument("issue") { type = NavType.StringType; defaultValue = "" }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(animationSpec = tween(300)) { it }
+                        },
+                        exitTransition = {
+                            slideOutHorizontally(animationSpec = tween(300)) { it }
+                        }
+                    ) { navBackStackEntry ->
+                        val c = remember(navBackStackEntry) {
+                            navBackStackEntry.arguments
+                                ?.getString("category")
+                                ?.let { Category.valueOf(it) }!!
+                        }
+                        val issues by viewModel.issuesFlow(c).collectAsState(initial = emptyList())
+                        val pageIssue = remember(navBackStackEntry, issues) {
+                            navBackStackEntry.argument<String>("issue")
+                                ?.let { code -> issues.firstOrNull { it.code == code } }
+                        }
+                        val argTarget = remember(navBackStackEntry) {
+                            navBackStackEntry.argument<String>("target").orEmpty()
+                        }
 
-            BottomMenu(
-                items = bottomMenuItems,
-                itemsArrangement = arrangement,
-                category = category,
-                signedIn = hatenaAccount != null,
-                issues = issues,
+                        EntriesContent(
+                            id = navBackStackEntry.id,
+                            viewModel = viewModel,
+                            listStateMap = listStateMap,
+                            navHostController = navController,
+                            category = c,
+                            issue = pageIssue,
+                            target = argTarget,
+                            readMarkVisible = entryReadMarkVisible,
+                            onChangeTab = onChangeTab,
+                            onRefresh = onRefresh,
+                            onAppearLastItem = onAppearLastItem,
+                            onClickItem = onClickItem,
+                            onLongClickItem = onLongClickItem,
+                            onDoubleClickItem = onDoubleClickItem,
+                            onClickItemEdge = onClickItemEdge,
+                            onLongClickItemEdge = onLongClickItemEdge,
+                            onDoubleClickItemEdge = onDoubleClickItemEdge,
+                            onClickItemComment = onClickItemComment,
+                            onLongClickItemComment = onLongClickItemComment
+                        )
+
+                        BackHandler(drawerState.isOpen) {
+                            coroutineScope.launch {
+                                drawerState.close()
+                            }
+                        }
+                    }
+                }
+                // FAB付近の背景タップを防止
+                if (fabVisibleState.currentState) {
+                    Box(
+                        Modifier
+                            .background(Color.Transparent)
+                            .size(90.dp)
+                            .align(Alignment.BottomEnd)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {}
+                    )
+                }
+
+                if (exBottomMenuDraggableState.currentValue) {
+                    Box(
+                        modifier = Modifier
+                            .background(CurrentTheme.tapGuard)
+                            .fillMaxSize()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                hideExtraBottomMenu()
+                            }
+                    ) {}
+                }
+            }
+        }
+
+        // 追加ボトムメニュー表示
+        // 初期状態では隠しておいてボトムバー・FABを上スワイプで表示する
+        Box(
+            modifier = Modifier
+                .constrainAs(exBottomRef) {
+                    linkTo(
+                        top = mainRef.bottom,
+                        bottom = parent.bottom,
+                        start = parent.start,
+                        end = parent.end
+                    )
+                    width = Dimension.matchParent
+                    height = Dimension.value(
+                        exBottomMenuDraggableState.requireOffset().dp
+                    )
+                }
+                .anchoredDraggable(
+                    state = exBottomMenuDraggableState,
+                    orientation = Orientation.Vertical,
+                    reverseDirection = true
+                )
+        ) {
+            BottomMenuItemsGrid(
                 onClickItem = {
+                    hideExtraBottomMenu()
                     coroutineScope.launch {
                         viewModel.onClickBottomMenuItem(
                             item = it,
@@ -698,133 +1014,13 @@ private fun MainContent(
                             onShowExcludedEntriesBottomSheet = onShowExcludedEntriesBottomSheet
                         )
                     }
-                },
-                onLongClickItem = {
-                    coroutineScope.launch {
-                        viewModel.onLongClickBottomMenuItem(
-                            item = it,
-                            onShowBrowserBottomSheet = onShowBrowserBottomSheet
-                        )
-                    }
-                },
-                onClickIssuesItem = onOpenIssuesMenu,
-                onClickSearchItem = onOpenSearchSetting
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                backgroundColor = CurrentTheme.primary,
-                contentColor = CurrentTheme.onPrimary,
-                onClick = { onChangeMenuState() }
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_menu),
-                    contentDescription = "open menu",
-                    colorFilter = ColorFilter.tint(CurrentTheme.onPrimary)
-                )
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End,
-        isFloatingActionButtonDocked = true,
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollConnection)
-    ) {
-        Box(
-            modifier = Modifier
-                .background(CurrentTheme.background)
-                .fillMaxSize()
-        ) {
-            NavHost(
-                navController = navController,
-                startDestination = "blank",
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // 初期表示カテゴリなどのロード前に表示しておく画面
-                composable("blank") {
-                    val initialState by viewModel.initialState.collectAsState(initial = null)
-                    initialState?.let {
-                        viewModel.initialNavigation(it, navController)
-                    }
-
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(CurrentTheme.background)
-                    ) {
-                        CircularProgressIndicator(
-                            color = CurrentTheme.primary,
-                            strokeWidth = 4.dp,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
                 }
-                // 各カテゴリ画面
-                composable(
-                    "entries/{category}?target={target}&issue={issue}",
-                    arguments = listOf(
-                        navArgument("category") { type = NavType.StringType },
-                        navArgument("target") { type = NavType.StringType; defaultValue = "" },
-                        navArgument("issue") { type = NavType.StringType; defaultValue = "" }
-                    ),
-                    enterTransition = {
-                        slideInHorizontally(animationSpec = tween(300)) { it }
-                    },
-                    exitTransition = {
-                        slideOutHorizontally(animationSpec = tween(300)) { it }
-                    }
-                ) { navBackStackEntry ->
-                    val c = remember(navBackStackEntry) {
-                        navBackStackEntry.arguments
-                            ?.getString("category")
-                            ?.let { Category.valueOf(it) }!!
-                    }
-                    val issues by viewModel.issuesFlow(c).collectAsState(initial = emptyList())
-                    val pageIssue = remember(navBackStackEntry, issues) {
-                        navBackStackEntry.argument<String>("issue")?.let { code -> issues.firstOrNull { it.code == code } }
-                    }
-                    val argTarget = remember(navBackStackEntry) {
-                        navBackStackEntry.argument<String>("target").orEmpty()
-                    }
-
-                    EntriesContent(
-                        id = navBackStackEntry.id,
-                        viewModel = viewModel,
-                        listStateMap = listStateMap,
-                        navHostController = navController,
-                        category = c,
-                        issue = pageIssue,
-                        target = argTarget,
-                        readMarkVisible = entryReadMarkVisible,
-                        onChangeTab = onChangeTab,
-                        onRefresh = onRefresh,
-                        onAppearLastItem = onAppearLastItem,
-                        onClickItem = onClickItem,
-                        onLongClickItem = onLongClickItem,
-                        onDoubleClickItem = onDoubleClickItem,
-                        onClickItemEdge = onClickItemEdge,
-                        onLongClickItemEdge = onLongClickItemEdge,
-                        onDoubleClickItemEdge = onDoubleClickItemEdge,
-                        onClickItemComment = onClickItemComment,
-                        onLongClickItemComment = onLongClickItemComment
-                    )
-
-                    BackHandler(drawerState.isOpen) {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                    }
-                }
-            }
-            // FAB付近の背景タップを防止
-            Box(
-                Modifier
-                    .background(Color.Transparent)
-                    .hoverable(interactionSource = remember { MutableInteractionSource() })
-                    .size(90.dp)
-                    .align(Alignment.BottomEnd)
             )
         }
+    }
+
+    BackHandler(exBottomMenuDraggableState.currentValue) {
+        hideExtraBottomMenu()
     }
 }
 
