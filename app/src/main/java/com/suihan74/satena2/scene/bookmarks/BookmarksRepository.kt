@@ -804,7 +804,7 @@ class BookmarksRepositoryImpl @Inject constructor(
         }
     }
 
-    private val idCallRegex = Regex("""(^|[^a-zA-Z0-9])id:([a-zA-Z0-9_]+)""")
+    private val idCallRegex = Regex("""(^|[^a-zA-Z0-9:])id:([a-zA-Z0-9_\-]+)""")
     private val urlRegex = Regex("""https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
 
     private suspend fun Bookmark.toDisplayBookmark(eid: Long) : DisplayBookmark {

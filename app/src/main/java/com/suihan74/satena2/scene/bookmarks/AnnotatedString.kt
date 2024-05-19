@@ -76,7 +76,7 @@ fun buildAnnotatedComment(
 ) : AnnotatedString = buildAnnotatedString {
     if (bookmark.comment.isBlank()) return@buildAnnotatedString
     val urlRegex =
-        Regex("""id:[a-zA-Z0-9_]+|https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
+        Regex("""(b:)?id:[a-zA-Z0-9_\-]+|https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
     // todo: `DisplayBookmark`生成時に切り分けるのでこちらでの正規表現処理は無くす
 
     appendRegex(urlRegex, bookmark.comment) { m ->
