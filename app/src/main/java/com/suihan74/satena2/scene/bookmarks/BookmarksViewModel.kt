@@ -644,7 +644,20 @@ class BookmarksViewModelImpl @Inject constructor(
      * アプリ内ブラウザで開く
      */
     override fun openBrowser(url: String) {
-        lifecycleObserver.launchBrowserActivity(url)
+        Regex("""id:entry:(\d+)""").matchEntire(url)?.let {
+            viewModelScope.launch {
+                runCatching {
+                    val eid = it.groups[1]!!.value.toLong()
+                    val actualUrl = repository.getPageUrl(eid)
+                    lifecycleObserver.launchBrowserActivity(actualUrl)
+                }.onFailure {
+                    // todo
+                    context.showToast("$url を開けませんでした")
+                }
+            }
+        } ?: run {
+            lifecycleObserver.launchBrowserActivity(url)
+        }
     }
 
     /**

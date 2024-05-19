@@ -161,6 +161,13 @@ interface BookmarksRepository {
         item: DisplayBookmark,
         coroutineScope: CoroutineScope
     ) : StateFlow<List<Mention>>
+
+    // ------ //
+
+    /**
+     * エントリIDからページのURLを取得する
+     */
+    suspend fun getPageUrl(eid: Long) : String
 }
 
 // ------ //
@@ -804,8 +811,8 @@ class BookmarksRepositoryImpl @Inject constructor(
         }
     }
 
-    private val idCallRegex = Regex("""(^|[^a-zA-Z0-9:])id:([a-zA-Z0-9_\-]+)""")
-    private val urlRegex = Regex("""https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
+    private val idCallRegex = Regex("""(^|[^a-zA-Z0-9:])id:(?!entry:)([a-zA-Z0-9_\-]+)""")
+    private val urlRegex = Regex("""id:entry:\d+|https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
 
     private suspend fun Bookmark.toDisplayBookmark(eid: Long) : DisplayBookmark {
         val ignoredUsers = ignoredUsersFlow.value
@@ -974,5 +981,14 @@ class BookmarksRepositoryImpl @Inject constructor(
                     .launchIn(this)
             }
         }
+    }
+
+    // ------ //
+
+    /**
+     * エントリIDからエントリのURLを取得する
+     */
+    override suspend fun getPageUrl(eid: Long) : String {
+        return plainHatenaClient.entry.getUrl(eid)
     }
 }
