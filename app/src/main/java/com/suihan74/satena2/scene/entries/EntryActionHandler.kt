@@ -3,8 +3,6 @@ package com.suihan74.satena2.scene.entries
 import androidx.navigation.NavController
 import com.suihan74.hatena.model.bookmark.BookmarkResult
 import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionResult
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 enum class EntryItemEvent {
     /** 単クリック */
@@ -18,7 +16,13 @@ enum class EntryItemEvent {
     /** 右端を長押し */
     LongClickEdge,
     /** 右端をダブルクリック */
-    DoubleClickEdge
+    DoubleClickEdge,
+    /** コメントをクリック */
+    ClickComment,
+    /** コメントを長押し */
+    LongClickComment,
+    /** コメントをダブルクリック */
+    DoubleClickComment,
 }
 
 // ------ //
@@ -43,6 +47,16 @@ interface EntryActionHandler {
      * ブクマページを開く
      */
     fun launchBookmarksActivity(entry: DisplayEntry)
+
+    /**
+     * ブクマページを開き指定ユーザーのブクマを表示する
+     */
+    fun launchBookmarksActivity(entry: DisplayEntry, user: String)
+
+    /**
+     * ブクマ編集画面を開く
+     */
+    fun launchPostBookmarkActivity(entry: DisplayEntry)
 
     /**
      * アプリ内ブラウザでページを開く
@@ -114,6 +128,12 @@ class FakeEntryActionHandler : EntryActionHandler {
     // ------ //
 
     override fun launchBookmarksActivity(entry: DisplayEntry) {
+    }
+
+    override fun launchBookmarksActivity(entry: DisplayEntry, user: String) {
+    }
+
+    override fun launchPostBookmarkActivity(entry: DisplayEntry) {
     }
 
     override fun launchBrowserActivity(entry: DisplayEntry) {

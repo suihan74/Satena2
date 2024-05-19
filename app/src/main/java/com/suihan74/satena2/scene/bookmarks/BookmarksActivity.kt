@@ -246,10 +246,10 @@ private fun BookmarksScene(
                     var ngWordEditionDialogVisible by remember { mutableStateOf(false) }
                     EntryItemMenuContent(
                         item = entryMenuTarget,
-                        sheetState = bottomSheetState,
                         category = Category.All,
                         account = account,
                         readMarkVisible = entryReadMarkVisible,
+                        onDismissRequest = { bottomSheetState.hide() },
                         onLaunchBookmarksActivity = { entryActionHandler.launchBookmarksActivity(it) },
                         onLaunchBrowserActivity = { entryActionHandler.launchBrowserActivity(it) },
                         onLaunchOuterBrowser = { entryActionHandler.openWithOtherApp(it) },

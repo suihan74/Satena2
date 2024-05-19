@@ -28,6 +28,8 @@ import com.suihan74.satena2.model.NoticeVerb
 import com.suihan74.satena2.scene.bookmarks.BookmarksActivityContract
 import com.suihan74.satena2.scene.browser.BrowserActivityContract
 import com.suihan74.satena2.scene.entries.bottomSheet.SearchSetting
+import com.suihan74.satena2.scene.post.EditData
+import com.suihan74.satena2.scene.post.PostBookmarkActivityContract
 import com.suihan74.satena2.scene.preferences.PreferencesActivityContract
 import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
@@ -45,6 +47,7 @@ import com.suihan74.satena2.utility.currentArgument
 import com.suihan74.satena2.utility.extension.createIntentWithoutThisApplication
 import com.suihan74.satena2.utility.extension.showToast
 import com.suihan74.satena2.utility.extension.trimScheme
+import com.suihan74.satena2.utility.hatena.copy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -591,15 +594,28 @@ class EntriesViewModelImpl @Inject constructor(
         onShowMenu: (DisplayEntry)->Unit,
         onShare: (DisplayEntry)->Unit
     ) {
-        val action = when (event) {
-            EntryItemEvent.Click -> clickAction.value
-            EntryItemEvent.LongClick -> longClickAction.value
-            EntryItemEvent.DoubleClick -> doubleClickAction.value
-            EntryItemEvent.ClickEdge -> clickEdgeAction.value
-            EntryItemEvent.LongClickEdge -> longClickEdgeAction.value
-            EntryItemEvent.DoubleClickEdge -> doubleClickEdgeAction.value
+        when (event) {
+            EntryItemEvent.ClickComment -> {
+                onClickComment(entry, entry.entry.bookmarkedData!!)
+            }
+            EntryItemEvent.LongClickComment -> {
+                onShowMenu(entry)
+            }
+            EntryItemEvent.DoubleClickComment -> throw NotImplementedError()
+
+            else -> {
+                val action = when (event) {
+                    EntryItemEvent.Click -> clickAction.value
+                    EntryItemEvent.LongClick -> longClickAction.value
+                    EntryItemEvent.DoubleClick -> doubleClickAction.value
+                    EntryItemEvent.ClickEdge -> clickEdgeAction.value
+                    EntryItemEvent.LongClickEdge -> longClickEdgeAction.value
+                    EntryItemEvent.DoubleClickEdge -> doubleClickEdgeAction.value
+                    else -> throw IllegalArgumentException()
+                }
+                launchClickAction(entry, action, onShowMenu, onShare)
+            }
         }
-        launchClickAction(entry, action, onShowMenu, onShare)
     }
 
     private fun launchClickAction(
@@ -650,6 +666,22 @@ class EntriesViewModelImpl @Inject constructor(
     override fun launchBookmarksActivity(entry: DisplayEntry) {
         readMarkEntry(entry)
         lifecycleObserver.launchBookmarksActivity(entry.entry)
+    }
+
+    /**
+     * ブクマページを開き指定ユーザーのブクマを表示する
+     */
+    override fun launchBookmarksActivity(entry: DisplayEntry, user: String) {
+        readMarkEntry(entry)
+        lifecycleObserver.launchBookmarksActivity(entry.entry, user)
+    }
+
+    /**
+     * ブクマ編集画面を開く
+     */
+    override fun launchPostBookmarkActivity(entry: DisplayEntry) {
+        readMarkEntry(entry)
+        lifecycleObserver.launchPostBookmarkActivity(entry.entry)
     }
 
     /**
@@ -1001,6 +1033,11 @@ class EntriesViewModelImpl @Inject constructor(
 
         // ------ //
 
+        /** [com.suihan74.satena2.scene.post.BookmarkPostActivity]のランチャ */
+        private lateinit var postBookmarkActivityLauncher : ActivityResultLauncher<Pair<Entry, EditData?>>
+
+        // ------ //
+
         /** [com.suihan74.satena2.scene.browser.BrowserActivity]のランチャ */
         private lateinit var browserActivityLauncher : ActivityResultLauncher<String?>
 
@@ -1044,6 +1081,22 @@ class EntriesViewModelImpl @Inject constructor(
                 }
             }
 
+            postBookmarkActivityLauncher = registry.register(
+                "PostBookmarkActivityLauncher",
+                owner,
+                PostBookmarkActivityContract()
+            ) {
+                it.second?.let { result ->
+                    result.eid?.let { eid ->
+                        viewModelScope.launch {
+                            val entry = entriesRepo.getEntry(eid)
+                            val updated = entry.copy(bookmarkResult = result)
+                            entriesRepo.updateEntry(updated)
+                        }
+                    }
+                }
+            }
+
             browserActivityLauncher = registry.register(
                 "BrowserActivityLauncher",
                 owner,
@@ -1068,6 +1121,7 @@ class EntriesViewModelImpl @Inject constructor(
         fun launchBookmarksActivity(entry: Entry) { bookmarksActivityLauncher.launch(entry) }
         fun launchBookmarksActivity(entry: Entry, targetUser: String) { bookmarksActivityLauncherWithUser.launch(entry to targetUser) }
         fun launchBookmarksActivity(notice: Notice) { bookmarksActivityLauncherWithNotice.launch(notice) }
+        fun launchPostBookmarkActivity(entry: Entry) { postBookmarkActivityLauncher.launch(entry to null) }
         fun launchBrowserActivity(entry: Entry) { browserActivityLauncher.launch(entry.url) }
         fun launchBrowserActivity(url: String) { browserActivityLauncher.launch(url) }
         fun launchBrowserActivity() { browserActivityLauncher.launch(null) }
@@ -1209,6 +1263,11 @@ class FakeEntriesViewModel(
     // ------ //
 
     override fun launchBookmarksActivity(entry: DisplayEntry) {
+    }
+    override fun launchBookmarksActivity(entry: DisplayEntry, user: String) {
+    }
+
+    override fun launchPostBookmarkActivity(entry: DisplayEntry) {
     }
 
     override fun launchBrowserActivity(entry: DisplayEntry) {

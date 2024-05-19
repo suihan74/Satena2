@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -37,26 +35,25 @@ import kotlinx.coroutines.launch
 /**
  * エントリ項目のボトムメニューダイアログコンテンツ
  */
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun EntryItemMenuContent(
     item: DisplayEntry?,
-    sheetState: ModalBottomSheetState,
     category: Category,
     account: Account?,
     readMarkVisible: Boolean,
-    onLaunchBookmarksActivity: (DisplayEntry)->Unit = {},
-    onLaunchBrowserActivity: (DisplayEntry)->Unit = {},
-    onLaunchOuterBrowser: (DisplayEntry)->Unit = {},
-    onShare: (DisplayEntry)->Unit = {},
-    onNavigateSiteCategory: (DisplayEntry)->Unit = {},
-    onFavorite: (DisplayEntry)->Unit = {},
-    onUnFavorite: (DisplayEntry)->Unit = {},
-    onCreateNgWord: (DisplayEntry)->Unit = {},
-    onReadLater: (DisplayEntry, Boolean)->Unit = { _, _ -> },
-    onRead: (DisplayEntry, Boolean)->Unit = { _, _ -> },
-    onDeleteReadMark: (DisplayEntry)->Unit = {},
-    onDeleteBookmark: (DisplayEntry)->Unit = {}
+    onDismissRequest: suspend ()->Unit,
+    onLaunchBookmarksActivity: (DisplayEntry)->Unit,
+    onLaunchBrowserActivity: (DisplayEntry)->Unit,
+    onLaunchOuterBrowser: (DisplayEntry)->Unit,
+    onShare: (DisplayEntry)->Unit,
+    onNavigateSiteCategory: (DisplayEntry)->Unit,
+    onFavorite: (DisplayEntry)->Unit,
+    onUnFavorite: (DisplayEntry)->Unit,
+    onCreateNgWord: (DisplayEntry)->Unit,
+    onReadLater: (DisplayEntry, Boolean)->Unit,
+    onRead: (DisplayEntry, Boolean)->Unit,
+    onDeleteReadMark: (DisplayEntry)->Unit,
+    onDeleteBookmark: (DisplayEntry)->Unit
 ) {
     if (item == null) {
         Box(Modifier.height(1.dp)) {}
@@ -82,7 +79,7 @@ fun EntryItemMenuContent(
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_launch_bookmarks_activity)) {
                     coroutineScope.launch {
-                        sheetState.hide()
+                        onDismissRequest()
                         onLaunchBookmarksActivity(item)
                     }
                 }
@@ -90,7 +87,7 @@ fun EntryItemMenuContent(
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_launch_browser_activity)) {
                     coroutineScope.launch {
-                        sheetState.hide()
+                        onDismissRequest()
                         onLaunchBrowserActivity(item)
                     }
                 }
@@ -98,7 +95,7 @@ fun EntryItemMenuContent(
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_open_page_with_apps)) {
                     coroutineScope.launch {
-                        sheetState.hide()
+                        onDismissRequest()
                         onLaunchOuterBrowser(item)
                     }
                 }
@@ -106,7 +103,7 @@ fun EntryItemMenuContent(
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_share)) {
                     coroutineScope.launch {
-                        sheetState.hide()
+                        onDismissRequest()
                         onShare(item)
                     }
                 }
@@ -115,7 +112,7 @@ fun EntryItemMenuContent(
                 item {
                     BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_site_entries)) {
                         coroutineScope.launch {
-                            sheetState.hide()
+                            onDismissRequest()
                             onNavigateSiteCategory(item)
                         }
                     }
@@ -124,7 +121,7 @@ fun EntryItemMenuContent(
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_favorite)) {
                     coroutineScope.launch {
-                        sheetState.hide()
+                        onDismissRequest()
                         onFavorite(item)
                     }
                 }
@@ -132,7 +129,6 @@ fun EntryItemMenuContent(
             item {
                 BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_ng_word_setting)) {
                     coroutineScope.launch {
-//                        sheetState.hide()
                         onCreateNgWord(item)
                     }
                 }
@@ -144,7 +140,7 @@ fun EntryItemMenuContent(
                     if (item.entry.bookmarkedData?.tags?.contains(readLaterTag) == true) {
                         ReadLaterMenuItem(text = stringResource(R.string.read), isPrivate = isPrivate) {
                             coroutineScope.launch {
-                                sheetState.hide()
+                                onDismissRequest()
                                 onRead(item, isPrivate.value)
                             }
                         }
@@ -152,7 +148,7 @@ fun EntryItemMenuContent(
                     else {
                         ReadLaterMenuItem(text = readLaterTag, isPrivate = isPrivate) {
                             coroutineScope.launch {
-                                sheetState.hide()
+                                onDismissRequest()
                                 onReadLater(item, isPrivate.value)
                             }
                         }
@@ -163,7 +159,7 @@ fun EntryItemMenuContent(
                 item {
                     BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_remove_read_mark)) {
                         coroutineScope.launch {
-                            sheetState.hide()
+                            onDismissRequest()
                             onDeleteReadMark(item)
                         }
                     }
@@ -174,7 +170,7 @@ fun EntryItemMenuContent(
                     BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_remove_bookmark)) {
                         coroutineScope.launch {
                             onDeleteBookmark(item)
-                            sheetState.hide()
+                            onDismissRequest()
                         }
                     }
                 }

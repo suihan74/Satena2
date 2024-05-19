@@ -66,6 +66,7 @@ import com.suihan74.hatena.model.entry.Issue
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.*
 import com.suihan74.satena2.scene.entries.bottomSheet.BrowserLauncher
+import com.suihan74.satena2.scene.entries.bottomSheet.CommentMenuContent
 import com.suihan74.satena2.scene.entries.bottomSheet.EntryBottomSheetContent
 import com.suihan74.satena2.scene.entries.bottomSheet.EntryItemMenuContent
 import com.suihan74.satena2.scene.entries.bottomSheet.ExcludedEntriesList
@@ -231,6 +232,15 @@ private fun EntriesScene(
         }
     }
 
+    val onShowCommentMenu: (DisplayEntry)->Unit = { item ->
+        menuTargetItem = item
+        bottomSheetContent = EntryBottomSheetContent.CommentMenu
+        coroutineScope.launch {
+            bottomSheetState.hide()
+            bottomSheetState.show()
+        }
+    }
+
     val onShare: (DisplayEntry)->Unit = { item ->
         menuTargetItem = item
         bottomSheetContent = EntryBottomSheetContent.Share
@@ -292,14 +302,14 @@ private fun EntriesScene(
 
                 EntryBottomSheetContent.ItemMenu -> {
                     val hatenaAccount by viewModel.hatenaAccount.collectAsState()
-                    val ngWordEditionDialogVisible = remember { mutableStateOf(false) }
+                    var ngWordEditionDialogVisible by remember { mutableStateOf(false) }
 
                     EntryItemMenuContent(
                         item = menuTargetItem,
-                        sheetState = bottomSheetState,
                         category = currentCategory,
                         account = hatenaAccount,
                         readMarkVisible = entryReadMarkVisible,
+                        onDismissRequest = { bottomSheetState.hide() },
                         onLaunchBookmarksActivity = { viewModel.launchBookmarksActivity(it) },
                         onLaunchBrowserActivity = { viewModel.launchBrowserActivity(it) },
                         onLaunchOuterBrowser = { viewModel.openWithOtherApp(it) },
@@ -307,19 +317,19 @@ private fun EntriesScene(
                         onNavigateSiteCategory = { viewModel.navigateSiteCategory(it.entry.rootUrl, navController) },
                         onFavorite = { /* todo */ },
                         onUnFavorite = { /* todo */ },
-                        onCreateNgWord = { ngWordEditionDialogVisible.value = true },
+                        onCreateNgWord = { ngWordEditionDialogVisible = true },
                         onRead = { entry, isPrivate -> viewModel.readEntry(entry, isPrivate) },
                         onReadLater = { entry, isPrivate -> viewModel.readLaterEntry(entry, isPrivate) },
                         onDeleteReadMark = { viewModel.removeReadMark(it) },
                         onDeleteBookmark = { viewModel.removeBookmark(it) }
                     )
 
-                    ngWordEditionDialogVisible.value.onTrue {
+                    ngWordEditionDialogVisible.onTrue {
                         NgWordEditionDialog(
                             initialText = menuTargetItem!!.entry.title,
                             initialUrl = menuTargetItem!!.entry.url.trimScheme(),
                             isError = { text, asRegex -> viewModel.isNgRegexError(text, asRegex) },
-                            onDismiss = { ngWordEditionDialogVisible.value = false },
+                            onDismiss = { ngWordEditionDialogVisible = false },
                             properties = viewModel.dialogProperties()
                         ) {
                             viewModel.insertNgWord(it).onTrue {
@@ -330,8 +340,20 @@ private fun EntriesScene(
                 }
 
                 EntryBottomSheetContent.CommentMenu -> {
-                    // todo
-                    Box(Modifier.height(100.dp)) {}
+                    CommentMenuContent(
+                        item = menuTargetItem,
+                        readMarkVisible = entryReadMarkVisible,
+                        onDismissRequest = { bottomSheetState.hide() },
+                        onLaunchBookmarksActivity = {
+                            viewModel.launchBookmarksActivity(it, it.entry.bookmarkedData!!.user)
+                        },
+                        onEditBookmark = {
+                            viewModel.launchPostBookmarkActivity(it)
+                        },
+                        onDeleteBookmark = {
+                            viewModel.removeBookmark(it)
+                        }
+                    )
                 }
 
                 EntryBottomSheetContent.SearchSetting -> {
@@ -495,8 +517,12 @@ private fun EntriesScene(
                 onDoubleClickItemEdge = {
                     viewModel.onEvent(it, EntryItemEvent.DoubleClickEdge, onShowMenu, onShare)
                 },
-                onClickItemComment = { item, b -> viewModel.onClickComment(item, b) },
-                onLongClickItemComment = { item, b -> viewModel.onLongClickComment(item, b) },
+                onClickItemComment = { item, b ->
+                    viewModel.onEvent(item, EntryItemEvent.ClickComment, onShowCommentMenu, onShare)
+                },
+                onLongClickItemComment = { item, b ->
+                    viewModel.onEvent(item, EntryItemEvent.LongClickComment, onShowCommentMenu, onShare)
+                },
                 onToggleExtraBottomMenu = {
                     // 追加ボトムメニュー表示中はドロワは封じる
                     drawerEnabled = !it

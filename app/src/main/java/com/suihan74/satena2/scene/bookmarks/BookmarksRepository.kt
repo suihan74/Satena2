@@ -11,9 +11,6 @@ import com.suihan74.hatena.model.bookmark.BookmarksEntry
 import com.suihan74.hatena.model.bookmark.BookmarksResponse
 import com.suihan74.hatena.model.bookmark.Report
 import com.suihan74.hatena.model.entry.Entry
-import com.suihan74.hatena.model.entry.EntryItem
-import com.suihan74.hatena.model.entry.IssueEntry
-import com.suihan74.hatena.model.entry.MyHotEntry
 import com.suihan74.hatena.model.entry.RelatedEntriesResponse
 import com.suihan74.hatena.model.star.StarCount
 import com.suihan74.hatena.model.star.StarsEntry
@@ -23,6 +20,7 @@ import com.suihan74.satena2.model.ignoredEntry.IgnoredEntry
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAccountRepository
 import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelRepository
 import com.suihan74.satena2.utility.hatena.actualUrl
+import com.suihan74.satena2.utility.hatena.copy
 import com.suihan74.satena2.utility.hatena.modifySpecificUrl
 import com.suihan74.satena2.utility.hatena.toBookmark
 import kotlinx.coroutines.CoroutineScope
@@ -648,14 +646,7 @@ class BookmarksRepositoryImpl @Inject constructor(
         )
         tasks.awaitAll()
 
-        val entry = when(val it = prevEntity.entry) {
-            is EntryItem -> it.copy(bookmarkedData = bookmarkResult)
-            is IssueEntry -> it.copy(bookmarkedData = bookmarkResult)
-            is MyHotEntry -> it.copy(bookmarkedData = bookmarkResult)
-// todo:            is UserEntry -> it
-// todo:            is FollowingEntry -> it
-            else -> it
-        }
+        val entry = prevEntity.entry.copy(bookmarkResult)
 
         @Suppress("UNCHECKED_CAST")
         val entity = prevEntity.copy(
