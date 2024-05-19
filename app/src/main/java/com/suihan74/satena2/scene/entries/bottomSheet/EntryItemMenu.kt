@@ -80,7 +80,7 @@ fun EntryItemMenuContent(
             )
         ) {
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_launch_bookmarks_activity)) {
+                BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_launch_bookmarks_activity)) {
                     coroutineScope.launch {
                         sheetState.hide()
                         onLaunchBookmarksActivity(item)
@@ -88,7 +88,7 @@ fun EntryItemMenuContent(
                 }
             }
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_launch_browser_activity)) {
+                BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_launch_browser_activity)) {
                     coroutineScope.launch {
                         sheetState.hide()
                         onLaunchBrowserActivity(item)
@@ -96,7 +96,7 @@ fun EntryItemMenuContent(
                 }
             }
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_open_page_with_apps)) {
+                BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_open_page_with_apps)) {
                     coroutineScope.launch {
                         sheetState.hide()
                         onLaunchOuterBrowser(item)
@@ -104,7 +104,7 @@ fun EntryItemMenuContent(
                 }
             }
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_share)) {
+                BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_share)) {
                     coroutineScope.launch {
                         sheetState.hide()
                         onShare(item)
@@ -113,7 +113,7 @@ fun EntryItemMenuContent(
             }
             if (Category.Site != category) {
                 item {
-                    BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_site_entries)) {
+                    BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_site_entries)) {
                         coroutineScope.launch {
                             sheetState.hide()
                             onNavigateSiteCategory(item)
@@ -122,7 +122,7 @@ fun EntryItemMenuContent(
                 }
             }
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_favorite)) {
+                BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_favorite)) {
                     coroutineScope.launch {
                         sheetState.hide()
                         onFavorite(item)
@@ -130,7 +130,7 @@ fun EntryItemMenuContent(
                 }
             }
             item {
-                BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_ng_word_setting)) {
+                BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_ng_word_setting)) {
                     coroutineScope.launch {
 //                        sheetState.hide()
                         onCreateNgWord(item)
@@ -161,7 +161,7 @@ fun EntryItemMenuContent(
             }
             if (item.read != null) {
                 item {
-                    BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_remove_read_mark)) {
+                    BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_remove_read_mark)) {
                         coroutineScope.launch {
                             sheetState.hide()
                             onDeleteReadMark(item)
@@ -171,7 +171,7 @@ fun EntryItemMenuContent(
             }
             if (account != null && item.entry.bookmarkedData?.user == account.name) {
                 item {
-                    BottomSheetMenuItem(text = stringResource(R.string.entry_menu_dialog_remove_bookmark)) {
+                    BottomSheetMenuItem(text = stringResource(R.string.entry_item_menu_remove_bookmark)) {
                         coroutineScope.launch {
                             onDeleteBookmark(item)
                             sheetState.hide()

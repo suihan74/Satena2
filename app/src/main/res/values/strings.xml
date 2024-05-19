@@ -163,6 +163,16 @@
     <string name="entry_menu_dialog_ng_word_setting">非表示設定</string>
     <string name="entry_menu_dialog_remove_read_mark">既読マークを消す</string>
     <string name="entry_menu_dialog_remove_bookmark">ブクマを削除する</string>
+    <!-- EntryItemMenu -->
+    <string name="entry_item_menu_launch_bookmarks_activity">ブックマークを見る</string>
+    <string name="entry_item_menu_launch_browser_activity">ページを開く</string>
+    <string name="entry_item_menu_open_page_with_apps">ページを外部アプリで開く</string>
+    <string name="entry_item_menu_share">共有</string>
+    <string name="entry_item_menu_site_entries">このサイトのエントリ</string>
+    <string name="entry_item_menu_favorite">お気に入りサイトに追加</string>
+    <string name="entry_item_menu_ng_word_setting">非表示設定</string>
+    <string name="entry_item_menu_remove_read_mark">既読マークを消去</string>
+    <string name="entry_item_menu_remove_bookmark">ブクマを削除</string>
 
     <!-- BottomMenuItem -->
     <string name="scroll_to_top">一番上までスクロール</string>
