@@ -3,8 +3,10 @@ package com.suihan74.satena2.scene.entries
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -43,6 +45,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -54,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -98,6 +102,8 @@ class EntriesActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         viewModel.onCreateActivity(activityResultRegistry, lifecycle, intent)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             val theme by themeViewModel.currentThemeFlow.collectAsState()
             val navController = rememberNavController()
@@ -106,6 +112,17 @@ class EntriesActivity : ComponentActivity() {
             val initialTabsMap by viewModel.initialTabs.collectAsState(emptyMap())
 
             Satena2Theme(theme) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        Color.Transparent.toArgb(),
+                        Color.Transparent.toArgb()
+                    ),
+                    navigationBarStyle = SystemBarStyle.auto(
+                        CurrentTheme.bottomBarBackground.toArgb(),
+                        CurrentTheme.bottomBarBackground.toArgb()
+                    )
+                )
+
                 CompositionLocalProvider(
                     LocalLongClickVibrationDuration provides longClickVibrationDuration,
                     LocalUseSystemTimeZone provides useSystemTimeZone,
@@ -185,6 +202,9 @@ private fun EntriesScene(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
+
+    // ナビゲーションバーの高さ
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerAlignment by viewModel.drawerAlignment.collectAsState(initial = Alignment.Start)
@@ -267,173 +287,190 @@ private fun EntriesScene(
         sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         sheetBackgroundColor = CurrentTheme.background,
         sheetContent = {
-            when (bottomSheetContent) {
-                EntryBottomSheetContent.Empty -> { Box(Modifier.fillMaxHeight()) }
+            Column {
+                when (bottomSheetContent) {
+                    EntryBottomSheetContent.Empty -> {
+                        Box(Modifier.fillMaxHeight())
+                    }
 
-                EntryBottomSheetContent.Share -> {
-                    EntrySharingContent(entry = menuTargetItem!!.entry)
-                }
+                    EntryBottomSheetContent.Share -> {
+                        EntrySharingContent(entry = menuTargetItem!!.entry)
+                    }
 
-                EntryBottomSheetContent.Issues -> {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.issues),
-                            fontSize = 18.sp,
-                            color = CurrentTheme.primary,
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
-                        )
-                        LazyColumn(
-                            Modifier.verticalScrollbar(
-                                state = rememberLazyListState(),
-                                color = CurrentTheme.primary
+                    EntryBottomSheetContent.Issues -> {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.issues),
+                                fontSize = 18.sp,
+                                color = CurrentTheme.primary,
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
                             )
-                        ) {
-                            items(issues) { issue ->
-                                BottomSheetMenuItem(text = issue.name) {
-                                    viewModel.navigate(navController, currentCategory, issue)
-                                    coroutineScope.launch {
-                                        bottomSheetState.hide()
+                            LazyColumn(
+                                Modifier.verticalScrollbar(
+                                    state = rememberLazyListState(),
+                                    color = CurrentTheme.primary
+                                )
+                            ) {
+                                items(issues) { issue ->
+                                    BottomSheetMenuItem(text = issue.name) {
+                                        viewModel.navigate(navController, currentCategory, issue)
+                                        coroutineScope.launch {
+                                            bottomSheetState.hide()
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                EntryBottomSheetContent.ItemMenu -> {
-                    val hatenaAccount by viewModel.hatenaAccount.collectAsState()
-                    var ngWordEditionDialogVisible by remember { mutableStateOf(false) }
+                    EntryBottomSheetContent.ItemMenu -> {
+                        val hatenaAccount by viewModel.hatenaAccount.collectAsState()
+                        var ngWordEditionDialogVisible by remember { mutableStateOf(false) }
 
-                    EntryItemMenuContent(
-                        item = menuTargetItem,
-                        category = currentCategory,
-                        account = hatenaAccount,
-                        readMarkVisible = entryReadMarkVisible,
-                        onDismissRequest = { bottomSheetState.hide() },
-                        onLaunchBookmarksActivity = { viewModel.launchBookmarksActivity(it) },
-                        onLaunchBrowserActivity = { viewModel.launchBrowserActivity(it) },
-                        onLaunchOuterBrowser = { viewModel.openWithOtherApp(it) },
-                        onShare = onShare,
-                        onNavigateSiteCategory = { viewModel.navigateSiteCategory(it.entry.rootUrl, navController) },
-                        onFavorite = { /* todo */ },
-                        onUnFavorite = { /* todo */ },
-                        onCreateNgWord = { ngWordEditionDialogVisible = true },
-                        onRead = { entry, isPrivate -> viewModel.readEntry(entry, isPrivate) },
-                        onReadLater = { entry, isPrivate -> viewModel.readLaterEntry(entry, isPrivate) },
-                        onDeleteReadMark = { viewModel.removeReadMark(it) },
-                        onDeleteBookmark = { viewModel.removeBookmark(it) }
-                    )
+                        EntryItemMenuContent(
+                            item = menuTargetItem,
+                            category = currentCategory,
+                            account = hatenaAccount,
+                            readMarkVisible = entryReadMarkVisible,
+                            onDismissRequest = { bottomSheetState.hide() },
+                            onLaunchBookmarksActivity = { viewModel.launchBookmarksActivity(it) },
+                            onLaunchBrowserActivity = { viewModel.launchBrowserActivity(it) },
+                            onLaunchOuterBrowser = { viewModel.openWithOtherApp(it) },
+                            onShare = onShare,
+                            onNavigateSiteCategory = {
+                                viewModel.navigateSiteCategory(
+                                    it.entry.rootUrl, navController
+                                )
+                            },
+                            onFavorite = { /* todo */ },
+                            onUnFavorite = { /* todo */ },
+                            onCreateNgWord = { ngWordEditionDialogVisible = true },
+                            onRead = { entry, isPrivate -> viewModel.readEntry(entry, isPrivate) },
+                            onReadLater = { entry, isPrivate ->
+                                viewModel.readLaterEntry(
+                                    entry, isPrivate
+                                )
+                            },
+                            onDeleteReadMark = { viewModel.removeReadMark(it) },
+                            onDeleteBookmark = { viewModel.removeBookmark(it) }
+                        )
 
-                    ngWordEditionDialogVisible.onTrue {
-                        NgWordEditionDialog(
-                            initialText = menuTargetItem!!.entry.title,
-                            initialUrl = menuTargetItem!!.entry.url.trimScheme(),
-                            isError = { text, asRegex -> viewModel.isNgRegexError(text, asRegex) },
-                            onDismiss = { ngWordEditionDialogVisible = false },
-                            properties = viewModel.dialogProperties()
-                        ) {
-                            viewModel.insertNgWord(it).onTrue {
-                                bottomSheetState.hide()
+                        ngWordEditionDialogVisible.onTrue {
+                            NgWordEditionDialog(
+                                initialText = menuTargetItem!!.entry.title,
+                                initialUrl = menuTargetItem!!.entry.url.trimScheme(),
+                                isError = { text, asRegex -> viewModel.isNgRegexError(text, asRegex) },
+                                onDismiss = { ngWordEditionDialogVisible = false },
+                                properties = viewModel.dialogProperties()
+                            ) {
+                                viewModel.insertNgWord(it).onTrue {
+                                    bottomSheetState.hide()
+                                }
                             }
                         }
                     }
-                }
 
-                EntryBottomSheetContent.CommentMenu -> {
-                    CommentMenuContent(
-                        item = menuTargetItem,
-                        readMarkVisible = entryReadMarkVisible,
-                        onDismissRequest = { bottomSheetState.hide() },
-                        onLaunchBookmarksActivity = {
-                            viewModel.launchBookmarksActivity(it, it.entry.bookmarkedData!!.user)
-                        },
-                        onEditBookmark = {
-                            viewModel.launchPostBookmarkActivity(it)
-                        },
-                        onDeleteBookmark = {
-                            viewModel.removeBookmark(it)
-                        }
-                    )
-                }
-
-                EntryBottomSheetContent.SearchSetting -> {
-                    val searchSetting by viewModel.searchSettingFlow.collectAsState()
-                    SearchSettingContent(
-                        value = searchSetting,
-                        dialogProperties = viewModel.dialogProperties(),
-                        onSearch = {
-                            viewModel.search(it)
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
+                    EntryBottomSheetContent.CommentMenu -> {
+                        CommentMenuContent(
+                            item = menuTargetItem,
+                            readMarkVisible = entryReadMarkVisible,
+                            onDismissRequest = { bottomSheetState.hide() },
+                            onLaunchBookmarksActivity = {
+                                viewModel.launchBookmarksActivity(it, it.entry.bookmarkedData!!.user)
+                            },
+                            onEditBookmark = {
+                                viewModel.launchPostBookmarkActivity(it)
+                            },
+                            onDeleteBookmark = {
+                                viewModel.removeBookmark(it)
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                EntryBottomSheetContent.SearchMyBookmarksSetting -> {
-                    val searchSetting by viewModel.searchMyBookmarksSettingFlow.collectAsState()
-                    SearchSettingContent(
-                        value = searchSetting,
-                        dialogProperties = viewModel.dialogProperties(),
-                        onSearch = {
-                            viewModel.searchMyBookmarks(it)
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
+                    EntryBottomSheetContent.SearchSetting -> {
+                        val searchSetting by viewModel.searchSettingFlow.collectAsState()
+                        SearchSettingContent(
+                            value = searchSetting,
+                            dialogProperties = viewModel.dialogProperties(),
+                            onSearch = {
+                                viewModel.search(it)
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                EntryBottomSheetContent.Browser -> {
-                    BrowserLauncher(
-                        searchAction = { q ->
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-                                viewModel.searchInBrowser(q)
+                    EntryBottomSheetContent.SearchMyBookmarksSetting -> {
+                        val searchSetting by viewModel.searchMyBookmarksSettingFlow.collectAsState()
+                        SearchSettingContent(
+                            value = searchSetting,
+                            dialogProperties = viewModel.dialogProperties(),
+                            onSearch = {
+                                viewModel.searchMyBookmarks(it)
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                EntryBottomSheetContent.ExcludedEntries -> {
-                    val excludedEntries by remember(
-                        currentCategory,
-                        currentIssue,
-                        currentTab.intValue,
-                        currentTarget
-                    ) {
-                        viewModel.excludedEntriesFlow(destination)
-                    }.collectAsState()
+                    EntryBottomSheetContent.Browser -> {
+                        BrowserLauncher(
+                            searchAction = { q ->
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                    viewModel.searchInBrowser(q)
+                                }
+                            }
+                        )
+                    }
 
-                    ExcludedEntriesList(
-                        items = excludedEntries,
-                        entryReadMarkVisible = entryReadMarkVisible,
-                        onClickItem = {
-                            viewModel.onEvent(it, EntryItemEvent.Click, onShowMenu, onShare)
-                        },
-                        onLongClickItem = {
-                            viewModel.onEvent(it, EntryItemEvent.LongClick, onShowMenu, onShare)
-                        },
-                        onDoubleClickItem = {
-                            viewModel.onEvent(it, EntryItemEvent.DoubleClick, onShowMenu, onShare)
-                        },
-                        onClickItemEdge = {
-                            viewModel.onEvent(it, EntryItemEvent.ClickEdge, onShowMenu, onShare)
-                        },
-                        onLongClickItemEdge = {
-                            viewModel.onEvent(it, EntryItemEvent.LongClickEdge, onShowMenu, onShare)
-                        },
-                        onDoubleClickItemEdge = {
-                            viewModel.onEvent(it, EntryItemEvent.DoubleClickEdge, onShowMenu, onShare)
-                        },
-                        onClickItemComment = { item, b ->
-                            viewModel.onClickComment(item, b)
-                        },
-                        onLongClickItemComment = { item, b ->
-                            viewModel.onLongClickComment(item, b)
-                        },
-                    )
+                    EntryBottomSheetContent.ExcludedEntries -> {
+                        val excludedEntries by remember(
+                            currentCategory,
+                            currentIssue,
+                            currentTab.intValue,
+                            currentTarget
+                        ) {
+                            viewModel.excludedEntriesFlow(destination)
+                        }.collectAsState()
+
+                        ExcludedEntriesList(
+                            items = excludedEntries,
+                            entryReadMarkVisible = entryReadMarkVisible,
+                            onClickItem = {
+                                viewModel.onEvent(it, EntryItemEvent.Click, onShowMenu, onShare)
+                            },
+                            onLongClickItem = {
+                                viewModel.onEvent(it, EntryItemEvent.LongClick, onShowMenu, onShare)
+                            },
+                            onDoubleClickItem = {
+                                viewModel.onEvent(it, EntryItemEvent.DoubleClick, onShowMenu, onShare)
+                            },
+                            onClickItemEdge = {
+                                viewModel.onEvent(it, EntryItemEvent.ClickEdge, onShowMenu, onShare)
+                            },
+                            onLongClickItemEdge = {
+                                viewModel.onEvent(it, EntryItemEvent.LongClickEdge, onShowMenu, onShare)
+                            },
+                            onDoubleClickItemEdge = {
+                                viewModel.onEvent(
+                                    it, EntryItemEvent.DoubleClickEdge, onShowMenu, onShare
+                                )
+                            },
+                            onClickItemComment = { item, b ->
+                                viewModel.onClickComment(item, b)
+                            },
+                            onLongClickItemComment = { item, b ->
+                                viewModel.onLongClickComment(item, b)
+                            },
+                        )
+                    }
                 }
+                Spacer(
+                    Modifier.height(navigationBarHeight)
+                )
             }
         },
     ) {
@@ -627,6 +664,9 @@ private fun MainContent(
         mutableStateOf(HashMap())
     }
 
+    // ナビゲーションバーの高さ
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
     // ボトムバーのスワイプ処理
     val exBottomMenuDraggableState = remember {
         AnchoredDraggableState(
@@ -797,10 +837,10 @@ private fun MainContent(
                                 }
                                 .constrainAs(tapGuardRef) {
                                     linkTo(
-                                        top = mainRef.top,
-                                        bottom = mainRef.bottom,
-                                        start = mainRef.start,
-                                        end = mainRef.end
+                                        top = parent.top,
+                                        bottom = parent.bottom,
+                                        start = parent.start,
+                                        end = parent.end
                                     )
                                     width = Dimension.fillToConstraints
                                     height = Dimension.fillToConstraints
@@ -821,6 +861,7 @@ private fun MainContent(
                 // 追加ボトムメニュー表示時にはFABを隠すため0.dpにする
                 val contentPaddingValues = remember(fabVisibleState.currentState) {
                     PaddingValues(
+                        bottom = navigationBarHeight,
                         start = 0.dp,
                         end = if (fabVisibleState.currentState) 88.dp else 0.dp
                     )
@@ -1130,6 +1171,8 @@ fun MenuContent(
         viewModel.launchPreferencesActivity()
     }
 
+    val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -1154,7 +1197,7 @@ fun MenuContent(
             BottomAppBar(
                 cutoutShape = CircleShape,
                 backgroundColor = Color.Transparent,
-                contentPadding = PaddingValues(end = 96.dp),
+                contentPadding = PaddingValues(end = 96.dp, bottom = bottomInset),
                 elevation = 0.dp
             ) {}
         },
@@ -1165,7 +1208,9 @@ fun MenuContent(
                 verticalArrangement = Arrangement.Bottom,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 96.dp)
+                    .padding(
+                        bottom = 96.dp + bottomInset
+                    )
             ) {
                 when (state) {
                     SignInState.None -> {

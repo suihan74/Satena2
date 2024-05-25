@@ -3,7 +3,16 @@ package com.suihan74.satena2.scene.entries
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -83,11 +92,13 @@ private fun VerticalCategoryItem(
     category: Category = Category.All,
     onClickItem: (Category) -> Unit = {}
 ) {
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     Column(
         Modifier
             .background(CurrentTheme.drawerBackground)
             .fillMaxWidth()
             .clickable { onClickItem(category) }
+            .padding(bottom = navigationBarHeight)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -124,6 +135,7 @@ private fun CategoriesGrid(
     categories: Array<Category> = Category.valuesWithoutSignedIn(),
     onClickItem: (Category) -> Unit = {}
 ) {
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     Column(
         verticalArrangement = Arrangement.Bottom,
         modifier = Modifier
@@ -134,7 +146,8 @@ private fun CategoriesGrid(
         LazyVerticalGrid(
             columns = GridCells.Adaptive(64.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(bottom = navigationBarHeight)
         ) {
             items(categories) { category ->
                 GridCategoryItem(category, onClickItem)
