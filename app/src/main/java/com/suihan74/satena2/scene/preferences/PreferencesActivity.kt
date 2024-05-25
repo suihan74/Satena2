@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.Icon
@@ -66,6 +65,7 @@ import com.suihan74.satena2.scene.preferences.page.accounts.AccountViewModel
 import com.suihan74.satena2.scene.preferences.page.accounts.AccountViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.accounts.AccountsPage
 import com.suihan74.satena2.scene.preferences.page.accounts.FakeAccountViewModel
+import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
 import com.suihan74.satena2.scene.preferences.page.bookmarks.BookmarkViewModel
 import com.suihan74.satena2.scene.preferences.page.bookmarks.BookmarkViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.bookmarks.FakeBookmarkViewModel
@@ -180,10 +180,23 @@ class PreferencesActivity : ComponentActivity() {
             // 無限ループ`HorizontalPager`がバグる件
             // https://issuetracker.google.com/issues/326887746
 
-            val pagerSize = PreferencesCategory.entries.size //Int.MAX_VALUE
+            val signedIn by accountViewModel.signedInHatena.collectAsState()
+            val categories = remember(signedIn) {
+                when (signedIn) {
+                    SignInState.SignedIn -> PreferencesCategory.entries
+                    else -> {
+                        PreferencesCategory.entries.filter {
+                            when (it) {
+                                PreferencesCategory.Followings, PreferencesCategory.NgUsers -> false
+                                else -> true
+                            }
+                        }
+                    }
+                }
+            }
+            val pagerSize = remember(categories) { categories.size } //Int.MAX_VALUE
             val startIndex = 0 //pagerSize / 2
             val pagerState = rememberPagerState(initialPage = startIndex) { pagerSize }
-            val categories = remember { PreferencesCategory.entries.toTypedArray() }
             val pageCount = remember(categories) { categories.size }
             val currentCategory = remember(pagerState.currentPage) {
                 categories[(pagerState.currentPage - startIndex).floorMod(pageCount)]
@@ -247,7 +260,7 @@ class PreferencesActivity : ComponentActivity() {
 @Composable
 private fun PreferencesScene(
     viewModels : PrefViewModels,
-    categories: Array<PreferencesCategory>,
+    categories: List<PreferencesCategory>,
     currentCategory: PreferencesCategory,
     pagerState: PagerState,
     startIndex: Int,
@@ -272,6 +285,7 @@ private fun PreferencesScene(
         Row(Modifier.fillMaxSize()) {
             // カテゴリ一覧
             Categories(
+                categories,
                 pagerState,
                 startIndex,
                 Modifier
@@ -388,7 +402,7 @@ private fun PreferencesScenePreview() {
     val pagerSize = Int.MAX_VALUE
     val startIndex = pagerSize / 2
     val pagerState = rememberPagerState(initialPage = startIndex) { pagerSize }
-    val categories = remember { PreferencesCategory.entries.toTypedArray() }
+    val categories = remember { PreferencesCategory.entries }
     val pageCount = remember(categories) { categories.size }
     val currentCategory = remember(pagerState.currentPage) {
         categories[(pagerState.currentPage - startIndex).floorMod(pageCount)]
@@ -470,6 +484,7 @@ private fun TopBar(category: PreferencesCategory) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Categories(
+    categories: List<PreferencesCategory>,
     pagerState: PagerState,
     startIndex: Int,
     modifier: Modifier
@@ -477,7 +492,7 @@ private fun Categories(
     LazyColumn(
         modifier = modifier
     ) {
-        items(PreferencesCategory.entries.toTypedArray()) {
+        items(categories) {
             PrefCategoryItem(it, pagerState, startIndex)
         }
     }
