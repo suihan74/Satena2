@@ -2,6 +2,7 @@ package com.suihan74.satena2.scene.entries
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -45,6 +46,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -65,6 +67,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.suihan74.hatena.model.bookmark.BookmarkResult
 import com.suihan74.hatena.model.entry.Issue
 import com.suihan74.satena2.R
@@ -79,6 +82,7 @@ import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
 import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionDialog
 import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
+import com.suihan74.satena2.ui.theme.LocalTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
 import com.suihan74.satena2.utility.argument
 import com.suihan74.satena2.utility.currentArgument
@@ -115,12 +119,17 @@ class EntriesActivity : ComponentActivity() {
                 enableEdgeToEdge(
                     statusBarStyle = SystemBarStyle.auto(
                         Color.Transparent.toArgb(),
-                        Color.Transparent.toArgb()
+                        Color.Transparent.toArgb(),
                     ),
                     navigationBarStyle = SystemBarStyle.auto(
-                        CurrentTheme.bottomBarBackground.toArgb(),
-                        CurrentTheme.bottomBarBackground.toArgb()
+                        Color.Transparent.toArgb(),
+                        Color.Transparent.toArgb()
                     )
+                )
+                val systemUiController = rememberSystemUiController()
+                systemUiController.setStatusBarColor(
+                    color = Color.Transparent,
+                    darkIcons = CurrentTheme.titleBarBackground.luminance() > .5f
                 )
 
                 CompositionLocalProvider(
@@ -272,6 +281,20 @@ private fun EntriesScene(
 
     // 既読マークを使用するかのフラグ
     val entryReadMarkVisible by viewModel.recordReadEntriesEnabled.collectAsState()
+
+    // ドロワ表示時はステータスバーの文字色をドロワ背景に合わせて計算する
+    val systemUiController = rememberSystemUiController()
+    val drawerBackground = CurrentTheme.drawerBackground
+    val titleBarBackground = CurrentTheme.titleBarBackground
+    LaunchedEffect(drawerState.isOpen, LocalTheme.current) {
+        Log.i("statusBarFront", drawerState.isOpen.toString())
+        systemUiController.setStatusBarColor(
+            color = Color.Transparent,
+            darkIcons =
+            if (drawerState.isOpen) drawerBackground.luminance() > .5f
+            else titleBarBackground.luminance() > .5f
+        )
+    }
 
     // ボトムシートの開閉と同時にキーボードを閉じる
     LaunchedEffect(Unit) {
