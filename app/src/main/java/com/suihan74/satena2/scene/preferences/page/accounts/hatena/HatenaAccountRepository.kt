@@ -162,7 +162,7 @@ class HatenaAccountRepositoryImpl(
      *
      * 比較的時間がかかる処理のため読み込み状態を参照できるようにする
      */
-    override val loadingNgUsers = MutableStateFlow(true)
+    override val loadingNgUsers = MutableStateFlow(false)
 
     // ------ //
 
@@ -191,7 +191,7 @@ class HatenaAccountRepositoryImpl(
     private suspend fun onUpdateRK(rk: String) {
         withContext(Dispatchers.IO) {
             accountMutex.withLock {
-                if (hatenaRK.value == rk) return@withContext
+                if (rk.isNotBlank() && hatenaRK.value == rk) return@withContext
                 runCatching {
                     state.value = SignInState.Signing
                     hatenaRK.value = rk
@@ -346,6 +346,7 @@ class HatenaAccountRepositoryImpl(
             result.getOrThrow()
         },
         withoutSign = {
+            loadingNgUsers.value = false
             emptyList()
         }
     )
