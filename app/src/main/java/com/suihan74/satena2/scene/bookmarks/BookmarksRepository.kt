@@ -814,7 +814,11 @@ class BookmarksRepositoryImpl @Inject constructor(
     private val idCallRegex = Regex("""(^|[^a-zA-Z0-9:])id:(?!entry:)([a-zA-Z0-9_\-]+)""")
     private val urlRegex = Regex("""id:entry:\d+|https?://([\w-]+\.)+[\w-]+(/[a-zA-Z0-9_\-+./!?%&=|^~#@*;:,<>()\[\]{}]*)?""")
 
-    private suspend fun Bookmark.toDisplayBookmark(eid: Long, recursivable: Boolean = true) : DisplayBookmark {
+    private suspend fun Bookmark.toDisplayBookmark(
+        eid: Long,
+        mentions: ArrayList<DisplayBookmark>? = null,
+        foundUsers: ArrayList<String>? = null,
+    ) : DisplayBookmark {
         val ignoredUsers = ignoredUsersFlow.value
         val formatter = DateTimeFormatter.ofPattern("uuuuMMdd")
         val zoneOffset = ZoneOffset.ofHours(9)
@@ -825,28 +829,31 @@ class BookmarksRepositoryImpl @Inject constructor(
                 starsMap.getOrPut(url) { MutableStateFlow(StarsEntry(url = "", stars = emptyList())) }
             }
 
-        val mentions =
-            if (recursivable) {
-                buildList {
-                    val bookmarksEntry = entityFlow.value.bookmarksEntry
-                    val allBookmarks = allBookmarksFlow.value
-                    val idsCalled = idCallRegex.findAll(this@toDisplayBookmark.comment)
-                    for (m in idsCalled) {
-                        val id = m.groupValues[2]
-                        if (id == this@toDisplayBookmark.user) {
-                            continue
-                        }
-                        val b = allBookmarks.firstOrNull { it.bookmark.user == id }
-                            ?: bookmarksEntry.bookmarks.firstOrNull { it.user == id }
-                                ?.toBookmark(bookmarksEntry)
-                                ?.toDisplayBookmark(eid, recursivable = false)
-                        if (b != null) {
-                            add(b)
-                        }
-                    }
-                }
+        val foundUsersList = foundUsers ?: ArrayList()
+        val mentionsList = mentions ?: ArrayList()
+
+        val bookmarksEntry = entityFlow.value.bookmarksEntry
+        val allBookmarks = allBookmarksFlow.value
+        val idsCalled = idCallRegex.findAll(this@toDisplayBookmark.comment)
+
+        foundUsersList.add(user)
+        for (m in idsCalled) {
+            val id = m.groupValues[2]
+            if (foundUsersList.contains(id)) {
+                continue
             }
-            else emptyList()
+            val b = allBookmarks.firstOrNull { it.bookmark.user == id }
+                ?: bookmarksEntry.bookmarks.firstOrNull { it.user == id }
+                    ?.toBookmark(bookmarksEntry)
+                    ?.toDisplayBookmark(
+                        eid,
+                        mentions = mentionsList,
+                        foundUsers = foundUsersList
+                    )
+            if (b != null) {
+                mentionsList.add(b)
+            }
+        }
 
         val urls = urlRegex.findAll(comment)
             .map {
@@ -865,7 +872,7 @@ class BookmarksRepositoryImpl @Inject constructor(
             bookmarksCount = 0,
             ignoredUser = ignoredUsers.contains(this.user),
             filtered = filters.any { it.match(this) },
-            mentions = mentions,
+            mentions = mentionsList.sortedBy { it.bookmark.timestamp },
             urls = urls,
             labels = labels,
             starsEntry = starsEntry,
