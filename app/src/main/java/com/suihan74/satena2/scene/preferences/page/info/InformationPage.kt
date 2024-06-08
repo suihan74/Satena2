@@ -2,7 +2,11 @@ package com.suihan74.satena2.scene.preferences.page.info
 
 import android.content.Context
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -44,10 +48,10 @@ private fun MutableComposableList.appInfoSection(
     viewModel: InformationViewModel
 ) = this.run {
     add(
-        { Section(R.string.pref_information_section_app_info) },
-        { AppInformation(viewModel) },
-        { PrefButton(R.string.pref_information_play_store) { viewModel.launchPlayStore(context) } },
-        {
+        0 to { Section(R.string.pref_information_section_app_info) },
+        R.string.pref_information_section_app_info to{ AppInformation(viewModel) },
+        R.string.pref_information_play_store to { PrefButton(R.string.pref_information_play_store) { viewModel.launchPlayStore(context) } },
+        R.string.pref_information_release_notes to {
             val dialogVisible = remember { mutableStateOf(false) }
             PrefButton(R.string.pref_information_release_notes) { dialogVisible.value = true }
 
@@ -67,11 +71,11 @@ private fun MutableComposableList.developerSection(
     viewModel: InformationViewModel
 ) = this.run {
     add(
-        { Section(R.string.pref_information_section_developer) },
-        { PrefButton(R.string.developer) { viewModel.launchDeveloperHatenaPage(context) } },
-        { PrefButton(R.string.pref_information_website) { viewModel.launchDeveloperWebsite(context) } },
-        { PrefButton(R.string.pref_information_twitter) { viewModel.launchDeveloperTwitter(context) } },
-        { PrefButton(R.string.pref_information_mail) { viewModel.sendMailToDeveloper(context) } },
+        0 to { Section(R.string.pref_information_section_developer) },
+        R.string.developer to { PrefButton(R.string.developer) { viewModel.launchDeveloperHatenaPage(context) } },
+        R.string.pref_information_website to { PrefButton(R.string.pref_information_website) { viewModel.launchDeveloperWebsite(context) } },
+        R.string.pref_information_twitter to { PrefButton(R.string.pref_information_twitter) { viewModel.launchDeveloperTwitter(context) } },
+        R.string.pref_information_mail to { PrefButton(R.string.pref_information_mail) { viewModel.sendMailToDeveloper(context) } },
     )
 }
 
@@ -80,10 +84,10 @@ private fun MutableComposableList.otherInfoSection(
     viewModel: InformationViewModel
 ) = this.run {
     add(
-        { Section(R.string.pref_information_section_other_info) },
-        { PrefButton(R.string.pref_information_hatena_terms) { viewModel.launchHatenaTerms(context) } },
-        { PrefButton(R.string.pref_information_privacy_policy) { viewModel.launchPrivacyPolicy(context) } },
-        { PrefButton(R.string.pref_information_license) { viewModel.launchLicenseActivity(context) } },
+        0 to { Section(R.string.pref_information_section_other_info) },
+        R.string.pref_information_hatena_terms to { PrefButton(R.string.pref_information_hatena_terms) { viewModel.launchHatenaTerms(context) } },
+        R.string.pref_information_privacy_policy to { PrefButton(R.string.pref_information_privacy_policy) { viewModel.launchPrivacyPolicy(context) } },
+        R.string.pref_information_license to { PrefButton(R.string.pref_information_license) { viewModel.launchLicenseActivity(context) } },
     )
 }
 

@@ -19,7 +19,6 @@ import com.suihan74.satena2.scene.preferences.page.buildComposableList
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
 import com.suihan74.satena2.utility.extension.add
 import com.suihan74.satena2.utility.extension.textId
-import com.suihan74.satena2.utility.hatena.textId
 
 /**
  * 「ブックマーク」ページのコンテンツ
@@ -36,14 +35,14 @@ fun bookmarkPageContents(viewModel: BookmarkViewModel) = buildComposableList {
 }
 
 private fun MutableComposableList.postSection(viewModel: BookmarkViewModel) = add(
-    { Section(R.string.pref_bookmark_section_post) },
-    {
+    0 to { Section(R.string.pref_bookmark_section_post) },
+    R.string.pref_post_bookmark_confirmation to{
         PrefToggleButton(
             flow = viewModel.postConfirmation,
             mainTextId = R.string.pref_post_bookmark_confirmation
         )
     },
-    {
+    R.string.pref_post_bookmark_dialog_vertical_alignment to {
         val dialogVisible = remember { mutableStateOf(false) }
         PrefButton(
             mainTextId = R.string.pref_post_bookmark_dialog_vertical_alignment,
@@ -74,7 +73,7 @@ private fun MutableComposableList.postSection(viewModel: BookmarkViewModel) = ad
             )
         }
     },
-    {
+    R.string.pref_post_bookmark_save_states to {
         PrefToggleButton(
             flow = viewModel.postSaveStates,
             mainTextId = R.string.pref_post_bookmark_save_states
@@ -83,8 +82,8 @@ private fun MutableComposableList.postSection(viewModel: BookmarkViewModel) = ad
 )
 
 private fun MutableComposableList.tabsSection(viewModel: BookmarkViewModel) = add(
-    { Section(R.string.pref_bookmark_section_tabs) },
-    {
+    0 to { Section(R.string.pref_bookmark_section_tabs) },
+    R.string.pref_bookmark_initial_tab to {
         val dialogVisible = remember { mutableStateOf(false) }
         PrefButton(
             mainTextId = R.string.pref_bookmark_initial_tab,
@@ -97,7 +96,7 @@ private fun MutableComposableList.tabsSection(viewModel: BookmarkViewModel) = ad
         if (dialogVisible.value) {
             MenuDialog(
                 titleText = stringResource(R.string.pref_bookmark_initial_tab),
-                menuItems = BookmarksTab.values().map { tab ->
+                menuItems = BookmarksTab.entries.map { tab ->
                     menuDialogItem(tab.textId) {
                         viewModel.initialTab.value = tab
                         true
@@ -110,7 +109,7 @@ private fun MutableComposableList.tabsSection(viewModel: BookmarkViewModel) = ad
             )
         }
     },
-    {
+    R.string.pref_bookmark_change_initial_tab_by_long_click to {
         PrefToggleButton(
             flow = viewModel.changeInitialTabByLongClick,
             mainTextId = R.string.pref_bookmark_change_initial_tab_by_long_click
@@ -119,21 +118,21 @@ private fun MutableComposableList.tabsSection(viewModel: BookmarkViewModel) = ad
 )
 
 private fun MutableComposableList.titleBarSection() = add(
-    { Section(R.string.pref_bookmark_section_title_bar) }
+    0 to { Section(R.string.pref_bookmark_section_title_bar) }
 )
 
 private fun MutableComposableList.behaviorSection() = add(
-    { Section(R.string.pref_bookmark_section_behavior) }
+    0 to { Section(R.string.pref_bookmark_section_behavior) }
 )
 
 private fun MutableComposableList.muteSection() = add(
-    { Section(R.string.pref_bookmark_section_mute) }
+    0 to { Section(R.string.pref_bookmark_section_mute) }
 )
 
 private fun MutableComposableList.linkSection() = add(
-    { Section(R.string.pref_bookmark_section_link) }
+    0 to { Section(R.string.pref_bookmark_section_link) }
 )
 
 private fun MutableComposableList.digestSection() = add(
-    { Section(R.string.pref_bookmark_section_digest) }
+    0 to { Section(R.string.pref_bookmark_section_digest) }
 )

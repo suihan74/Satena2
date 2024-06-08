@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -25,12 +26,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -47,10 +53,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,12 +70,15 @@ import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.LocalLongClickVibrationDuration
 import com.suihan74.satena2.compose.Tooltip
 import com.suihan74.satena2.compose.combinedClickable
+import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.scene.preferences.page.BasicPreferencesPage
+import com.suihan74.satena2.scene.preferences.page.ComposablePrefItem
 import com.suihan74.satena2.scene.preferences.page.accounts.AccountViewModel
 import com.suihan74.satena2.scene.preferences.page.accounts.AccountViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.accounts.AccountsPage
 import com.suihan74.satena2.scene.preferences.page.accounts.FakeAccountViewModel
 import com.suihan74.satena2.scene.preferences.page.accounts.SignInState
+import com.suihan74.satena2.scene.preferences.page.accounts.accountPageContents
 import com.suihan74.satena2.scene.preferences.page.bookmarks.BookmarkViewModel
 import com.suihan74.satena2.scene.preferences.page.bookmarks.BookmarkViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.bookmarks.FakeBookmarkViewModel
@@ -109,6 +122,8 @@ import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelsViewModel
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
 import com.suihan74.satena2.utility.extension.showToast
+import com.suihan74.satena2.utility.focusKeyboardRequester
+import com.suihan74.satena2.utility.rememberMutableTextFieldValue
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -126,33 +141,54 @@ private data class PrefViewModels(
     val userLabels : UserLabelsViewModel
 )
 
+private data class PrefContents(
+    val information: List<ComposablePrefItem>,
+    val general: List<ComposablePrefItem>,
+    val account: List<ComposablePrefItem>,
+    val bookmark: List<ComposablePrefItem>,
+    val browser: List<ComposablePrefItem>,
+) {
+    private var _allItems: List<Pair<String, @Composable ()->Unit>>? = null
+    fun allItems(context: Context) : List<Pair<String, @Composable ()->Unit>> {
+        if (_allItems != null) {
+            return _allItems!!
+        }
+        val items = buildList {
+            fun addItems(items: List<ComposablePrefItem>) {
+                for (item in items) {
+                    val str =
+                        if (item.first == 0) ""
+                        else context.getString(item.first)
+                    add(str to item.second)
+                }
+            }
+            addItems(information)
+            addItems(general)
+            addItems(account)
+            addItems(bookmark)
+            addItems(browser)
+        }
+        _allItems = items
+        return items
+    }
+}
+
 @AndroidEntryPoint
 class PreferencesActivity : ComponentActivity() {
     private val informationViewModel by viewModels<InformationViewModelImpl>()
-
     private val accountViewModel by viewModels<AccountViewModelImpl>()
-
     private val generalViewModel by viewModels<GeneralViewModelImpl>()
-
     private val themeViewModel by viewModels<ThemeViewModelImpl>()
-
     private val entryViewModel by viewModels<EntryViewModelImpl>()
-
     private val bookmarkViewModel by viewModels<BookmarkViewModelImpl>()
-
     private val browserViewModel by viewModels<BrowserViewModelImpl>()
-
     private val favoriteSitesViewModel by viewModels<FavoriteSitesViewModelImpl>()
-
     private val ngWordViewModel by viewModels<NgWordsViewModelImpl>()
-
     private val ngUsersViewModel by viewModels<NgUsersViewModelImpl>()
-
     private val userLabelsViewModel by viewModels<UserLabelsViewModelImpl>()
 
     // ------ //
 
-    @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val viewModels = PrefViewModels(
@@ -174,7 +210,6 @@ class PreferencesActivity : ComponentActivity() {
 
         setContent {
             val theme by themeViewModel.currentThemeFlow.collectAsState()
-
             val longClickVibrationDuration by generalViewModel.longClickVibrationDuration.collectAsState()
 
             // 無限ループ`HorizontalPager`がバグる件
@@ -194,13 +229,14 @@ class PreferencesActivity : ComponentActivity() {
                     }
                 }
             }
-            val pagerSize = remember(categories) { categories.size } //Int.MAX_VALUE
-            val startIndex = 0 //pagerSize / 2
-            val pagerState = rememberPagerState(initialPage = startIndex) { pagerSize }
-            val pageCount = remember(categories) { categories.size }
-            val currentCategory = remember(pagerState.currentPage) {
-                categories[(pagerState.currentPage - startIndex).floorMod(pageCount)]
-            }
+
+            val contents = PrefContents(
+                information = informationPageContents(informationViewModel),
+                general = generalPageContents(generalViewModel),
+                account = accountPageContents(accountViewModel),
+                bookmark = bookmarkPageContents(bookmarkViewModel),
+                browser = browserPageContents(browserViewModel)
+            )
 
             LaunchedEffect(Unit) {
                 generalViewModel.launchRequestNotificationPermission.collect { isOn ->
@@ -218,10 +254,7 @@ class PreferencesActivity : ComponentActivity() {
                     PreferencesScene(
                         viewModels,
                         categories,
-                        currentCategory,
-                        pagerState,
-                        startIndex,
-                        pageCount
+                        contents
                     )
                 }
             }
@@ -261,18 +294,30 @@ class PreferencesActivity : ComponentActivity() {
 private fun PreferencesScene(
     viewModels : PrefViewModels,
     categories: List<PreferencesCategory>,
-    currentCategory: PreferencesCategory,
-    pagerState: PagerState,
-    startIndex: Int,
-    pageCount: Int,
+    contents: PrefContents
 ) {
+    val pagerSize = remember(categories) { categories.size } //Int.MAX_VALUE
+    val startIndex = 0 //pagerSize / 2
+    val pagerState = rememberPagerState(initialPage = startIndex) { pagerSize }
+    val pageCount = remember(categories) { categories.size }
+    val currentCategory = remember(pagerState.currentPage) {
+        categories[(pagerState.currentPage - startIndex).floorMod(pageCount)]
+    }
+
+    var searchQuery by remember { mutableStateOf("") }
+
     Column(
         Modifier
             .fillMaxSize()
             .background(CurrentTheme.background)
     ) {
         // トップバー
-        TopBar(category = currentCategory)
+        TopBar(
+            category = currentCategory,
+            onSearchQueryChange = {
+                searchQuery = it
+            }
+        )
 
         // トップバー下端のセパレータ（上下）
         Spacer(
@@ -282,131 +327,33 @@ private fun PreferencesScene(
                 .background(CurrentTheme.primary)
         )
 
-        Row(Modifier.fillMaxSize()) {
-            // カテゴリ一覧
-            Categories(
-                categories,
-                pagerState,
-                startIndex,
-                Modifier
-                    .width(48.dp)
-                    .fillMaxHeight()
+        Box(
+            Modifier.fillMaxSize()
+        ) {
+            MainContents(
+                viewModels = viewModels,
+                categories = categories,
+                pagerState = pagerState,
+                startIndex = startIndex,
+                pageCount = pageCount,
+                contents = contents
             )
 
-            // セパレータ（左右）
-            Spacer(
-                Modifier
-                    .width(2.dp)
-                    .fillMaxHeight()
-                    .background(CurrentTheme.primary)
-            )
-
-            // コンテンツ部分
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { index ->
-                val p = (index - startIndex).floorMod(pageCount)
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Image(
-                        painter = painterResource(categories[p].iconId),
-                        contentDescription = "current category icon",
-                        colorFilter = ColorFilter.tint(CurrentTheme.grayTextColor),
-                        modifier = Modifier
-                            .size(72.dp)
-                            .alpha(.15f)
-                    )
-
-                    when (categories[p]) {
-                        PreferencesCategory.Info -> {
-                            BasicPreferencesPage(
-                                state = viewModels.information.lazyListState(),
-                                contents = informationPageContents(viewModels.information)
-                            )
-                        }
-
-                        PreferencesCategory.Accounts -> {
-                            AccountsPage(
-                                state = viewModels.account.lazyListState(),
-                                viewModel = viewModels.account
-                            )
-                        }
-
-                        PreferencesCategory.General -> {
-                            BasicPreferencesPage(
-                                state = viewModels.general.lazyListState(),
-                                contents = generalPageContents(viewModels.general)
-                            )
-                        }
-
-                        PreferencesCategory.Theme -> {
-                            ThemePage(
-                                viewModel = viewModels.theme,
-                                pagerState = pagerState
-                            )
-                        }
-
-                        PreferencesCategory.Entry -> {
-                            EntryPage(viewModel = viewModels.entry)
-                        }
-
-                        PreferencesCategory.Bookmark -> {
-                            BasicPreferencesPage(
-                                state = viewModels.bookmark.lazyListState(),
-                                contents = bookmarkPageContents(viewModels.bookmark)
-                            )
-                        }
-
-                        PreferencesCategory.Browser -> {
-                            BasicPreferencesPage(
-                                state = viewModels.browser.lazyListState(),
-                                contents = browserPageContents(viewModels.browser)
-                            )
-                        }
-
-                        PreferencesCategory.FavoriteSites -> {
-                            FavoriteSitesPage(viewModels.favoriteSites)
-                        }
-
-                        PreferencesCategory.NgWords -> {
-                            NgWordsPage(viewModels.ngWord)
-                        }
-
-                        PreferencesCategory.NgUsers -> {
-                            NgUsersPage(viewModels.ngUsers)
-                        }
-
-                        PreferencesCategory.UserLabels -> {
-                            UserLabelsPage(
-                                viewModel = viewModels.userLabels,
-                                pagerState = pagerState
-                            )
-                        }
-
-                        else -> {}
-                    }
-                }
+            if (searchQuery.isNotEmpty()) {
+                SearchContents(
+                    contents = contents,
+                    query = searchQuery
+                )
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun PreferencesScenePreview() {
     val coroutineScope = rememberCoroutineScope()
-    val pagerSize = Int.MAX_VALUE
-    val startIndex = pagerSize / 2
-    val pagerState = rememberPagerState(initialPage = startIndex) { pagerSize }
     val categories = remember { PreferencesCategory.entries }
-    val pageCount = remember(categories) { categories.size }
-    val currentCategory = remember(pagerState.currentPage) {
-        categories[(pagerState.currentPage - startIndex).floorMod(pageCount)]
-    }
 
     val viewModels = PrefViewModels(
         information = FakeInformationViewModel(),
@@ -421,14 +368,185 @@ private fun PreferencesScenePreview() {
         ngUsers = FakeNgUsersViewModel(),
         userLabels = FakeUserLabelsViewModel()
     )
+
+    val contents = PrefContents(
+        information = informationPageContents(viewModels.information),
+        general = generalPageContents(viewModels.general),
+        account = accountPageContents(viewModels.account),
+        bookmark = bookmarkPageContents(viewModels.bookmark),
+        browser = browserPageContents(viewModels.browser)
+    )
+
     PreferencesScene(
         viewModels,
         categories,
-        currentCategory,
-        pagerState,
-        startIndex,
-        pageCount
+        contents
     )
+}
+
+// ------ //
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MainContents(
+    viewModels : PrefViewModels,
+    categories: List<PreferencesCategory>,
+    contents: PrefContents,
+    pagerState: PagerState,
+    startIndex: Int,
+    pageCount: Int,
+) {
+    Row(Modifier.fillMaxSize()) {
+        // カテゴリ一覧
+        Categories(
+            categories,
+            pagerState,
+            startIndex,
+            Modifier
+                .width(48.dp)
+                .fillMaxHeight()
+        )
+
+        // セパレータ（左右）
+        Spacer(
+            Modifier
+                .width(2.dp)
+                .fillMaxHeight()
+                .background(CurrentTheme.primary)
+        )
+
+        // コンテンツ部分
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { index ->
+            val p = (index - startIndex).floorMod(pageCount)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Image(
+                    painter = painterResource(categories[p].iconId),
+                    contentDescription = "current category icon",
+                    colorFilter = ColorFilter.tint(CurrentTheme.grayTextColor),
+                    modifier = Modifier
+                        .size(72.dp)
+                        .alpha(.15f)
+                )
+
+                when (categories[p]) {
+                    PreferencesCategory.Info -> {
+                        BasicPreferencesPage(
+                            state = viewModels.information.lazyListState(),
+                            contents = contents.information
+                        )
+                    }
+
+                    PreferencesCategory.Accounts -> {
+                        AccountsPage(
+                            state = viewModels.account.lazyListState(),
+                            contents = contents.account,
+                            onReload = { viewModels.account.reload() }
+                        )
+                    }
+
+                    PreferencesCategory.General -> {
+                        BasicPreferencesPage(
+                            state = viewModels.general.lazyListState(),
+                            contents = contents.general
+                        )
+                    }
+
+                    PreferencesCategory.Theme -> {
+                        ThemePage(
+                            viewModel = viewModels.theme,
+                            pagerState = pagerState
+                        )
+                    }
+
+                    PreferencesCategory.Entry -> {
+                        EntryPage(viewModel = viewModels.entry)
+                    }
+
+                    PreferencesCategory.Bookmark -> {
+                        BasicPreferencesPage(
+                            state = viewModels.bookmark.lazyListState(),
+                            contents = contents.bookmark
+                        )
+                    }
+
+                    PreferencesCategory.Browser -> {
+                        BasicPreferencesPage(
+                            state = viewModels.browser.lazyListState(),
+                            contents = contents.browser
+                        )
+                    }
+
+                    PreferencesCategory.FavoriteSites -> {
+                        FavoriteSitesPage(viewModels.favoriteSites)
+                    }
+
+                    PreferencesCategory.NgWords -> {
+                        NgWordsPage(viewModels.ngWord)
+                    }
+
+                    PreferencesCategory.NgUsers -> {
+                        NgUsersPage(viewModels.ngUsers)
+                    }
+
+                    PreferencesCategory.UserLabels -> {
+                        UserLabelsPage(
+                            viewModel = viewModels.userLabels,
+                            pagerState = pagerState
+                        )
+                    }
+
+                    else -> {}
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchContents(
+    contents: PrefContents,
+    query: String
+) {
+    val context = LocalContext.current
+    val contentItems = remember { contents.allItems(context) }
+    val displayItems = remember(query) {
+        buildList {
+            // 検索ヒットしたアイテムが属するサブカテゴリも表示する
+            var currentSubCategory: Pair<String, @Composable ()->Unit>? = null
+            for (item in contentItems) {
+                if (item.first.isBlank()) {
+                    currentSubCategory = item
+                }
+                else if (item.first.contains(query)) {
+                    currentSubCategory?.let {
+                        add(it)
+                    }
+                    add(item)
+                    currentSubCategory = null
+                }
+            }
+        }
+    }
+
+    val lazyListState = rememberLazyListState()
+
+    LazyColumn(
+        state = lazyListState,
+        modifier = Modifier
+            .background(CurrentTheme.background)
+            .verticalScrollbar(lazyListState)
+            .fillMaxSize()
+    ) {
+        items(displayItems) {
+            it.second()
+        }
+    }
 }
 
 // ------ //
@@ -437,14 +555,50 @@ private fun PreferencesScenePreview() {
  * トップバー
  */
 @Composable
-private fun TopBar(category: PreferencesCategory) {
+private fun TopBar(
+    category: PreferencesCategory,
+    onSearchQueryChange: (String)->Unit
+) {
     var isSearchViewEnabled by remember { mutableStateOf(false) }
+    val textFieldValue = rememberMutableTextFieldValue(text = "")
+
+    BackHandler(enabled = isSearchViewEnabled) {
+        isSearchViewEnabled = false
+        onSearchQueryChange("")
+    }
 
     TopAppBar(
         backgroundColor = CurrentTheme.titleBarBackground,
         title = {
             if (isSearchViewEnabled) {
-                // TODO: 検索バーつくる
+                val keyboardController = LocalSoftwareKeyboardController.current
+                val focusRequester = focusKeyboardRequester()
+                val keyboardOptions = remember { KeyboardOptions(imeAction = ImeAction.Search) }
+                val keyboardActions = remember { KeyboardActions(onSearch = { keyboardController?.hide() }) }
+
+                TextField(
+                    value = textFieldValue.value,
+                    onValueChange = {
+                        textFieldValue.value = it
+                        onSearchQueryChange(it.text)
+                    },
+                    placeholder = {
+                        Text(stringResource(R.string.search_setting_sheet_query_placeholder))
+                    },
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = CurrentTheme.onPrimary,
+                        placeholderColor = CurrentTheme.onPrimary.copy(alpha = .6f),
+                        cursorColor = CurrentTheme.onPrimary,
+                        focusedIndicatorColor = CurrentTheme.onPrimary,
+                    ),
+                    keyboardOptions = keyboardOptions,
+                    keyboardActions = keyboardActions,
+                    maxLines = 1,
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                )
             }
             else {
                 Text(
@@ -460,7 +614,14 @@ private fun TopBar(category: PreferencesCategory) {
             }
         },
         actions = {
-            IconButton(onClick = { isSearchViewEnabled = !isSearchViewEnabled }) {
+            IconButton(
+                onClick = {
+                    isSearchViewEnabled = !isSearchViewEnabled
+                    if (!isSearchViewEnabled) {
+                        onSearchQueryChange("")
+                    }
+                }
+            ) {
                 val iconVector =
                     if (isSearchViewEnabled) Icons.Filled.Close
                     else Icons.Filled.Search

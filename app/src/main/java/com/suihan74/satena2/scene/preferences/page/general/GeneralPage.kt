@@ -49,14 +49,14 @@ fun generalPageContents(viewModel: GeneralViewModel) = buildComposableList {
 }
 
 private fun MutableComposableList.behaviorSection(viewModel: GeneralViewModel) = add(
-    { Section(R.string.pref_section_behavior) },
-    {
+    0 to { Section(R.string.pref_section_behavior) },
+    R.string.pref_general_behavior_use_system_timezone to {
         PrefToggleButton(
             flow = viewModel.useSystemTimeZone,
             mainTextId = R.string.pref_general_behavior_use_system_timezone
         )
     },
-    {
+    R.string.pref_general_behavior_drawer_alignment to {
         val dialogVisible = remember { mutableStateOf(false) }
         PrefButton(
             mainTextId = R.string.pref_general_behavior_drawer_alignment,
@@ -86,7 +86,7 @@ private fun MutableComposableList.behaviorSection(viewModel: GeneralViewModel) =
             )
         }
     },
-    {
+    R.string.pref_general_behavior_long_click_vibration_duration to {
         val dialogVisible = remember { mutableStateOf(false) }
         val duration by viewModel.longClickVibrationDuration.collectAsState()
         val textDisable = stringResource(R.string.disable)
@@ -133,8 +133,8 @@ private fun MutableComposableList.behaviorSection(viewModel: GeneralViewModel) =
  * 通知セクション
  */
 private fun MutableComposableList.noticeSection(viewModel: GeneralViewModel) = add(
-    { Section(R.string.pref_general_section_notice) },
-    {
+    0 to { Section(R.string.pref_general_section_notice) },
+    R.string.pref_general_notice_background_checking_enabled to {
         PrefToggleButton(
             flow = viewModel.backgroundCheckingNoticesEnabled,
             mainTextId = R.string.pref_general_notice_background_checking_enabled
@@ -142,7 +142,7 @@ private fun MutableComposableList.noticeSection(viewModel: GeneralViewModel) = a
             viewModel.launchRequestNotificationPermission.value = true
         }
     },
-    {
+    R.string.pref_general_notice_checking_intervals to {
         val dialogVisible = remember { mutableStateOf(false) }
 
         val minutes = viewModel.checkingNoticesIntervals.collectAsState().value
@@ -175,13 +175,13 @@ private fun MutableComposableList.noticeSection(viewModel: GeneralViewModel) = a
             )
         }
     },
-    {
+    R.string.pref_general_notice_same_comment to {
         PrefToggleButton(
             flow = viewModel.noticeSameComment,
             mainTextId = R.string.pref_general_notice_same_comment
         )
     },
-    {
+    R.string.pref_general_update_read_flag_on_notification to {
         PrefToggleButton(
             flow = viewModel.updateReadFlagOnNotification,
             mainTextId = R.string.pref_general_update_read_flag_on_notification
@@ -193,14 +193,14 @@ private fun MutableComposableList.noticeSection(viewModel: GeneralViewModel) = a
  * アップデート通知セクション
  */
 private fun MutableComposableList.updateNoticeSection(viewModel: GeneralViewModel) = add(
-    { Section(R.string.pref_general_section_update_notification) },
-    {
+    0 to { Section(R.string.pref_general_section_update_notification) },
+    R.string.pref_general_update_showing_release_notes to {
         PrefToggleButton(
             flow = viewModel.showingReleaseNotesAfterUpdateEnabled,
             mainTextId = R.string.pref_general_update_showing_release_notes
         )
     },
-    {
+    R.string.pref_general_update_notice_targets to {
         PrefButton(
             mainText = stringResource(R.string.pref_general_update_notice_targets),
             subTextPrefix = stringResource(R.string.pref_current_value_prefix),
@@ -209,7 +209,7 @@ private fun MutableComposableList.updateNoticeSection(viewModel: GeneralViewMode
             // TODO
         }
     },
-    {
+    R.string.pref_general_update_notice_once_ignored to {
         PrefToggleButton(
             flow = viewModel.noticeUpdateOnceIgnored,
             mainTextId = R.string.pref_general_update_notice_once_ignored
@@ -221,8 +221,8 @@ private fun MutableComposableList.updateNoticeSection(viewModel: GeneralViewMode
  * インテントセクション
  */
 private fun MutableComposableList.intentSection(viewModel: GeneralViewModel) = add(
-    { Section(R.string.pref_general_section_intent) },
-    {
+    0 to { Section(R.string.pref_general_section_intent) },
+    R.string.pref_general_intent_use_chooser to {
         PrefToggleButton(
             flow = viewModel.useIntentChooser,
             mainTextId = R.string.pref_general_intent_use_chooser
@@ -234,8 +234,8 @@ private fun MutableComposableList.intentSection(viewModel: GeneralViewModel) = a
  * ダイアログセクション
  */
 private fun MutableComposableList.dialogSection(viewModel: GeneralViewModel) = add(
-    { Section(R.string.pref_general_section_dialog) },
-    {
+    0 to { Section(R.string.pref_general_section_dialog) },
+    R.string.pref_general_dialog_close_by_touching_outside to {
         PrefToggleButton(
             flow = viewModel.closeDialogByTouchingOutside,
             mainTextId = R.string.pref_general_dialog_close_by_touching_outside
@@ -247,13 +247,13 @@ private fun MutableComposableList.dialogSection(viewModel: GeneralViewModel) = a
  * バックアップセクション
  */
 private fun MutableComposableList.backupSection(viewModel: GeneralViewModel) = add(
-    { Section(R.string.pref_general_section_backup) },
-    {
+    0 to { Section(R.string.pref_general_section_backup) },
+    R.string.pref_general_save_settings to {
         PrefButton(mainTextId = R.string.pref_general_save_settings) {
             viewModel.launchAppDataExport()
         }
     },
-    {
+    R.string.pref_general_load_settings to {
         PrefButton(mainTextId = R.string.pref_general_load_settings) {
             viewModel.launchAppDataImport()
         }
@@ -264,8 +264,8 @@ private fun MutableComposableList.backupSection(viewModel: GeneralViewModel) = a
  * キャッシュセクション
  */
 private fun MutableComposableList.cacheSection(viewModel: GeneralViewModel) = add(
-    { Section(R.string.pref_general_section_cache) },
-    {
+    0 to { Section(R.string.pref_general_section_cache) },
+    R.string.pref_general_clear_image_cache_span to {
         PrefButton(
             mainText = stringResource(R.string.pref_general_clear_image_cache_span),
             subTextPrefix = stringResource(R.string.pref_current_value_prefix),
@@ -274,7 +274,7 @@ private fun MutableComposableList.cacheSection(viewModel: GeneralViewModel) = ad
             // TODO
         }
     },
-    {
+    R.string.pref_general_clear_image_cache to {
         PrefButton(
             mainTextId = R.string.pref_general_clear_image_cache,
             mainTextColor = Color.Red

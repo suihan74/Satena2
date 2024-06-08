@@ -47,6 +47,7 @@ import com.suihan74.satena2.scene.preferences.PrefButton
 import com.suihan74.satena2.scene.preferences.PrefItem
 import com.suihan74.satena2.scene.preferences.Section
 import com.suihan74.satena2.scene.preferences.page.BasicPreferencesPage
+import com.suihan74.satena2.scene.preferences.page.ComposablePrefItem
 import com.suihan74.satena2.scene.preferences.page.MutableComposableList
 import com.suihan74.satena2.scene.preferences.page.buildComposableList
 import com.suihan74.satena2.ui.theme.CurrentTheme
@@ -59,16 +60,16 @@ import com.suihan74.satena2.utility.extension.add
 @Composable
 fun AccountsPage(
     state: LazyListState = LazyListState(),
-    viewModel: AccountViewModel
+    contents: List<ComposablePrefItem>,
+    onReload: ()->Unit
 ) {
-    val contents = accountPageContents(viewModel = viewModel)
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
             state = state,
             modifier = Modifier.fillMaxSize()
         ) {
-            items(contents) { composable ->
-                composable.invoke()
+            items(contents) {
+                it.second.invoke()
             }
             emptyFooter()
         }
@@ -80,9 +81,7 @@ fun AccountsPage(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 24.dp, end = 16.dp),
-            onClick = {
-                viewModel.reload()
-            }
+            onClick = onReload
         ) {
             Icon(
                 Icons.Filled.Refresh,
@@ -109,8 +108,8 @@ fun accountPageContents(viewModel: AccountViewModel) = buildComposableList {
  */
 @Composable
 private fun MutableComposableList.hatenaSection(viewModel: AccountViewModel) = add(
-    { Section(R.string.pref_account_section_hatena) },
-    {
+    0 to { Section(R.string.pref_account_section_hatena) },
+    R.string.pref_account_section_hatena to {
         val context = LocalContext.current
         val state by viewModel.signedInHatena.collectAsState()
         when (state) {
@@ -158,10 +157,10 @@ private fun MutableComposableList.hatenaSection(viewModel: AccountViewModel) = a
 private fun MutableComposableList.mastodonSection(viewModel: AccountViewModel) = run {
     val context = LocalContext.current
 
-    add { Section(R.string.pref_account_section_mastodon) }
+    add(0 to { Section(R.string.pref_account_section_mastodon) })
     if (viewModel.signedInMastodon.collectAsState().value) {
         add(
-            {
+            R.string.pref_account_section_mastodon to {
                 val account = viewModel.mastodonAccount.collectAsState().value!!
                 val instance = viewModel.mastodonInstance.collectAsState().value
                 AccountItem(
@@ -176,7 +175,7 @@ private fun MutableComposableList.mastodonSection(viewModel: AccountViewModel) =
                     onClear = { viewModel.signOutMastodon() }
                 )
             },
-            {
+            R.string.pref_account_mastodon_visibility to {
                 val menuVisible = remember { mutableStateOf(false) }
                 val current by viewModel.mastodonPostVisibility.collectAsState()
                 PrefButton(
@@ -193,7 +192,7 @@ private fun MutableComposableList.mastodonSection(viewModel: AccountViewModel) =
                         titleText = stringResource(R.string.pref_account_mastodon_visibility),
                         menuItems = buildList {
                             addAll(
-                                TootVisibility.values().map {
+                                TootVisibility.entries.map {
                                     menuDialogItem(textId = it.textId) {
                                         viewModel.updateMastodonPostVisibility(it)
                                         true
@@ -210,7 +209,9 @@ private fun MutableComposableList.mastodonSection(viewModel: AccountViewModel) =
         )
     }
     else {
-        add { PrefButton(R.string.sign_in) { viewModel.launchMastodonAuthorizationActivity(context) } }
+        add(
+            R.string.pref_account_section_mastodon to { PrefButton(R.string.sign_in) { viewModel.launchMastodonAuthorizationActivity(context) } }
+        )
     }
 }
 
@@ -221,10 +222,10 @@ private fun MutableComposableList.mastodonSection(viewModel: AccountViewModel) =
 private fun MutableComposableList.misskeySection(viewModel: AccountViewModel) = run {
     val context = LocalContext.current
 
-    add { Section(R.string.pref_account_section_misskey) }
+    add(0 to { Section(R.string.pref_account_section_misskey) })
     if (viewModel.signedInMisskey.collectAsState(initial = false).value) {
         add(
-            {
+            R.string.pref_account_section_misskey to {
                 val instance by viewModel.misskeyInstance.collectAsState()
                 val account by viewModel.misskeyAccount.collectAsState()
                 AccountItem(
@@ -239,7 +240,7 @@ private fun MutableComposableList.misskeySection(viewModel: AccountViewModel) = 
                     onClear = { viewModel.signOutMisskey() }
                 )
             },
-            {
+            R.string.pref_account_misskey_visibility to {
                 val menuVisible = remember { mutableStateOf(false) }
                 val current by viewModel.misskeyPostVisibility.collectAsState()
                 PrefButton(
@@ -256,7 +257,7 @@ private fun MutableComposableList.misskeySection(viewModel: AccountViewModel) = 
                         titleText = stringResource(R.string.pref_account_misskey_visibility),
                         menuItems = buildList {
                             addAll(
-                                NoteVisibility.values().map {
+                                NoteVisibility.entries.map {
                                     menuDialogItem(textId = it.textId) {
                                         viewModel.updateMisskeyPostVisibility(it)
                                         true
@@ -273,7 +274,9 @@ private fun MutableComposableList.misskeySection(viewModel: AccountViewModel) = 
         )
     }
     else {
-        add { PrefButton(R.string.sign_in) { viewModel.launchMisskeyAuthorizationActivity(context) } }
+        add(
+            R.string.pref_account_section_misskey to { PrefButton(R.string.sign_in) { viewModel.launchMisskeyAuthorizationActivity(context) } }
+        )
     }
 }
 

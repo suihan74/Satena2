@@ -1,7 +1,12 @@
 package com.suihan74.satena2.scene.preferences.page.browser
 
 import android.os.Build
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import com.suihan74.satena2.R
@@ -18,7 +23,6 @@ import com.suihan74.satena2.scene.preferences.page.buildComposableList
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
 import com.suihan74.satena2.utility.extension.add
 import com.suihan74.satena2.utility.extension.textId
-import com.suihan74.satena2.utility.hatena.textId
 
 /**
  * 「アプリ内ブラウザ」ページのコンテンツ
@@ -34,8 +38,8 @@ fun browserPageContents(viewModel: BrowserViewModel) = buildComposableList {
 }
 
 private fun MutableComposableList.basicSection(viewModel: BrowserViewModel) = add(
-    { Section(R.string.pref_browser_section_basic) },
-    {
+    0 to { Section(R.string.pref_browser_section_basic) },
+    R.string.pref_browser_type to {
         var dialogVisible by remember { mutableStateOf(false) }
         val current by viewModel.browserType.collectAsState()
         PrefButton(
@@ -47,10 +51,13 @@ private fun MutableComposableList.basicSection(viewModel: BrowserViewModel) = ad
         }
 
         if (dialogVisible) {
-            val items = BrowserType.values().map {
+            val items = BrowserType.entries.map {
                 menuDialogItem(
                     textId = it.textId,
-                    action = { viewModel.browserType.value = it; true }
+                    action = {
+                        viewModel.browserType.value = it
+                        true
+                    }
                 )
             }
             MenuDialog(
@@ -63,7 +70,7 @@ private fun MutableComposableList.basicSection(viewModel: BrowserViewModel) = ad
             )
         }
     },
-    {
+    R.string.pref_browser_start_page to {
         var dialogVisible by remember { mutableStateOf(false) }
         val current by viewModel.startPageUrl.collectAsState()
         PrefButton(
@@ -89,8 +96,8 @@ private fun MutableComposableList.basicSection(viewModel: BrowserViewModel) = ad
 )
 
 private fun MutableComposableList.appearanceSection(viewModel: BrowserViewModel) = add(
-    { Section(R.string.pref_browser_section_appearance) },
-    {
+    0 to { Section(R.string.pref_browser_section_appearance) },
+    R.string.pref_browser_address_bar_alignment to {
         var dialogVisible by remember { mutableStateOf(false) }
         val current by viewModel.addressBarAlignment.collectAsState()
         PrefButton(
@@ -119,7 +126,7 @@ private fun MutableComposableList.appearanceSection(viewModel: BrowserViewModel)
             )
         }
     },
-    {
+    R.string.pref_browser_web_view_theme to {
         var dialogVisible by remember { mutableStateOf(false) }
         val current by viewModel.webViewTheme.collectAsState()
         PrefButton(
@@ -150,5 +157,5 @@ private fun MutableComposableList.appearanceSection(viewModel: BrowserViewModel)
 )
 
 private fun MutableComposableList.functionSection(viewModel: BrowserViewModel) = add(
-    { Section(R.string.pref_browser_section_function) },
+    0 to { Section(R.string.pref_browser_section_function) },
 )

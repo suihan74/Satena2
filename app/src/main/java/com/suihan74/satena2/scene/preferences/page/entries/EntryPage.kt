@@ -33,11 +33,11 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -114,11 +114,11 @@ fun entryPageContents(
 }
 
 private fun MutableComposableList.bottomMenuSection(viewModel: EntryViewModel) = add(
-    { Section(R.string.pref_entry_section_bottom_menu) },
-    { PrefToggleButton(viewModel.useBottomMenu, R.string.pref_entry_use_bottom_menu) },
-    {
+    0 to { Section(R.string.pref_entry_section_bottom_menu) },
+    R.string.pref_entry_use_bottom_menu to { PrefToggleButton(viewModel.useBottomMenu, R.string.pref_entry_use_bottom_menu) },
+    R.string.pref_entry_bottom_menu_arrangement to item@ {
         val useBottomMenu by viewModel.useBottomMenu.collectAsState(initial = false)
-        if (!useBottomMenu) return@add
+        if (!useBottomMenu) return@item
         val dialogVisible = remember { mutableStateOf(false) }
         PrefButton(
             mainTextId = R.string.pref_entry_bottom_menu_arrangement,
@@ -148,9 +148,9 @@ private fun MutableComposableList.bottomMenuSection(viewModel: EntryViewModel) =
             )
         }
     },
-    {
+    R.string.pref_entry_bottom_menu_items to item@ {
         val useBottomMenu by viewModel.useBottomMenu.collectAsState(initial = false)
-        if (!useBottomMenu) return@add
+        if (!useBottomMenu) return@item
         val bottomMenuItems by viewModel.bottomMenuItems.collectAsState()
         val itemsArrangement by viewModel.bottomMenuArrangement.collectAsState()
         BottomMenuPrefItem(
@@ -163,14 +163,25 @@ private fun MutableComposableList.bottomMenuSection(viewModel: EntryViewModel) =
 )
 
 private fun MutableComposableList.actionsSection(viewModel: EntryViewModel) = add(
-    { Section(R.string.pref_entry_section_actions) },
-    { ClickEntryActionSelector(viewModel, viewModel.clickEntryAction, R.string.pref_entry_click_action) },
-    { ClickEntryActionSelector(viewModel, viewModel.longClickEntryAction, R.string.pref_entry_long_click_action) },
-    { ClickEntryActionSelector(viewModel, viewModel.doubleClickEntryAction, R.string.pref_entry_double_click_action) },
-
-    { ClickEntryActionSelector(viewModel, viewModel.clickEntryEdgeAction, R.string.pref_entry_click_edge_action) },
-    { ClickEntryActionSelector(viewModel, viewModel.longClickEntryEdgeAction, R.string.pref_entry_long_edge_click_action) },
-    { ClickEntryActionSelector(viewModel, viewModel.doubleClickEntryEdgeAction, R.string.pref_entry_double_edge_click_action) }
+    0 to { Section(R.string.pref_entry_section_actions) },
+    R.string.pref_entry_click_action to {
+        ClickEntryActionSelector(viewModel, viewModel.clickEntryAction, R.string.pref_entry_click_action)
+    },
+    R.string.pref_entry_long_click_action to {
+        ClickEntryActionSelector(viewModel, viewModel.longClickEntryAction, R.string.pref_entry_long_click_action)
+    },
+    R.string.pref_entry_double_click_action to {
+        ClickEntryActionSelector(viewModel, viewModel.doubleClickEntryAction, R.string.pref_entry_double_click_action)
+    },
+    R.string.pref_entry_click_edge_action to {
+        ClickEntryActionSelector(viewModel, viewModel.clickEntryEdgeAction, R.string.pref_entry_click_edge_action)
+    },
+    R.string.pref_entry_long_edge_click_action to {
+        ClickEntryActionSelector(viewModel, viewModel.longClickEntryEdgeAction, R.string.pref_entry_long_edge_click_action)
+    },
+    R.string.pref_entry_double_edge_click_action to {
+        ClickEntryActionSelector(viewModel, viewModel.doubleClickEntryEdgeAction, R.string.pref_entry_double_edge_click_action)
+    }
 )
 
 /**
@@ -209,8 +220,8 @@ private fun MutableComposableList.categorySection(
     viewModel: EntryViewModel,
     initialStateSelectorVisible: MutableState<Boolean>
 ) = add(
-    { Section(R.string.pref_entry_section_category) },
-    {
+    0 to { Section(R.string.pref_entry_section_category) },
+    R.string.pref_entry_initial_state to {
         val current by viewModel.initialState.collectAsState()
         var dialogVisible by remember { mutableStateOf(false) }
         PrefButton(
@@ -242,7 +253,7 @@ private fun MutableComposableList.categorySection(
             )
         }
     },
-    {
+    R.string.pref_entry_initial_tabs to {
         PrefButton(
             mainTextId = R.string.pref_entry_initial_tabs
         ) {
@@ -252,8 +263,8 @@ private fun MutableComposableList.categorySection(
 )
 
 private fun MutableComposableList.behaviorSection(viewModel: EntryViewModel) = add(
-    { Section(R.string.pref_section_behavior) },
-    {
+    0 to { Section(R.string.pref_section_behavior) },
+    R.string.pref_entry_category_list_type to {
         val dialogVisible = remember { mutableStateOf(false) }
 
         PrefButton(
@@ -277,7 +288,7 @@ private fun MutableComposableList.behaviorSection(viewModel: EntryViewModel) = a
             )
         }
     },
-    {
+    R.string.pref_entry_ignored_entries_visibility_in_mybookmarks to {
         PrefToggleButton(
             mainTextId = R.string.pref_entry_ignored_entries_visibility_in_mybookmarks,
             flow = viewModel.ignoredEntriesVisibilityInMyBookmarks
@@ -286,8 +297,8 @@ private fun MutableComposableList.behaviorSection(viewModel: EntryViewModel) = a
 )
 
 private fun MutableComposableList.historySection(viewModel: EntryViewModel) = add(
-    { Section(R.string.pref_entry_section_history) },
-    {
+    0 to { Section(R.string.pref_entry_section_history) },
+    R.string.pref_entry_record_read_entries_enabled to {
         PrefToggleButton(
             mainTextId = R.string.pref_entry_record_read_entries_enabled,
             flow = viewModel.recordReadEntriesEnabled
@@ -296,7 +307,7 @@ private fun MutableComposableList.historySection(viewModel: EntryViewModel) = ad
 )
 
 private fun MutableComposableList.readLaterSection() = add(
-    { Section(R.string.pref_entry_section_read_later) }
+    R.string.pref_entry_section_read_later to { Section(R.string.pref_entry_section_read_later) }
 )
 
 // ------ //
@@ -308,7 +319,7 @@ private fun BottomMenuPrefItem(
     dialogProperties: DialogProperties,
     onComplete: ((Int, BottomMenuItem?)->Unit)? = null,
 ) {
-    var dialogTargetIndex by remember { mutableStateOf(-1) }
+    var dialogTargetIndex by remember { mutableIntStateOf(-1) }
     val scrollState = rememberScrollState()
     Column(
         Modifier.padding(

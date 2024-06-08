@@ -19,14 +19,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun BasicPreferencesPage(
     state: LazyListState = LazyListState(),
-    contents: List<@Composable ()->Unit>
+    contents: List<ComposablePrefItem>
 ) {
     LazyColumn(
         state = state,
         modifier = Modifier.fillMaxSize()
     ) {
         items(contents) { composable ->
-            composable.invoke()
+            composable.second.invoke()
         }
         emptyFooter()
     }
@@ -37,13 +37,13 @@ fun BasicPreferencesPage(
 @Preview
 @Composable
 private fun BasicPreferencesPagePreview() {
-    val contents = listOf<@Composable ()->Unit>(
-        { Section(title = "セクション1") },
-        { PrefButton(mainText = "ボタン") },
-        { PrefToggleButton(mainText = "トグルボタン", flow = MutableStateFlow(true)) },
-        { Section(title = "セクション2") },
-        { PrefButton(mainText = "ボタン2") },
-        { PrefToggleButton(mainText = "トグルボタン2", flow = MutableStateFlow(true)) },
+    val contents = listOf<ComposablePrefItem>(
+        0 to { Section(title = "セクション1") },
+        0 to { PrefButton(mainText = "ボタン") },
+        0 to { PrefToggleButton(mainText = "トグルボタン", flow = MutableStateFlow(true)) },
+        0 to { Section(title = "セクション2") },
+        0 to { PrefButton(mainText = "ボタン2") },
+        0 to { PrefToggleButton(mainText = "トグルボタン2", flow = MutableStateFlow(true)) },
     )
 
     BasicPreferencesPage(contents = contents)
