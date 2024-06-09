@@ -64,7 +64,7 @@ android {
 
 dependencies {
     // compose
-    def composeBom = platform('androidx.compose:compose-bom:2024.04.01')
+    def composeBom = platform('androidx.compose:compose-bom:2024.05.00')
     implementation composeBom
     androidTestImplementation composeBom
 
@@ -80,15 +80,15 @@ dependencies {
     // Material Design 3
     implementation("androidx.compose.material3:material3:1.2.1")
 
-    def lifecycle_version = '2.7.0'
+    def lifecycle_version = '2.8.1'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation 'androidx.activity:activity-compose:1.8.2'
+    implementation 'androidx.activity:activity-compose:1.9.0'
 
     // kotlinx-serialization
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0'
 
     // DataStore
-    implementation "androidx.datastore:datastore:1.0.0"
+    implementation "androidx.datastore:datastore:1.1.1"
 
     // Hilt - dependency injection for Android
     implementation "com.google.dagger:hilt-android:$hilt_version"
@@ -140,10 +140,10 @@ dependencies {
     implementation "com.google.accompanist:accompanist-webview:$accompanist_version"
 
     // WebView features
-    implementation 'androidx.webkit:webkit:1.10.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
 
     // chrome custom tabs
-    implementation 'androidx.browser:browser:1.7.0'
+    implementation 'androidx.browser:browser:1.8.0'
 
     // number picker
     implementation "com.chargemap.compose:numberpicker:1.0.3"
