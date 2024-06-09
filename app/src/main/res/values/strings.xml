@@ -273,6 +273,11 @@
     <string name="bookmark_custom_tab_setting_no_comments_shown">無言ブクマ</string>
     <string name="bookmark_custom_tab_setting_ignored_users_shown">非表示ユーザー</string>
 
+    <!-- UserLabelDialog -->
+    <string name="user_label_dialog_edit_label_name_title">ラベル名を編集</string>"
+    <string name="user_label_dialog_edit_label_name_placeholder">ラベル名</string>"
+    <string name="user_label_dialog_add_new_label">新しいラベルを作成</string>"
+
     <!-- ドロワ -->
     <string name="bookmark_drawer_tags_title">タグ</string>
     <string name="bookmark_drawer_related_entries_title">関連エントリ</string>
@@ -573,6 +578,7 @@
     <!-- ユーザーラベル -->
     <string name="set_user_label_success">id:%sのラベルを設定しました</string>
     <string name="register_user_label_success">ラベル「%s」を作成しました</string>
+    <string name="register_user_label_failure">ラベル「%s」を作成できません</string>
     <string name="delete_user_label_success">ラベル「%s」を削除しました</string>
 
     <!-- 設定「ブックマーク」ページのコンテンツ -->

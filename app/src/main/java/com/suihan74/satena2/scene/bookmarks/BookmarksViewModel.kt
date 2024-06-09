@@ -285,6 +285,11 @@ interface BookmarksViewModel : DialogPropertiesProvider {
      */
     fun updateUserLabels(user: String, states: List<Pair<Label, Boolean>>)
 
+    /**
+     * ユーザーラベルを作成する
+     */
+    suspend fun createUserLabel(label: Label) : Boolean
+
     // ------ //
 
     /**
@@ -808,6 +813,24 @@ class BookmarksViewModelImpl @Inject constructor(
         }
     }
 
+    /**
+     * ユーザーラベルを作成する
+     */
+    override suspend fun createUserLabel(label: Label) : Boolean {
+        val result = runCatching {
+            userLabelRepo.createLabel(label)
+        }.onSuccess {
+            context.showToast(
+                context.getString(R.string.register_user_label_success, label.name)
+            )
+        }.onFailure {
+            context.showToast(
+                context.getString(R.string.register_user_label_failure, label.name)
+            )
+        }
+        return result.isSuccess
+    }
+
     // ------ //
 
     private lateinit var lifecycleObserver : LifecycleObserver
@@ -1045,6 +1068,10 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     }
 
     override fun updateUserLabels(user: String, states: List<Pair<Label, Boolean>>) {
+    }
+
+    override suspend fun createUserLabel(label: Label) : Boolean {
+        return true
     }
 
     // ------ //

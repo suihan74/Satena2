@@ -13,19 +13,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Checkbox
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.suihan74.satena2.R
+import com.suihan74.satena2.compose.BottomSheetMenuItem
 import com.suihan74.satena2.compose.SingleLineText
 import com.suihan74.satena2.model.userLabel.Label
 import com.suihan74.satena2.ui.theme.CurrentTheme
@@ -38,6 +45,8 @@ import com.suihan74.satena2.ui.theme.themed.themedCheckboxColors
 fun UserLabelDialog(
     labels: List<Label>,
     checkedLabels: List<Label>,
+    dialogProperties: DialogProperties,
+    onCreateLabel: suspend (Label)->Boolean,
     onUpdate: (List<Pair<Label,Boolean>>)->Unit
 ) {
     val pairs = remember(labels, checkedLabels) {
@@ -45,6 +54,7 @@ fun UserLabelDialog(
             label to mutableStateOf(checkedLabels.any { it == label })
         }
     }
+    var editorDialogTarget by remember { mutableStateOf<Label?>(null) }
 
     Box(
         modifier = Modifier.fillMaxWidth()
@@ -61,6 +71,15 @@ fun UserLabelDialog(
                     UserLabelDialogItem(
                         label = item.first,
                         checked = item.second
+                    )
+                }
+                item {
+                    BottomSheetMenuItem(
+                        icon = rememberVectorPainter(image = Icons.Default.Add),
+                        text = stringResource(R.string.user_label_dialog_add_new_label),
+                        onClick = {
+                            editorDialogTarget = Label(name = "")
+                        }
                     )
                 }
             }
@@ -83,6 +102,15 @@ fun UserLabelDialog(
                 colorFilter = ColorFilter.tint(CurrentTheme.onPrimary)
             )
         }
+    }
+
+    editorDialogTarget?.let { label ->
+        UserLabelNameEditionDialog(
+            label = label,
+            onRegistration = onCreateLabel,
+            onDismiss = { editorDialogTarget = null },
+            dialogProperties = dialogProperties
+        )
     }
 }
 

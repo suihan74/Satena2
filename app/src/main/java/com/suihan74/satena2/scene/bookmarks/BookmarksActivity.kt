@@ -363,6 +363,10 @@ private fun BookmarksScene(
                         UserLabelDialog(
                             labels = userLabels,
                             checkedLabels = userAndLabels?.labels.orEmpty(),
+                            dialogProperties = viewModel.dialogProperties(),
+                            onCreateLabel = {
+                                viewModel.createUserLabel(it)
+                            },
                             onUpdate = {
                                 coroutineScope.launch {
                                     viewModel.updateUserLabels(user, it)

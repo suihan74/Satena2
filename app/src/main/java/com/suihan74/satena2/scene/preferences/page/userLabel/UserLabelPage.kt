@@ -27,7 +27,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -43,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,7 +54,6 @@ import androidx.navigation.compose.rememberNavController
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.AnimatedListItem
 import com.suihan74.satena2.compose.combinedClickable
-import com.suihan74.satena2.compose.dialog.CustomDialog
 import com.suihan74.satena2.compose.dialog.DialogButton
 import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
@@ -69,10 +66,7 @@ import com.suihan74.satena2.scene.preferences.HatenaUserItem
 import com.suihan74.satena2.scene.preferences.PrefItemDefaults
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
-import com.suihan74.satena2.ui.theme.themed.themedTextFieldColors
-import com.suihan74.satena2.utility.focusKeyboardRequester
 import com.suihan74.satena2.utility.hatena.hatenaUserIconUrl
-import com.suihan74.satena2.utility.rememberMutableTextFieldValue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -143,8 +137,12 @@ fun UserLabelsPage(
                     onBack = {
                         navController.popBackStack()
                     },
-                    onEditLabel = { /* todo */ },
-                    onUpdateLabels = { user, states -> viewModel.updateUserLabels(user, states) }
+                    onCrateLabel = {
+                        viewModel.createLabel(it)
+                    },
+                    onUpdateLabels = { user, states ->
+                        viewModel.updateUserLabels(user, states)
+                    }
                 )
             }
         }
@@ -229,9 +227,9 @@ private fun LabelsContents(
         )
     }
 
-    if (editorDialogTarget != null) {
-        LabelNameDialog(
-            label = editorDialogTarget,
+    editorDialogTarget?.let { label ->
+        UserLabelNameEditionDialog(
+            label = label,
             onRegistration = { onRegistration(it) },
             onDismiss = { editorDialogTarget = null },
             dialogProperties = dialogProperties
@@ -251,9 +249,9 @@ private fun UsersContents(
     allLabels: List<Label>,
     dialogProperties: DialogProperties,
     userAndLabelsGetter: (String)-> Flow<UserAndLabels?>,
-    onBack: ()->Unit = {},
-    onEditLabel: (Label)->Unit = {},
-    onUpdateLabels: (String, List<Pair<Label, Boolean>>)->Unit = { _, _ -> }
+    onBack: ()->Unit,
+    onCrateLabel: suspend (Label)->Boolean,
+    onUpdateLabels: (String, List<Pair<Label, Boolean>>)->Unit
 ) {
     if (label == null) {
         Box(Modifier.fillMaxSize())
@@ -278,6 +276,8 @@ private fun UsersContents(
             UserLabelDialog(
                 labels = allLabels,
                 checkedLabels = checkedLabels?.labels.orEmpty(),
+                dialogProperties = dialogProperties,
+                onCreateLabel = onCrateLabel,
                 onUpdate = {
                     coroutineScope.launch {
                         onUpdateLabels(userLabelsSheetTarget!!, it)
@@ -395,6 +395,9 @@ private fun UsersContentsPreview() {
         },
         allLabels = emptyList(),
         dialogProperties = remember { DialogProperties() },
+        onBack = {},
+        onCrateLabel = { true },
+        onUpdateLabels = { _, _ -> },
         userAndLabelsGetter = { MutableStateFlow(null) }
     )
 }
@@ -476,53 +479,6 @@ private fun LabelItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-// ------ //
-
-/**
- * 新しいラベルを作成する・既存のラベル名を変更するダイアログ
- *
- * todo
- */
-@Composable
-private fun LabelNameDialog(
-    label: Label?,
-    onRegistration: suspend (Label)->Boolean,
-    onDismiss: () -> Unit,
-    dialogProperties: DialogProperties
-) {
-    val item = label ?: return
-    val textFieldValue = rememberMutableTextFieldValue(text = item.name)
-    val coroutineScope = rememberCoroutineScope()
-    val focusRequester = focusKeyboardRequester()
-
-    CustomDialog(
-        titleText = stringResource(R.string.pref_theme_preset_title_edition_dialog_title),
-        positiveButton = dialogButton(R.string.register) {
-            coroutineScope.launch {
-                if (onRegistration(label.copy(name = textFieldValue.value.text))) {
-                    onDismiss()
-                }
-            }
-        },
-        negativeButton = dialogButton(R.string.cancel) { onDismiss() },
-        onDismissRequest = { onDismiss() },
-        colors = themedCustomDialogColors(),
-        properties = dialogProperties
-    ) {
-        TextField(
-            value = textFieldValue.value,
-            onValueChange = { textFieldValue.value = it },
-            placeholder = { Text(stringResource(R.string.pref_theme_edition_section_title)) },
-            singleLine = true,
-            maxLines = 1,
-            colors = themedTextFieldColors(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester)
         )
     }
 }

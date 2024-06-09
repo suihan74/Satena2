@@ -94,8 +94,9 @@ class UserLabelsViewModelImpl @Inject constructor(
                 context.getString(R.string.register_user_label_success, label.name)
             )
         }.onFailure {
-            // todo
-            Log.e("userLabel", it.stackTraceToString())
+            context.showToast(
+                context.getString(R.string.register_user_label_failure, label.name)
+            )
         }
         return result.isSuccess
     }
