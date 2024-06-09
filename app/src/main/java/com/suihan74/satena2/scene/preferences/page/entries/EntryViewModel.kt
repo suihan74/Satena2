@@ -58,6 +58,11 @@ interface EntryViewModel : IPreferencePageViewModel {
      */
     val recordReadEntriesEnabled : MutableStateFlow<Boolean>
 
+    /**
+     * フィルタを有効化する
+     */
+    val filteringEntriesEnabled : MutableStateFlow<Boolean>
+
     // ------ //
 
     /**
@@ -145,6 +150,11 @@ class EntryViewModelImpl @Inject constructor(
      */
     override val recordReadEntriesEnabled : MutableStateFlow<Boolean> = prefsStateFlow(true)
 
+    /**
+     * フィルタを有効化する
+     */
+    override val filteringEntriesEnabled : MutableStateFlow<Boolean> = prefsStateFlow(true)
+
     // ------ //
 
     /**
@@ -190,6 +200,7 @@ class EntryViewModelImpl @Inject constructor(
                 initialTabs.value = it.entryInitialTabs
                 ignoredEntriesVisibilityInMyBookmarks.value = it.ignoredEntriesVisibilityInMyBookmarks
                 recordReadEntriesEnabled.value = it.recordReadEntriesEnabled
+                filteringEntriesEnabled.value = it.filteringEntriesEnabled
 
                 clickEntryAction.value = it.clickEntryAction
                 longClickEntryAction.value = it.longClickEntryAction
@@ -217,6 +228,7 @@ class EntryViewModelImpl @Inject constructor(
                 entryInitialTabs = initialTabs.value,
                 ignoredEntriesVisibilityInMyBookmarks = ignoredEntriesVisibilityInMyBookmarks.value,
                 recordReadEntriesEnabled = recordReadEntriesEnabled.value,
+                filteringEntriesEnabled = filteringEntriesEnabled.value,
                 clickEntryAction = clickEntryAction.value,
                 longClickEntryAction = longClickEntryAction.value,
                 doubleClickEntryAction = doubleClickEntryAction.value,
@@ -291,6 +303,7 @@ class FakeEntryViewModel :
     override val initialTabs = MutableStateFlow<Map<Category, Int>>(emptyMap())
     override val ignoredEntriesVisibilityInMyBookmarks = MutableStateFlow(true)
     override val recordReadEntriesEnabled = MutableStateFlow(true)
+    override val filteringEntriesEnabled = MutableStateFlow(true)
     override val clickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_COMMENTS)
     override val longClickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_MENU)
     override val doubleClickEntryAction = MutableStateFlow(ClickEntryAction.SHOW_PAGE)

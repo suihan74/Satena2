@@ -95,6 +95,7 @@ fun EntryItem(
                 .matchEntire(it)?.groups?.get(2)?.value ?: it
         })
     }
+    val markColorTint = ColorFilter.tint(CurrentTheme.grayTextColor.copy(alpha = .75f))
 
     ConstraintLayout(
         modifier = Modifier
@@ -110,23 +111,41 @@ fun EntryItem(
                 else it
             }
     ) {
-        val (favicon, title, image, users, ad, domain, commentArea, readMark, edgeClickArea) = createRefs()
+        val (favicon, title, image, users, ad, domain, commentArea, readMark, filteredMark, edgeClickArea) = createRefs()
 
         Image(
             painter = painterResource(id = R.drawable.ic_check_circle_outline),
             contentDescription = "read mark",
-            colorFilter = ColorFilter.tint(CurrentTheme.grayTextColor),
+            colorFilter = markColorTint,
             modifier = Modifier
-                .size(40.dp)
+                .size(38.dp)
                 .constrainAs(readMark) {
                     linkTo(
                         top = title.top,
-                        bottom = title.bottom,
+                        bottom = filteredMark.top,
+                        start = favicon.start,
+                        end = parent.end,
+                        horizontalBias = 0f,
+                        verticalBias = .5f
+                    )
+                    visibility = (readMarkVisible && item.read != null).toVisibility()
+                }
+        )
+        Image(
+            painter = painterResource(id = R.drawable.ic_visibility_off),
+            contentDescription = "filtered mark",
+            colorFilter = markColorTint,
+            modifier = Modifier
+                .size(38.dp)
+                .constrainAs(filteredMark) {
+                    linkTo(
+                        top = readMark.bottom,
+                        bottom = parent.bottom,
                         start = favicon.start,
                         end = parent.end,
                         horizontalBias = 0f
                     )
-                    visibility = (readMarkVisible && item.read != null).toVisibility()
+                    visibility = (item.filterState == FilterState.EXCLUSION).toVisibility()
                 }
         )
         SubcomposeAsyncImage(

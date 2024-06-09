@@ -293,6 +293,12 @@ private fun MutableComposableList.behaviorSection(viewModel: EntryViewModel) = a
             mainTextId = R.string.pref_entry_ignored_entries_visibility_in_mybookmarks,
             flow = viewModel.ignoredEntriesVisibilityInMyBookmarks
         )
+    },
+    R.string.pref_entry_filtering_enabled to {
+        PrefToggleButton(
+            mainTextId = R.string.pref_entry_filtering_enabled,
+            flow = viewModel.filteringEntriesEnabled
+        )
     }
 )
 

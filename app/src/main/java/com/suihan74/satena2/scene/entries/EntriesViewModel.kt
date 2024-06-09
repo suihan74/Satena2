@@ -880,11 +880,21 @@ class EntriesViewModelImpl @Inject constructor(
     ) {
         if (!item.longClickable) throw IllegalArgumentException()
         when (item) {
-            BottomMenuItem.INNER_BROWSER -> {
-                onShowBrowserBottomSheet()
-            }
+            BottomMenuItem.INNER_BROWSER -> onShowBrowserBottomSheet()
+            BottomMenuItem.EXCLUDED_ENTRIES -> switchFilteringEntries()
             else -> throw NotImplementedError()
         }
+    }
+
+    /**
+     * エントリフィルタリングの有効化/無効化
+     */
+    private suspend fun switchFilteringEntries() {
+        val result = entriesRepo.switchFilteringEntries()
+        val msgId =
+            if (result) R.string.pref_entry_filtering_enabled_msg
+            else R.string.pref_entry_filtering_disabled_msg
+        context.showToast(msgId)
     }
 
     // ------ //

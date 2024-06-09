@@ -21,7 +21,6 @@ import com.suihan74.satena2.model.dataStore.Preferences
 import com.suihan74.satena2.model.entries.ReadEntry
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntry
 import com.suihan74.satena2.scene.entries.bottomSheet.SearchSetting
-import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.scene.preferences.page.accounts.hatena.HatenaAccountRepository
 import com.suihan74.satena2.utility.extension.onNot
 import com.suihan74.satena2.utility.hatena.actualUrl
@@ -175,6 +174,11 @@ interface EntriesRepository {
      */
     suspend fun removeBookmark(entry: Entry)
 
+    /**
+     * エントリフィルタリングの有効化/無効化を切替え
+     */
+    suspend fun switchFilteringEntries() : Boolean
+
     // ------ //
 
     /**
@@ -209,7 +213,7 @@ interface EntriesRepository {
 class EntriesRepositoryImpl @Inject constructor(
     appDatabase: AppDatabase,
     private val hatenaRepo: HatenaAccountRepository,
-    dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>
 ) : EntriesRepository {
     private val ignoredEntryDao = appDatabase.ignoredEntryDao()
 
@@ -249,6 +253,11 @@ class EntriesRepositoryImpl @Inject constructor(
      * 全フィルタ
      */
     override val filtersFlow = ignoredEntryDao.entryFiltersFlow()
+
+    /**
+     * フィルタリング有効状態
+     */
+    private val filteringEnabled = dataStore.data.map { it.filteringEntriesEnabled }
 
     /**
      * 既読エントリ情報
@@ -315,13 +324,17 @@ class EntriesRepositoryImpl @Inject constructor(
                         items.filter { it.filterState == FilterState.EXCLUSION }
                     }
 
-                allEntriesFlow
-                    .map { items -> items.filter { it.filterState == FilterState.VALID } }
-                    .stateIn(
-                        scope = coroutineScope,
-                        started = SharingStarted.Eagerly,
-                        initialValue = emptyList()
-                    )
+                combine(allEntriesFlow, filteringEnabled) { items, filteringEnabled ->
+                    if (filteringEnabled) {
+                        items.filter { it.filterState == FilterState.VALID }
+                    }
+                    else items
+                }
+                .stateIn(
+                    scope = coroutineScope,
+                    started = SharingStarted.Eagerly,
+                    initialValue = emptyList()
+                )
             }
         }
     }
@@ -657,6 +670,15 @@ class EntriesRepositoryImpl @Inject constructor(
             addAll(fromIds)
             addAll(fromUrls)
         }
+    }
+
+    /**
+     * エントリフィルタリングの有効化/無効化を切替え
+     */
+    override suspend fun switchFilteringEntries() : Boolean {
+        return dataStore.updateData {
+            it.copy(filteringEntriesEnabled = !it.filteringEntriesEnabled)
+        }.filteringEntriesEnabled
     }
 
     // ------ //

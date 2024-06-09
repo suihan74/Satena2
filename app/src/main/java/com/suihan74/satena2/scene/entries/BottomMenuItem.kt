@@ -42,7 +42,8 @@ enum class BottomMenuItem(
 
     EXCLUDED_ENTRIES(5,
         R.drawable.ic_visibility_off,
-        R.string.excluded_entries
+        R.string.excluded_entries,
+        longClickable = true
     ),
 
     SEARCH(6,

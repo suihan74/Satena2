@@ -152,6 +152,9 @@ data class Preferences(
     /** エントリ: 既読エントリを記録する */
     val recordReadEntriesEnabled : Boolean = true,
 
+    /** エントリ: フィルタを有効化する */
+    val filteringEntriesEnabled : Boolean = true,
+
     // ------ //
 
     /** ブクマ: 最初に表示するタブ */
