@@ -3,16 +3,42 @@ package com.suihan74.satena2.scene.bookmarks
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.*
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FabPosition
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -29,7 +55,14 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.suihan74.hatena.model.bookmark.Bookmark
 import com.suihan74.satena2.R
-import com.suihan74.satena2.compose.*
+import com.suihan74.satena2.compose.CombinedIconButton
+import com.suihan74.satena2.compose.DrawerDraggableArea
+import com.suihan74.satena2.compose.SingleLineText
+import com.suihan74.satena2.compose.SwipeRefreshBox
+import com.suihan74.satena2.compose.VerticalScrollableIndicator
+import com.suihan74.satena2.compose.combinedClickable
+import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.utility.extension.zonedString
 import com.suihan74.satena2.utility.hatena.hatenaUserIconUrl
@@ -104,6 +137,7 @@ fun BookmarkDetailContent(
 
 // ------ //
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BookmarkArea(
     item: DisplayBookmark,
@@ -111,6 +145,8 @@ private fun BookmarkArea(
     onShowBookmarkItemMenu: (DisplayBookmark)->Unit
 ) {
     val bookmark = remember(item) { item.bookmark }
+    val starsEntry by item.starsEntry.collectAsState()
+
     Row(
         modifier
             .padding(8.dp)
@@ -135,14 +171,48 @@ private fun BookmarkArea(
                 lineHeight = 20.sp
             )
             Spacer(Modifier.height(2.dp))
-            Row {
-                SingleLineText(
-                    text = bookmark.timestamp.zonedString("yyyy-MM-dd HH:mm"),
-                    color = CurrentTheme.grayTextColor,
-                    fontSize = 13.sp,
+            Row(
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    if (bookmark.tags.isNotEmpty()) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.Start),
+                            verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.Top),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            for (tag in bookmark.tags) {
+                                TagItem(
+                                    text = tag,
+                                    background = CurrentTheme.grayTextColor,
+                                    foreground = CurrentTheme.background
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(2.dp))
+                    }
+                    SingleLineText(
+                        annotatedString =
+                            if (starsEntry.url.isNotBlank()) {
+                                buildTimestampAndStarsText(
+                                    timestamp = bookmark.timestamp,
+                                    starsEntry = starsEntry
+                                )
+                            }
+                            else {
+                                buildTimestampAndStarsText(
+                                    timestamp = bookmark.timestamp,
+                                    starCount = bookmark.starCount
+                                )
+                            },
+                        color = CurrentTheme.grayTextColor,
+                        fontSize = 13.sp
+                    )
+                }
                 CombinedIconButton(
+                    modifier = Modifier.padding(12.dp),
                     onClick = { onShowBookmarkItemMenu(item) }
                 ) {
                     Icon(

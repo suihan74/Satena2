@@ -261,34 +261,6 @@ fun BookmarkItem(
     }
 }
 
-/**
- * タイムスタンプ+スターリスト部分の装飾テキストを作成する
- */
-@Composable
-private fun buildTimestampAndStarsText(
-    timestamp: Instant,
-    starCount: List<StarCount>
-) : AnnotatedString = buildAnnotatedString {
-    withStyle(SpanStyle(color = CurrentTheme.grayTextColor)) {
-        append(timestamp.zonedString("yyyy-MM-dd HH:mm"))
-    }
-    appendStarCountText(starCount = starCount)
-}
-
-/**
- * タイムスタンプ+スターリスト部分の装飾テキストを作成する
- */
-@Composable
-private fun buildTimestampAndStarsText(
-    timestamp: Instant,
-    starsEntry: StarsEntry
-) : AnnotatedString = buildAnnotatedString {
-    withStyle(SpanStyle(color = CurrentTheme.grayTextColor)) {
-        append(timestamp.zonedString("yyyy-MM-dd HH:mm"))
-    }
-    appendStarCountText(starsEntry = starsEntry)
-}
-
 // ------ //
 
 @Preview
