@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -406,21 +408,69 @@ private fun CommentItem(
                     verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.Top),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    for (str in item.tags) {
-                        Text(
-                            text = str,
-                            fontSize = 11.sp,
-                            color = CurrentTheme.entryCommentBackground,
-                            modifier = Modifier
-                                .background(CurrentTheme.grayTextColor)
-                                .padding(vertical = 1.dp, horizontal = 4.dp)
-                        )
+                    for (tag in item.tags) {
+                        Tag(text = tag)
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+private fun Tag(text: String) {
+    val shape = GenericShape { size, _ ->
+        moveTo(0f, 0f)
+        lineTo(size.width, 0f)
+        lineTo(size.width, size.height)
+        lineTo(0f, size.height)
+        lineTo(-size.height / 3.5f, size.height / 2)
+        lineTo(0f, 0f)
+        close()
+    }
+
+    Box(
+        Modifier
+            .padding(start = 4.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .background(
+                    color = CurrentTheme.grayTextColor,
+                    shape = shape
+                )
+                .padding(
+                    top = .25.dp,
+                    bottom = .25.dp,
+                    start = 1.5.dp,
+                    end = 4.dp
+                )
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_tag),
+                contentDescription = "",
+                tint = CurrentTheme.entryCommentBackground,
+                modifier = Modifier
+                    .size(with(LocalDensity.current) { 11.sp.toDp() })
+            )
+            Text(
+                text = text,
+                fontSize = 11.sp,
+                color = CurrentTheme.entryCommentBackground,
+                modifier = Modifier.padding(start = 2.dp)
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TagPreview() {
+    Tag(text = "タグ")
+}
+
+// ------ //
 
 /**
  * コメント+スターリスト部分の装飾テキストを作成する
