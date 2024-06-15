@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.CircularProgressIndicator
@@ -68,6 +67,16 @@ import com.suihan74.satena2.utility.extension.zonedString
 import com.suihan74.satena2.utility.hatena.hatenaUserIconUrl
 import kotlinx.coroutines.launch
 import java.time.Instant
+
+private enum class DetailTab(
+    val iconId: Int,
+    val text: String
+) {
+    StarsTo(iconId = R.drawable.ic_star, text = "To"),
+    StarsFrom(iconId = R.drawable.ic_star, text = "From"),
+    MentionsTo(iconId = R.drawable.ic_comment, text = "To"),
+    MentionsFrom(iconId = R.drawable.ic_comment, text = "From")
+}
 
 @Composable
 fun BookmarkDetailContent(
@@ -234,7 +243,15 @@ private fun MentionsArea(
     item: DisplayBookmark,
     modifier: Modifier = Modifier
 ) {
-    val tabs = remember { listOf("to", "from") }
+    val tabs = remember {
+        buildList {
+            add(DetailTab.StarsTo)
+            add(DetailTab.StarsFrom)
+            if (item.mentions.isNotEmpty()) {
+                add(DetailTab.MentionsFrom)
+            }
+        }
+    }
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
     val drawerAlignment by viewModel.drawerAlignmentFlow.collectAsState(initial = Alignment.Start)
@@ -272,11 +289,22 @@ private fun MentionsArea(
                             }
                         }
                     ) {
-                        Text(
-                            text = tab,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(vertical = 14.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(vertical = 14.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = tab.iconId),
+                                contentDescription = "tab icon",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = tab.text,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 2.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -286,9 +314,9 @@ private fun MentionsArea(
                 state = pagerState,
                 userScrollEnabled = true
             ) { page ->
-                when (page) {
-                    0 -> StarsToContent(
                 val lazyListState = lazyListStates[page]
+                when (tabs[page]) {
+                    DetailTab.StarsTo -> StarsToContent(
                         mentions = starsTo,
                         lazyListState = lazyListState,
                         onClickItem = { m ->
@@ -298,7 +326,20 @@ private fun MentionsArea(
                         }
                     )
 
-                    1 -> StarsFromContent()
+                    DetailTab.StarsFrom -> {
+                        StarsFromContent(
+                            lazyListState = lazyListState
+                        )
+                    }
+
+                    DetailTab.MentionsFrom -> {
+                        MentionsFromContent(
+                            mentions = item.mentions,
+                            lazyListState = lazyListState
+                        )
+                    }
+
+                    else -> throw NotImplementedError()
                 }
             }
         }
@@ -364,6 +405,53 @@ private fun StarsToContent(
 private fun StarsFromContent(
     lazyListState: LazyListState
 ) {
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun MentionsFromContent(
+    mentions: List<DisplayBookmark>,
+    lazyListState: LazyListState,
+) {
+    val loading by remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = loading,
+        onRefresh = { /* todo */ }
+    )
+
+    Box(Modifier.fillMaxSize()) {
+        SwipeRefreshBox(
+            refreshing = loading,
+            state = pullRefreshState
+        ) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScrollbar(
+                        state = lazyListState,
+                        color = CurrentTheme.primary
+                    ),
+            ) {
+                items(items = mentions) {
+                    BookmarkItem(
+                        item = it
+                    )
+                    Divider(
+                        color = CurrentTheme.listItemDivider,
+                        thickness = 1.dp
+                    )
+                }
+                emptyFooter()
+            }
+        }
+        VerticalScrollableIndicator(
+            lazyListState = lazyListState,
+            gradientColor = CurrentTheme.background,
+            topGradientHeight = 48.dp,
+            bottomGradientHeight = 80.dp
+        )
+    }
 }
 
 // ------ //
