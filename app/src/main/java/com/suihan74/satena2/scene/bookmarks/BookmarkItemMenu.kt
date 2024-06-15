@@ -39,6 +39,7 @@ fun BookmarkItemMenuContent(
     onReport: suspend (DisplayBookmark)->Unit,
     onDeleteMyBookmark: suspend (DisplayBookmark)->Unit
 ) {
+    val warningItemColor = Color(0xFD, 0x82, 0x82, 0xFF)
     if (item == null) {
         Box(Modifier.fillMaxHeight())
         return
@@ -123,7 +124,7 @@ fun BookmarkItemMenuContent(
                 item {
                     BottomSheetMenuItem(
                         text = stringResource(R.string.bookmark_menu_delete_my_bookmark),
-                        color = Color(0xFD, 0x82, 0x82, 0xFF)
+                        color = warningItemColor
                     ) {
                         coroutineScope.launch {
                             onDeleteMyBookmark(item)
@@ -135,7 +136,7 @@ fun BookmarkItemMenuContent(
                 item {
                     BottomSheetMenuItem(
                         text = stringResource(R.string.bookmark_menu_report),
-                        color = Color(0xFD, 0x82, 0x82, 0xFF)
+                        color = warningItemColor
                     ) {
                         coroutineScope.launch {
                             onReport(item)
