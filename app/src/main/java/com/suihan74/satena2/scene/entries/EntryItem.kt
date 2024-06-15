@@ -16,9 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -51,6 +49,7 @@ import com.suihan74.hatena.model.star.StarsEntry
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.SingleLineText
 import com.suihan74.satena2.compose.combinedClickable
+import com.suihan74.satena2.scene.bookmarks.TagItem
 import com.suihan74.satena2.scene.bookmarks.appendStarCountText
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.utility.extension.alsoAs
@@ -409,65 +408,16 @@ private fun CommentItem(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     for (tag in item.tags) {
-                        Tag(text = tag)
+                        TagItem(
+                            text = tag,
+                            background = CurrentTheme.grayTextColor,
+                            foreground = CurrentTheme.entryCommentBackground
+                        )
                     }
                 }
             }
         }
     }
-}
-
-@Composable
-private fun Tag(text: String) {
-    val shape = GenericShape { size, _ ->
-        moveTo(0f, 0f)
-        lineTo(size.width, 0f)
-        lineTo(size.width, size.height)
-        lineTo(0f, size.height)
-        lineTo(-size.height / 3.5f, size.height / 2)
-        lineTo(0f, 0f)
-        close()
-    }
-
-    Box(
-        Modifier
-            .padding(start = 4.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .background(
-                    color = CurrentTheme.grayTextColor,
-                    shape = shape
-                )
-                .padding(
-                    top = .25.dp,
-                    bottom = .25.dp,
-                    start = 1.5.dp,
-                    end = 4.dp
-                )
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_tag),
-                contentDescription = "",
-                tint = CurrentTheme.entryCommentBackground,
-                modifier = Modifier
-                    .size(with(LocalDensity.current) { 11.sp.toDp() })
-            )
-            Text(
-                text = text,
-                fontSize = 11.sp,
-                color = CurrentTheme.entryCommentBackground,
-                modifier = Modifier.padding(start = 2.dp)
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun TagPreview() {
-    Tag(text = "タグ")
 }
 
 // ------ //

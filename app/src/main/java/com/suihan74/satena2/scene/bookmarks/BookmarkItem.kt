@@ -2,8 +2,11 @@ package com.suihan74.satena2.scene.bookmarks
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,7 +61,7 @@ import com.suihan74.satena2.utility.extension.zonedString
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.Instant
 
-@OptIn(ExperimentalTextApi::class)
+@OptIn(ExperimentalTextApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun BookmarkItem(
     item: DisplayBookmark,
@@ -207,20 +210,18 @@ fun BookmarkItem(
             Spacer(Modifier.height(2.dp))
 
             if (bookmark.tags.isNotEmpty()) {
-                Row {
-                    Image(
-                        painterResource(R.drawable.ic_tag),
-                        contentDescription = "tag header icon",
-                        colorFilter = ColorFilter.tint(CurrentTheme.grayTextColor),
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .size(13.dp)  // todo
-                    )
-                    Text(
-                        text = bookmark.tags.joinToString(separator = ", "),
-                        color = CurrentTheme.grayTextColor,
-                        fontSize = 13.sp
-                    )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(3.dp, Alignment.Start),
+                    verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.Top),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    for (tag in bookmark.tags) {
+                        TagItem(
+                            text = tag,
+                            background = CurrentTheme.grayTextColor,
+                            foreground = CurrentTheme.background
+                        )
+                    }
                 }
                 Spacer(Modifier.height(2.dp))
             }
