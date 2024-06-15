@@ -288,7 +288,9 @@ private fun MentionsArea(
             ) { page ->
                 when (page) {
                     0 -> StarsToContent(
+                val lazyListState = lazyListStates[page]
                         mentions = starsTo,
+                        lazyListState = lazyListState,
                         onClickItem = { m ->
                             if (m.bookmark != null) {
                                 viewModel.showBookmarkDetail(user = m.user, navController = navController)
@@ -311,10 +313,10 @@ private fun MentionsArea(
 @Composable
 private fun StarsToContent(
     mentions: List<Mention>,
+    lazyListState: LazyListState,
     onClickItem: (Mention)->Unit = {},
     onLongClickItem: (Mention)->Unit = {}
 ) {
-    val lazyListState = rememberLazyListState()
     val loading by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullRefreshState(
         refreshing = loading,
@@ -327,6 +329,7 @@ private fun StarsToContent(
             state = pullRefreshState
         ) {
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScrollbar(
@@ -358,7 +361,9 @@ private fun StarsToContent(
 }
 
 @Composable
-private fun StarsFromContent() {
+private fun StarsFromContent(
+    lazyListState: LazyListState
+) {
 }
 
 // ------ //
