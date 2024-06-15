@@ -533,12 +533,13 @@ private fun BookmarksScene(
                     arguments = listOf(navArgument("user") { type = NavType.StringType })
                 ) { backStackEntry ->
                     val user = backStackEntry.argument<String>("user") ?: return@composable
-                    val item by viewModel.getUserBookmarkFlow(user)
-                        .collectAsState(initial = null)
+                    val item by viewModel.getUserBookmarkFlow(user).collectAsState(initial = null)
+                    val mentionsTo by viewModel.getMentionsTo(user).collectAsState(initial = emptyList())
                     BookmarkDetailContent(
                         viewModel = viewModel,
                         navController = navController,
                         item = item,
+                        mentionsTo = mentionsTo,
                         onShowBookmarkItemMenu = {
                             coroutineScope.launch {
                                 bottomSheetContent = BottomSheetContent.BookmarkMenu

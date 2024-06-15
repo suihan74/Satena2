@@ -189,6 +189,11 @@ interface BookmarksViewModel : DialogPropertiesProvider {
     fun getUserBookmarkFlow(user: String) : Flow<DisplayBookmark?>
 
     /**
+     * 指定ユーザーへのメンションを取得する
+     */
+    fun getMentionsTo(user: String) : Flow<List<DisplayBookmark>>
+
+    /**
      * ブコメ検索クエリを登録する
      */
     fun setSearchQuery(query: String)
@@ -552,6 +557,8 @@ class BookmarksViewModelImpl @Inject constructor(
 
     /**
      * 指定ユーザーのブクマを取得
+     *
+     * todo: リポジトリ側でキャッシュするようにする
      */
     override fun getUserBookmarkFlow(user: String) : Flow<DisplayBookmark?> {
         return entityFlow.map { entity ->
@@ -562,6 +569,27 @@ class BookmarksViewModelImpl @Inject constructor(
                 ?: (if (myBookmark?.user == user) myBookmark else null)?.toBookmark()
                 ?: entity.bookmarksEntry.bookmarks.firstOrNull { it.user == user }?.toBookmark(entity.entry.eid)
             bookmark?.let { repository.makeDisplayBookmark(bookmark = it, eid = entity.entry.eid) }
+        }
+    }
+
+    /**
+     * 指定ユーザーへのメンションを取得する
+     *
+     * todo: リポジトリ側でキャッシュするようにする
+     */
+    override fun getMentionsTo(user: String) : Flow<List<DisplayBookmark>> {
+        val mentionText = "id:$user"
+        return entityFlow.map { entity ->
+            entity.bookmarksEntry.bookmarks
+                .filter {
+                    it.comment.contains(mentionText)
+                }
+                .map {
+                    repository.makeDisplayBookmark(
+                        bookmark = it.toBookmark(entity.entry.eid),
+                        eid = entity.entry.eid
+                    )
+                }
         }
     }
 
@@ -1004,6 +1032,13 @@ class FakeBookmarksViewModel : BookmarksViewModel {
      */
     override fun getUserBookmarkFlow(user: String) : Flow<DisplayBookmark?> {
         return MutableStateFlow(null)
+    }
+
+    /**
+     * 指定ユーザーへのメンションを取得する
+     */
+    override fun getMentionsTo(user: String) : Flow<List<DisplayBookmark>> {
+        return MutableStateFlow(emptyList())
     }
 
     override fun setSearchQuery(query: String) {

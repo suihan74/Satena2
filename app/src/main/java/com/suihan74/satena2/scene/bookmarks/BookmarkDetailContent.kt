@@ -78,11 +78,14 @@ private enum class DetailTab(
     MentionsFrom(iconId = R.drawable.ic_comment, text = "From")
 }
 
+// ------ //
+
 @Composable
 fun BookmarkDetailContent(
     viewModel: BookmarksViewModel,
     navController: NavHostController,
     item: DisplayBookmark?,
+    mentionsTo: List<DisplayBookmark>,
     onShowBookmarkItemMenu: (DisplayBookmark)->Unit
 ) {
     Scaffold(
@@ -122,6 +125,8 @@ fun BookmarkDetailContent(
                     viewModel = viewModel,
                     navController = navController,
                     item = displayItem,
+                    mentionsTo = mentionsTo,
+                    onShowBookmarkItemMenu = onShowBookmarkItemMenu,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
@@ -238,15 +243,20 @@ private fun BookmarkArea(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MentionsArea(
+    modifier: Modifier = Modifier,
     viewModel: BookmarksViewModel,
     navController: NavHostController,
     item: DisplayBookmark,
-    modifier: Modifier = Modifier
+    mentionsTo: List<DisplayBookmark>,
+    onShowBookmarkItemMenu: (DisplayBookmark)->Unit,
 ) {
     val tabs = remember {
         buildList {
             add(DetailTab.StarsTo)
             add(DetailTab.StarsFrom)
+            if (mentionsTo.isNotEmpty()) {
+                add(DetailTab.MentionsTo)
+            }
             if (item.mentions.isNotEmpty()) {
                 add(DetailTab.MentionsFrom)
             }
@@ -321,7 +331,10 @@ private fun MentionsArea(
                         lazyListState = lazyListState,
                         onClickItem = { m ->
                             if (m.bookmark != null) {
-                                viewModel.showBookmarkDetail(user = m.user, navController = navController)
+                                viewModel.showBookmarkDetail(
+                                    user = m.user,
+                                    navController = navController
+                                )
                             }
                         }
                     )
@@ -332,14 +345,33 @@ private fun MentionsArea(
                         )
                     }
 
-                    DetailTab.MentionsFrom -> {
-                        MentionsFromContent(
-                            mentions = item.mentions,
-                            lazyListState = lazyListState
+                    DetailTab.MentionsTo -> {
+                        MentionsContent(
+                            mentions = mentionsTo,
+                            lazyListState = lazyListState,
+                            onClickItem = {
+                                viewModel.showBookmarkDetail(
+                                    user = it.bookmark.user,
+                                    navController = navController
+                                )
+                            },
+                            onLongClickItem = onShowBookmarkItemMenu
                         )
                     }
 
-                    else -> throw NotImplementedError()
+                    DetailTab.MentionsFrom -> {
+                        MentionsContent(
+                            mentions = item.mentions,
+                            lazyListState = lazyListState,
+                            onClickItem = {
+                                viewModel.showBookmarkDetail(
+                                    user = it.bookmark.user,
+                                    navController = navController
+                                )
+                            },
+                            onLongClickItem = onShowBookmarkItemMenu
+                        )
+                    }
                 }
             }
         }
@@ -409,9 +441,11 @@ private fun StarsFromContent(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun MentionsFromContent(
+private fun MentionsContent(
     mentions: List<DisplayBookmark>,
     lazyListState: LazyListState,
+    onClickItem: (DisplayBookmark)->Unit = {},
+    onLongClickItem: (DisplayBookmark)->Unit = {}
 ) {
     val loading by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullRefreshState(
@@ -435,7 +469,10 @@ private fun MentionsFromContent(
             ) {
                 items(items = mentions) {
                     BookmarkItem(
-                        item = it
+                        item = it,
+                        showMentions = false,
+                        onClick = onClickItem,
+                        onLongClick = onLongClickItem
                     )
                     Divider(
                         color = CurrentTheme.listItemDivider,
@@ -540,6 +577,7 @@ private fun BookmarkDetailContentPreview() {
                 starCount = emptyList()
             )
         ),
+        mentionsTo = emptyList(),
         onShowBookmarkItemMenu = {}
     )
 }

@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -46,7 +45,6 @@ import coil.request.ImageRequest
 import com.suihan74.hatena.model.bookmark.Bookmark
 import com.suihan74.hatena.model.star.StarColor
 import com.suihan74.hatena.model.star.StarCount
-import com.suihan74.hatena.model.star.StarsEntry
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.ClickableText
 import com.suihan74.satena2.compose.SingleLineText
@@ -66,6 +64,7 @@ import java.time.Instant
 fun BookmarkItem(
     item: DisplayBookmark,
     clickable: Boolean = true,
+    showMentions: Boolean = true,
     onClick: (DisplayBookmark)->Unit = {},
     onLongClick: (DisplayBookmark)->Unit = {},
     onDoubleClick: (DisplayBookmark)->Unit = {},
@@ -243,7 +242,7 @@ fun BookmarkItem(
                 fontSize = 13.sp
             )
 
-            if (item.mentions.isNotEmpty()) {
+            if (showMentions && item.mentions.isNotEmpty()) {
                 Column(Modifier.fillMaxWidth()) {
                     Spacer(Modifier.height(4.dp))
                     for (m in item.mentions) {
