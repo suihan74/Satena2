@@ -4,10 +4,8 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
@@ -47,7 +45,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -83,7 +80,7 @@ import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionD
 import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.LocalTheme
-import com.suihan74.satena2.ui.theme.Satena2Theme
+import com.suihan74.satena2.ui.theme.Satena2ThemeFullScreen
 import com.suihan74.satena2.utility.argument
 import com.suihan74.satena2.utility.currentArgument
 import com.suihan74.satena2.utility.extension.LocalUseSystemTimeZone
@@ -115,23 +112,7 @@ class EntriesActivity : ComponentActivity() {
             val useSystemTimeZone by viewModel.useSystemTimeZone.collectAsState(false)
             val initialTabsMap by viewModel.initialTabs.collectAsState(emptyMap())
 
-            Satena2Theme(theme) {
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(
-                        Color.Transparent.toArgb(),
-                        Color.Transparent.toArgb(),
-                    ),
-                    navigationBarStyle = SystemBarStyle.auto(
-                        Color.Transparent.toArgb(),
-                        Color.Transparent.toArgb()
-                    )
-                )
-                val systemUiController = rememberSystemUiController()
-                systemUiController.setStatusBarColor(
-                    color = Color.Transparent,
-                    darkIcons = CurrentTheme.titleBarBackground.luminance() > .5f
-                )
-
+            Satena2ThemeFullScreen(theme) {
                 CompositionLocalProvider(
                     LocalLongClickVibrationDuration provides longClickVibrationDuration,
                     LocalUseSystemTimeZone provides useSystemTimeZone,

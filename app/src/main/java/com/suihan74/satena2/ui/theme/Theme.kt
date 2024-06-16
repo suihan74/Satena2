@@ -2,6 +2,9 @@
 
 package com.suihan74.satena2.ui.theme
 
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
@@ -18,6 +21,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.suihan74.satena2.model.theme.ThemePreset
 import com.suihan74.satena2.model.theme.default.DefaultThemePresetLight
@@ -118,5 +123,34 @@ fun Satena2Theme(
             LocalTheme provides t,
             content = content
         )
+    }
+}
+
+@Composable
+fun ComponentActivity.Satena2ThemeFullScreen(
+    theme: ThemePreset,
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    Satena2Theme(
+        theme = theme,
+        darkTheme = darkTheme
+    ) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb(),
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb()
+            )
+        )
+        val systemUiController = rememberSystemUiController()
+        systemUiController.setStatusBarColor(
+            color = Color.Transparent,
+            darkIcons = CurrentTheme.titleBarBackground.luminance() > .5f
+        )
+        content()
     }
 }

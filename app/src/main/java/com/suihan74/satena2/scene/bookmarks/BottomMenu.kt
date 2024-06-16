@@ -12,7 +12,10 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
@@ -51,10 +54,14 @@ fun BottomMenu(
     val transitionAnim = tween<IntOffset>(300)
     val enterTransition = slideIn(animationSpec = transitionAnim) { IntOffset(0, it.height) }
     val exitTransition = slideOut(animationSpec = transitionAnim) { IntOffset(0, it.height) }
-    val contentPadding = PaddingValues(
-        start = 0.dp,
-        end = if (signedIn) 88.dp else 0.dp
-    )
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val contentPadding = remember(signedIn) {
+        PaddingValues(
+            bottom = navigationBarHeight,
+            start = 0.dp,
+            end = if (signedIn) 88.dp else 0.dp
+        )
+    }
 
     BottomAppBar(
         cutoutShape = CircleShape,

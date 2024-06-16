@@ -14,9 +14,13 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DrawerValue
@@ -38,16 +42,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.BookmarkSharingContent
 import com.suihan74.satena2.compose.EntrySharingContent
@@ -71,7 +78,7 @@ import com.suihan74.satena2.scene.preferences.page.ngWords.dialog.NgWordEditionD
 import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelDialog
 import com.suihan74.satena2.ui.theme.CurrentTheme
-import com.suihan74.satena2.ui.theme.Satena2Theme
+import com.suihan74.satena2.ui.theme.Satena2ThemeFullScreen
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
 import com.suihan74.satena2.utility.argument
 import com.suihan74.satena2.utility.extension.LocalUseSystemTimeZone
@@ -128,12 +135,14 @@ class BookmarksActivity : ComponentActivity() {
         viewModel.onCreateActivity(activityResultRegistry, lifecycle)
         relatedEntriesViewModel.onCreateActivity(activityResultRegistry, lifecycle)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             val theme by themeViewModel.currentThemeFlow.collectAsState()
             val longClickVibrationDuration by viewModel.longClickVibrationDuration.collectAsState(40L)
             val useSystemTimeZone by viewModel.useSystemTimeZone.collectAsState(false)
 
-            Satena2Theme(theme) {
+            Satena2ThemeFullScreen(theme) {
                 CompositionLocalProvider(
                     LocalLongClickVibrationDuration provides longClickVibrationDuration,
                     LocalUseSystemTimeZone provides useSystemTimeZone
@@ -237,217 +246,248 @@ private fun BookmarksScene(
         sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         sheetBackgroundColor = CurrentTheme.background,
         sheetContent = {
-            when (bottomSheetContent) {
-                // 何も設定されていない状態
-                BottomSheetContent.Empty -> { Box(Modifier.fillMaxHeight()) }
+            val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            Column {
+                when (bottomSheetContent) {
+                    // 何も設定されていない状態
+                    BottomSheetContent.Empty -> {
+                        Box(Modifier.fillMaxHeight())
+                    }
 
-                // エントリメニュー
-                BottomSheetContent.EntryMenu -> {
-                    var ngWordEditionDialogVisible by remember { mutableStateOf(false) }
-                    EntryItemMenuContent(
-                        item = entryMenuTarget,
-                        category = Category.All,
-                        account = account,
-                        readMarkVisible = entryReadMarkVisible,
-                        onDismissRequest = { bottomSheetState.hide() },
-                        onLaunchBookmarksActivity = { entryActionHandler.launchBookmarksActivity(it) },
-                        onLaunchBrowserActivity = { entryActionHandler.launchBrowserActivity(it) },
-                        onLaunchOuterBrowser = { entryActionHandler.openWithOtherApp(it) },
-                        onShare = onShareEntry,
-                        onNavigateSiteCategory = { entryActionHandler.navigateSiteCategory(it.entry.rootUrl, navController) },
-                        onFavorite = { /* todo */ },
-                        onUnFavorite = { /* todo */ },
-                        onCreateNgWord = { ngWordEditionDialogVisible = true },
-                        onRead = { entry, isPrivate -> entryActionHandler.readEntry(entry, isPrivate) },
-                        onReadLater = { entry, isPrivate -> entryActionHandler.readLaterEntry(entry, isPrivate) },
-                        onDeleteReadMark = { entryActionHandler.removeReadMark(it) },
-                        onDeleteBookmark = { entryActionHandler.removeBookmark(it) }
-                    )
+                    // エントリメニュー
+                    BottomSheetContent.EntryMenu -> {
+                        var ngWordEditionDialogVisible by remember { mutableStateOf(false) }
+                        EntryItemMenuContent(
+                            item = entryMenuTarget,
+                            category = Category.All,
+                            account = account,
+                            readMarkVisible = entryReadMarkVisible,
+                            onDismissRequest = { bottomSheetState.hide() },
+                            onLaunchBookmarksActivity = {
+                                entryActionHandler.launchBookmarksActivity(
+                                    it
+                                )
+                            },
+                            onLaunchBrowserActivity = {
+                                entryActionHandler.launchBrowserActivity(
+                                    it
+                                )
+                            },
+                            onLaunchOuterBrowser = { entryActionHandler.openWithOtherApp(it) },
+                            onShare = onShareEntry,
+                            onNavigateSiteCategory = {
+                                entryActionHandler.navigateSiteCategory(
+                                    it.entry.rootUrl, navController
+                                )
+                            },
+                            onFavorite = { /* todo */ },
+                            onUnFavorite = { /* todo */ },
+                            onCreateNgWord = { ngWordEditionDialogVisible = true },
+                            onRead = { entry, isPrivate ->
+                                entryActionHandler.readEntry(
+                                    entry, isPrivate
+                                )
+                            },
+                            onReadLater = { entry, isPrivate ->
+                                entryActionHandler.readLaterEntry(
+                                    entry, isPrivate
+                                )
+                            },
+                            onDeleteReadMark = { entryActionHandler.removeReadMark(it) },
+                            onDeleteBookmark = { entryActionHandler.removeBookmark(it) }
+                        )
 
-                    ngWordEditionDialogVisible.onTrue {
-                        NgWordEditionDialog(
-                            initialText = entryMenuTarget!!.entry.title,
-                            initialUrl = entryMenuTarget!!.entry.url.trimScheme(),
-                            isError = { text, asRegex -> ngWordsViewModel.isNgRegexError(text, asRegex) },
-                            properties = viewModel.dialogProperties(),
-                            onDismiss = { ngWordEditionDialogVisible = false }
+                        ngWordEditionDialogVisible.onTrue {
+                            NgWordEditionDialog(
+                                initialText = entryMenuTarget!!.entry.title,
+                                initialUrl = entryMenuTarget!!.entry.url.trimScheme(),
+                                isError = { text, asRegex ->
+                                    ngWordsViewModel.isNgRegexError(
+                                        text, asRegex
+                                    )
+                                },
+                                properties = viewModel.dialogProperties(),
+                                onDismiss = { ngWordEditionDialogVisible = false }
+                            ) {
+                                ngWordsViewModel.insert(it.toIgnoredEntry()).onTrue {
+                                    bottomSheetState.hide()
+                                }
+                            }
+                        }
+                    }
+
+                    // エントリ共有メニュー
+                    BottomSheetContent.ShareEntry -> {
+                        EntrySharingContent(entry = entryMenuTarget!!.entry)
+                    }
+
+                    // ブクマメニュー
+                    BottomSheetContent.BookmarkMenu -> {
+                        BookmarkItemMenuContent(
+                            item = bottomMenuTarget,
+                            coroutineScope = coroutineScope,
+                            onShowRecentBookmarks = {
+                                viewModel.launchEntriesActivityForUser(it)
+                                bottomSheetState.hide()
+                            },
+                            onShowBookmarksToItem = {
+                                viewModel.launchBookmarksActivityToBookmark(it)
+                                bottomSheetState.hide()
+                            },
+                            onShowUserLabelDialog = {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.UserLabel
+                                bottomSheetState.show()
+                            },
+                            onSelectUrlsMenu = {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.Urls
+                                bottomSheetState.show()
+                            },
+                            onSelectTagsMenu = {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.Tags
+                                bottomSheetState.show()
+                            },
+                            onSelectNgWordsMenu = {
+                                ngWordTarget = it
+                                bottomSheetState.hide()
+                            },
+                            onFollow = {
+                                // todo
+                                bottomSheetState.hide()
+                            },
+                            onIgnore = {
+                                ignoreUserDialogTarget = it
+                                bottomSheetState.hide()
+                            },
+                            onShare = {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.ShareBookmark
+                                shareBookmarkTarget = it
+                                bottomSheetState.show()
+                            },
+                            onReport = {
+                                bottomSheetState.hide()
+                                bottomSheetContent = BottomSheetContent.Report
+                                bottomSheetState.show()
+                            },
+                            onDeleteMyBookmark = {
+                                deletingMyBookmark = it
+                                bottomSheetState.hide()
+                            }
+                        )
+                    }
+
+                    // ブクマ共有メニュー
+                    BottomSheetContent.ShareBookmark -> {
+                        Column(Modifier.height(300.dp)) {
+                            shareBookmarkTarget?.let {
+                                BookmarkSharingContent(bookmark = it.bookmark)
+                            }
+                        }
+                    }
+
+                    // ユーザーラベル
+                    BottomSheetContent.UserLabel -> {
+                        val user = bottomMenuTarget?.bookmark?.user
+                        if (user == null) {
+                            Box(Modifier.height(1.dp))
+                        }
+                        else {
+                            val userLabels by viewModel.allUserLabelsFlow.collectAsState()
+                            val userAndLabels by viewModel.userLabelsFlow(user)
+                                .collectAsState(initial = null)
+                            UserLabelDialog(
+                                labels = userLabels,
+                                checkedLabels = userAndLabels?.labels.orEmpty(),
+                                dialogProperties = viewModel.dialogProperties(),
+                                onCreateLabel = {
+                                    viewModel.createUserLabel(it)
+                                },
+                                onUpdate = {
+                                    coroutineScope.launch {
+                                        viewModel.updateUserLabels(user, it)
+                                        bottomSheetContent = BottomSheetContent.Empty
+                                        bottomSheetState.hide()
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // コメントに含まれるリンクリスト
+                    BottomSheetContent.Urls -> {
+                        if (bottomMenuTarget?.urls.isNullOrEmpty()) {
+                            Box(Modifier.height(1.dp))
+                        }
+                        else {
+                            BookmarkUrlsMenuContent(
+                                item = bottomMenuTarget,
+                                onSelectUrl = {
+                                    coroutineScope.launch {
+                                        bottomSheetState.hide()
+                                        viewModel.openBrowser(it)
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // タグリスト
+                    BottomSheetContent.Tags -> {
+                        if (bottomMenuTarget?.bookmark?.tags.isNullOrEmpty()) {
+                            Box(Modifier.height(1.dp))
+                        }
+                        else {
+                            BookmarkTagsMenuContent(
+                                item = bottomMenuTarget,
+                                onSelectTag = {
+                                    coroutineScope.launch {
+                                        bottomSheetState.hide()
+                                        viewModel.launchEntriesActivityForTag(it)
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // ブクマを報告
+                    BottomSheetContent.Report -> {
+                        if (bottomMenuTarget?.bookmark == null) {
+                            Box(Modifier.height(1.dp))
+                        }
+                        else {
+                            ReportBookmarkContent(
+                                entry = entity.entry,
+                                item = bottomMenuTarget,
+                                onReport = {
+                                    coroutineScope.launch {
+                                        runCatching {
+                                            viewModel.report(it)
+                                        }.onSuccess {
+                                            bottomSheetState.hide()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // 「カスタム」タブの表示対象を設定
+                    BottomSheetContent.CustomTabSetting -> {
+                        CustomTabSettingContent(
+                            initialSetting = initialSetting,
+                            allLabels = labels
                         ) {
-                            ngWordsViewModel.insert(it.toIgnoredEntry()).onTrue {
+                            viewModel.updateCustomTabSetting(it)
+                            coroutineScope.launch {
                                 bottomSheetState.hide()
                             }
                         }
                     }
                 }
-
-                // エントリ共有メニュー
-                BottomSheetContent.ShareEntry -> {
-                    EntrySharingContent(entry = entryMenuTarget!!.entry)
-                }
-
-                // ブクマメニュー
-                BottomSheetContent.BookmarkMenu -> {
-                    BookmarkItemMenuContent(
-                        item = bottomMenuTarget,
-                        coroutineScope = coroutineScope,
-                        onShowRecentBookmarks = {
-                            viewModel.launchEntriesActivityForUser(it)
-                            bottomSheetState.hide()
-                        },
-                        onShowBookmarksToItem = {
-                            viewModel.launchBookmarksActivityToBookmark(it)
-                            bottomSheetState.hide()
-                        },
-                        onShowUserLabelDialog = {
-                            bottomSheetState.hide()
-                            bottomSheetContent = BottomSheetContent.UserLabel
-                            bottomSheetState.show()
-                        },
-                        onSelectUrlsMenu = {
-                            bottomSheetState.hide()
-                            bottomSheetContent = BottomSheetContent.Urls
-                            bottomSheetState.show()
-                        },
-                        onSelectTagsMenu = {
-                            bottomSheetState.hide()
-                            bottomSheetContent = BottomSheetContent.Tags
-                            bottomSheetState.show()
-                        },
-                        onSelectNgWordsMenu = {
-                            ngWordTarget = it
-                            bottomSheetState.hide()
-                        },
-                        onFollow = {
-                            // todo
-                            bottomSheetState.hide()
-                        },
-                        onIgnore = {
-                            ignoreUserDialogTarget = it
-                            bottomSheetState.hide()
-                        },
-                        onShare = {
-                            bottomSheetState.hide()
-                            bottomSheetContent = BottomSheetContent.ShareBookmark
-                            shareBookmarkTarget = it
-                            bottomSheetState.show()
-                        },
-                        onReport = {
-                            bottomSheetState.hide()
-                            bottomSheetContent = BottomSheetContent.Report
-                            bottomSheetState.show()
-                        },
-                        onDeleteMyBookmark = {
-                            deletingMyBookmark = it
-                            bottomSheetState.hide()
-                        }
-                    )
-                }
-
-                // ブクマ共有メニュー
-                BottomSheetContent.ShareBookmark -> {
-                    Column(Modifier.height(300.dp)) {
-                        shareBookmarkTarget?.let {
-                            BookmarkSharingContent(bookmark = it.bookmark)
-                        }
-                    }
-                }
-
-                // ユーザーラベル
-                BottomSheetContent.UserLabel -> {
-                    val user = bottomMenuTarget?.bookmark?.user
-                    if (user == null) {
-                        Box(Modifier.height(1.dp))
-                    }
-                    else {
-                        val userLabels by viewModel.allUserLabelsFlow.collectAsState()
-                        val userAndLabels by viewModel.userLabelsFlow(user).collectAsState(initial = null)
-                        UserLabelDialog(
-                            labels = userLabels,
-                            checkedLabels = userAndLabels?.labels.orEmpty(),
-                            dialogProperties = viewModel.dialogProperties(),
-                            onCreateLabel = {
-                                viewModel.createUserLabel(it)
-                            },
-                            onUpdate = {
-                                coroutineScope.launch {
-                                    viewModel.updateUserLabels(user, it)
-                                    bottomSheetContent = BottomSheetContent.Empty
-                                    bottomSheetState.hide()
-                                }
-                            }
-                        )
-                    }
-                }
-
-                // コメントに含まれるリンクリスト
-                BottomSheetContent.Urls -> {
-                    if (bottomMenuTarget?.urls.isNullOrEmpty()) {
-                        Box(Modifier.height(1.dp))
-                    }
-                    else {
-                        BookmarkUrlsMenuContent(
-                            item = bottomMenuTarget,
-                            onSelectUrl = {
-                                coroutineScope.launch {
-                                    bottomSheetState.hide()
-                                    viewModel.openBrowser(it)
-                                }
-                            }
-                        )
-                    }
-                }
-
-                // タグリスト
-                BottomSheetContent.Tags -> {
-                    if (bottomMenuTarget?.bookmark?.tags.isNullOrEmpty()) {
-                        Box(Modifier.height(1.dp))
-                    }
-                    else {
-                        BookmarkTagsMenuContent(
-                            item = bottomMenuTarget,
-                            onSelectTag = {
-                                coroutineScope.launch {
-                                    bottomSheetState.hide()
-                                    viewModel.launchEntriesActivityForTag(it)
-                                }
-                            }
-                        )
-                    }
-                }
-
-                // ブクマを報告
-                BottomSheetContent.Report -> {
-                    if (bottomMenuTarget?.bookmark == null) {
-                        Box(Modifier.height(1.dp))
-                    }
-                    else {
-                        ReportBookmarkContent(
-                            entry = entity.entry,
-                            item = bottomMenuTarget,
-                            onReport = {
-                                coroutineScope.launch {
-                                    runCatching {
-                                        viewModel.report(it)
-                                    }.onSuccess {
-                                        bottomSheetState.hide()
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-
-                // 「カスタム」タブの表示対象を設定
-                BottomSheetContent.CustomTabSetting -> {
-                    CustomTabSettingContent(
-                        initialSetting = initialSetting,
-                        allLabels = labels
-                    ) {
-                        viewModel.updateCustomTabSetting(it)
-                        coroutineScope.launch {
-                            bottomSheetState.hide()
-                        }
-                    }
-                }
+                Spacer(Modifier.height(navigationBarHeight))
             }
         }
     ) {
@@ -459,6 +499,13 @@ private fun BookmarksScene(
             width = 300.dp,
             drawerState = drawerState,
             drawerContent = {
+                if (drawerState.isOpen) {
+                    val systemUiController = rememberSystemUiController()
+                    systemUiController.setStatusBarColor(
+                        color = Color.Transparent,
+                        darkIcons = CurrentTheme.drawerBackground.luminance() > .5f
+                    )
+                }
                 DrawerContent(
                     entryActionHandler = entryActionHandler,
                     entity = entity,
@@ -492,6 +539,12 @@ private fun BookmarksScene(
                     enterTransition = { EnterTransition.None },
                     exitTransition = { fadeOut(animationSpec = tween(600)) }
                 ) {
+                    val systemUiController = rememberSystemUiController()
+                    systemUiController.setStatusBarColor(
+                        color = Color.Transparent,
+                        darkIcons = CurrentTheme.titleBarBackground.luminance() > .5f
+                    )
+
                     BookmarksMainContent(
                         viewModel = viewModel,
                         entity = entity,
@@ -535,6 +588,11 @@ private fun BookmarksScene(
                     val user = backStackEntry.argument<String>("user") ?: return@composable
                     val item by viewModel.getUserBookmarkFlow(user).collectAsState(initial = null)
                     val mentionsTo by viewModel.getMentionsTo(user).collectAsState(initial = emptyList())
+                    val systemUiController = rememberSystemUiController()
+                    systemUiController.setStatusBarColor(
+                        color = Color.Transparent,
+                        darkIcons = CurrentTheme.background.luminance() > .5f
+                    )
                     BookmarkDetailContent(
                         viewModel = viewModel,
                         navController = navController,

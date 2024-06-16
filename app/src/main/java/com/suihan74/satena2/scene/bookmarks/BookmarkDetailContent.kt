@@ -10,11 +10,14 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -108,14 +111,18 @@ fun BookmarkDetailContent(
         floatingActionButtonPosition = FabPosition.End,
         isFloatingActionButtonDocked = true,
         modifier = Modifier.fillMaxSize()
-    ) {
+    ) { paddingValues ->
         item?.let { displayItem ->
             Column(
                 Modifier
                     .fillMaxSize()
                     .background(CurrentTheme.background)
-                    .padding(it)
+                    .padding(paddingValues)
             ) {
+                val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                Spacer(
+                    Modifier.height(statusBarHeight)
+                )
                 BookmarkArea(
                     item = displayItem,
                     modifier = Modifier.fillMaxWidth(),
@@ -137,7 +144,7 @@ fun BookmarkDetailContent(
                 Modifier
                     .fillMaxSize()
                     .background(CurrentTheme.background)
-                    .padding(it)
+                    .padding(paddingValues)
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),

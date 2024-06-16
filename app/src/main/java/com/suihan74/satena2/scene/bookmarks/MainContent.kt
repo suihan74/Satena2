@@ -32,8 +32,10 @@ import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -94,7 +96,7 @@ private val listStatesSaver: Saver<List<LazyListState>, *> = listSaver(
  *
  * 各タブとそれに対応するブクマリスト
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BookmarksMainContent(
     viewModel: BookmarksViewModel,
@@ -119,8 +121,14 @@ fun BookmarksMainContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                backgroundColor = CurrentTheme.titleBarBackground,
                 title = { TitleBarContent(entity) },
+                colors = TopAppBarDefaults.topAppBarColors().copy(
+                    containerColor = CurrentTheme.titleBarBackground,
+                    scrolledContainerColor = CurrentTheme.titleBarBackground,
+                    titleContentColor = CurrentTheme.titleBarOnBackground,
+                    navigationIconContentColor = CurrentTheme.titleBarOnBackground,
+                    actionIconContentColor = CurrentTheme.titleBarOnBackground
+                ),
                 modifier = Modifier
                     .combinedClickable(
                         onClick = onClickTopBar,
