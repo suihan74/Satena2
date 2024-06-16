@@ -524,12 +524,17 @@ class BrowserViewModelImpl @Inject constructor(
      * 指定URLに遷移する
      */
     override fun loadUrl(url: String) {
-        require(URLUtil.isNetworkUrl(url) || url == SYSTEM_URL_ABOUT_BLANK)
-        if (url == currentUrlOrigin.value) {
-            refresh()
+        if (url.isBlank()) {
+            loadUrl(SYSTEM_URL_ABOUT_BLANK)
         }
         else {
-            currentUrlOrigin.value = url
+            require(URLUtil.isNetworkUrl(url) || url == SYSTEM_URL_ABOUT_BLANK)
+            if (url == currentUrlOrigin.value) {
+                refresh()
+            }
+            else {
+                currentUrlOrigin.value = url
+            }
         }
     }
 
