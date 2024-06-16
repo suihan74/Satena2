@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -291,7 +292,9 @@ private fun EntriesScene(
         sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         sheetBackgroundColor = CurrentTheme.background,
         sheetContent = {
-            Column {
+            Column(
+                Modifier.heightIn(max = LocalConfiguration.current.screenHeightDp.dp + navigationBarHeight)
+            ) {
                 when (bottomSheetContent) {
                     EntryBottomSheetContent.Empty -> {
                         Box(Modifier.fillMaxHeight())
