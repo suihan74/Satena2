@@ -24,13 +24,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.suihan74.satena2.R
 import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
-import com.suihan74.satena2.ui.theme.Satena2Theme
+import com.suihan74.satena2.ui.theme.Satena2ThemeFullScreen
 import com.suihan74.satena2.utility.copyrightYearStr
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -46,11 +47,12 @@ class SplashActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         viewModel.onCreateActivity(activityResultRegistry, lifecycle)
 
         setContent {
             val theme by themeViewModel.currentThemeFlow.collectAsState()
-            Satena2Theme(theme) {
+            Satena2ThemeFullScreen(theme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     SplashScene(viewModel.versionName)
                 }
