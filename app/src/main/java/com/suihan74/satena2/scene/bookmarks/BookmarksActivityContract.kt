@@ -14,7 +14,7 @@ import com.suihan74.satena2.utility.extension.putObjectExtra
  */
 interface BookmarksActivityContract {
     interface BookmarksActivityContractImpl {
-        fun parseResultImpl(intent: Intent?) : Entry = intent?.getObjectExtra<Entry>(RESULT_ENTRY)!!
+        fun parseResultImpl(intent: Intent?) : Entry? = intent?.getObjectExtra<Entry>(RESULT_ENTRY)
     }
 
     // ------ //
@@ -22,45 +22,45 @@ interface BookmarksActivityContract {
     /**
      * エントリを引数に呼び出す場合
      */
-    class WithEntry : ActivityResultContract<Entry, Entry>(), BookmarksActivityContractImpl {
+    class WithEntry : ActivityResultContract<Entry, Entry?>(), BookmarksActivityContractImpl {
         override fun createIntent(context: Context, input: Entry) : Intent =
             Intent(context, BookmarksActivity::class.java).apply {
                 putObjectExtra(EXTRA_ENTRY, input)
             }
-        override fun parseResult(resultCode: Int, intent: Intent?) : Entry = parseResultImpl(intent)
+        override fun parseResult(resultCode: Int, intent: Intent?) : Entry? = parseResultImpl(intent)
     }
 
     /**
      * URLを引数に呼び出す場合
      */
-    class WithUrl : ActivityResultContract<String, Entry>(), BookmarksActivityContractImpl {
+    class WithUrl : ActivityResultContract<String, Entry?>(), BookmarksActivityContractImpl {
         override fun createIntent(context: Context, input: String) : Intent {
             require(URLUtil.isNetworkUrl(input))
             return Intent(context, BookmarksActivity::class.java).apply {
                 putExtra(EXTRA_URL, input)
             }
         }
-        override fun parseResult(resultCode: Int, intent: Intent?) : Entry = parseResultImpl(intent)
+        override fun parseResult(resultCode: Int, intent: Intent?) : Entry? = parseResultImpl(intent)
     }
 
     /**
      * エントリとユーザー名を引数に呼び出す場合
      */
-    class WithEntryAndUser : ActivityResultContract<Pair<Entry, String>, Entry>(), BookmarksActivityContractImpl {
+    class WithEntryAndUser : ActivityResultContract<Pair<Entry, String>, Entry?>(), BookmarksActivityContractImpl {
         override fun createIntent(context: Context, input: Pair<Entry, String>) : Intent =
             Intent(context, BookmarksActivity::class.java).apply {
                 putObjectExtra(EXTRA_ENTRY, input.first)
                 putExtra(EXTRA_TARGET_USER, input.second)
             }
-        override fun parseResult(resultCode: Int, intent: Intent?) : Entry = parseResultImpl(intent)
+        override fun parseResult(resultCode: Int, intent: Intent?) : Entry? = parseResultImpl(intent)
     }
 
-    class WithNotice : ActivityResultContract<Notice, Entry>(), BookmarksActivityContractImpl {
+    class WithNotice : ActivityResultContract<Notice, Entry?>(), BookmarksActivityContractImpl {
         override fun createIntent(context: Context, input: Notice) : Intent =
             Intent(context, BookmarksActivity::class.java).apply {
                 putObjectExtra(EXTRA_NOTICE, input)
             }
-        override fun parseResult(resultCode: Int, intent: Intent?) : Entry = parseResultImpl(intent)
+        override fun parseResult(resultCode: Int, intent: Intent?) : Entry? = parseResultImpl(intent)
     }
 
     // ------ //

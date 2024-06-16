@@ -142,7 +142,7 @@ interface EntriesRepository {
     /**
      * 指定エントリを新たに与えられたものに差し替える
      */
-    suspend fun updateEntry(entry: Entry)
+    suspend fun updateEntry(entry: Entry?)
 
     /**
      * 指定IDのエントリを取得する
@@ -517,7 +517,10 @@ class EntriesRepositoryImpl @Inject constructor(
     /**
      * 該当エントリを新たに与えられたものに差し替える
      */
-    override suspend fun updateEntry(entry: Entry) = withContext(Dispatchers.Default) {
+    override suspend fun updateEntry(entry: Entry?) = withContext(Dispatchers.Default) {
+        if (entry == null) {
+            return@withContext
+        }
         for (rawEntriesFlow in rawEntriesMap.values) {
             val prev = rawEntriesFlow.value
             prev.indexOfFirst {
