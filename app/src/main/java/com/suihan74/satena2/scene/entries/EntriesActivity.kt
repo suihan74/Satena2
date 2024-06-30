@@ -1043,10 +1043,7 @@ private fun MainContent(
                             .background(Color.Transparent)
                             .size(90.dp)
                             .align(Alignment.BottomEnd)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {}
+                            .clickGuard()
                     )
                 }
 

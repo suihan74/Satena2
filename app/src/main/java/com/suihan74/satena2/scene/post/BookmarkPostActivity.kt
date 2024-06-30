@@ -49,7 +49,6 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -95,6 +94,7 @@ import com.suihan74.satena2.compose.CombinedIconButton
 import com.suihan74.satena2.compose.HorizontalScrollableIndicator
 import com.suihan74.satena2.compose.MarqueeText
 import com.suihan74.satena2.compose.Tooltip
+import com.suihan74.satena2.compose.clickGuard
 import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
@@ -309,11 +309,7 @@ private fun BookmarkPostContent(
                 vertical = 8.dp,
 //                horizontal = 8.dp
             )  // ボタンシャドウが途切れないようにするため
-            .clickable(
-                onClick = {},
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )  // コンテンツ部分のクリックを透過しないようにする
+            .clickGuard()  // コンテンツ部分のクリックを透過しないようにする
     ) {
         val (main, sendButton, tagsArea, guard, progressBar) = createRefs()
 

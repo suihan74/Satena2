@@ -17,12 +17,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -56,6 +60,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -65,10 +70,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.LocalLongClickVibrationDuration
 import com.suihan74.satena2.compose.Tooltip
+import com.suihan74.satena2.compose.VerticalGradientEdge
+import com.suihan74.satena2.compose.clickGuard
 import com.suihan74.satena2.compose.combinedClickable
 import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.scene.preferences.page.BasicPreferencesPage
@@ -120,7 +129,7 @@ import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelsPage
 import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelsViewModel
 import com.suihan74.satena2.scene.preferences.page.userLabel.UserLabelsViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
-import com.suihan74.satena2.ui.theme.Satena2Theme
+import com.suihan74.satena2.ui.theme.Satena2ThemeFullScreen
 import com.suihan74.satena2.utility.extension.showToast
 import com.suihan74.satena2.utility.focusKeyboardRequester
 import com.suihan74.satena2.utility.rememberMutableTextFieldValue
@@ -191,6 +200,8 @@ class PreferencesActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         val viewModels = PrefViewModels(
             information = informationViewModel,
             account = accountViewModel,
@@ -250,7 +261,12 @@ class PreferencesActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalLongClickVibrationDuration provides longClickVibrationDuration
             ) {
-                Satena2Theme(theme) {
+                Satena2ThemeFullScreen(theme) {
+                    val systemUiController = rememberSystemUiController()
+                    systemUiController.setStatusBarColor(
+                        color = CurrentTheme.titleBarBackground,
+                        darkIcons = CurrentTheme.titleBarBackground.luminance() > .5f
+                    )
                     PreferencesScene(
                         viewModels,
                         categories,
@@ -311,6 +327,11 @@ private fun PreferencesScene(
             .fillMaxSize()
             .background(CurrentTheme.background)
     ) {
+        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        Spacer(
+            Modifier.height(statusBarHeight)
+        )
+
         // トップバー
         TopBar(
             category = currentCategory,
@@ -396,16 +417,31 @@ private fun MainContents(
     startIndex: Int,
     pageCount: Int,
 ) {
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
     Row(Modifier.fillMaxSize()) {
         // カテゴリ一覧
-        Categories(
-            categories,
-            pagerState,
-            startIndex,
+        Box(
             Modifier
                 .width(48.dp)
                 .fillMaxHeight()
-        )
+        ) {
+            Categories(
+                categories,
+                pagerState,
+                startIndex,
+                Modifier.fillMaxSize()
+            )
+
+            VerticalGradientEdge(
+                topColor = Color.Transparent,
+                bottomColor = CurrentTheme.background,
+                height = navigationBarHeight * 1.5f,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .clickGuard()
+            )
+        }
 
         // セパレータ（左右）
         Spacer(
@@ -446,6 +482,7 @@ private fun MainContents(
                         AccountsPage(
                             state = viewModels.account.lazyListState(),
                             contents = contents.account,
+                            navigationBarInset = navigationBarHeight,
                             onReload = { viewModels.account.reload() }
                         )
                     }
@@ -460,7 +497,8 @@ private fun MainContents(
                     PreferencesCategory.Theme -> {
                         ThemePage(
                             viewModel = viewModels.theme,
-                            pagerState = pagerState
+                            pagerState = pagerState,
+                            navigationBarInset = navigationBarHeight
                         )
                     }
 
@@ -483,26 +521,45 @@ private fun MainContents(
                     }
 
                     PreferencesCategory.FavoriteSites -> {
-                        FavoriteSitesPage(viewModels.favoriteSites)
-                    }
+                        FavoriteSitesPage(
+                            viewModel = viewModels.favoriteSites,
+                            navigationBarInset = navigationBarHeight
+                        )
+                   }
 
                     PreferencesCategory.NgWords -> {
-                        NgWordsPage(viewModels.ngWord)
+                        NgWordsPage(
+                            viewModel = viewModels.ngWord,
+                            navigationBarInset = navigationBarHeight
+                        )
                     }
 
                     PreferencesCategory.NgUsers -> {
-                        NgUsersPage(viewModels.ngUsers)
+                        NgUsersPage(
+                            viewModel = viewModels.ngUsers,
+                            navigationBarInset = navigationBarHeight
+                        )
                     }
 
                     PreferencesCategory.UserLabels -> {
                         UserLabelsPage(
                             viewModel = viewModels.userLabels,
-                            pagerState = pagerState
+                            pagerState = pagerState,
+                            navigationBarInset = navigationBarHeight
                         )
                     }
 
                     else -> {}
                 }
+
+                VerticalGradientEdge(
+                    topColor = Color.Transparent,
+                    bottomColor = CurrentTheme.background,
+                    height = navigationBarHeight * 1.5f,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .clickGuard()
+                )
             }
         }
     }

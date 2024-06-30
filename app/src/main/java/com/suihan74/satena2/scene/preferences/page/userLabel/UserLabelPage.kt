@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -78,7 +79,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun UserLabelsPage(
     viewModel: UserLabelsViewModel,
-    pagerState: PagerState
+    pagerState: PagerState,
+    navigationBarInset: Dp
 ) {
     val navController = rememberNavController()
     val labels by viewModel.labelsFlow.collectAsState(initial = emptyList())
@@ -109,6 +111,7 @@ fun UserLabelsPage(
                 labels = labels,
                 lazyListState = lazyListState,
                 dialogProperties = viewModel.dialogProperties(),
+                navigationBarInset = navigationBarInset,
                 onClick = {
                     targetLabel.value = it
                     navController.navigate("users")
@@ -133,6 +136,7 @@ fun UserLabelsPage(
                     label = label,
                     allLabels = labels,
                     dialogProperties = viewModel.dialogProperties(),
+                    navigationBarInset = navigationBarInset,
                     userAndLabelsGetter = { user -> viewModel.userAndLabelsFlow(user) },
                     onBack = {
                         navController.popBackStack()
@@ -159,6 +163,7 @@ private fun LabelsContents(
     labels: List<Label>,
     lazyListState: LazyListState,
     dialogProperties: DialogProperties,
+    navigationBarInset: Dp,
     onClick: (Label)->Unit,
     onRegistration: suspend (Label)->Boolean,
     onDelete: suspend (Label)->Boolean
@@ -197,7 +202,10 @@ private fun LabelsContents(
             contentColor = CurrentTheme.onPrimary,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 24.dp, end = 16.dp),
+                .padding(
+                    bottom = 24.dp + navigationBarInset,
+                    end = 16.dp
+                ),
             onClick = {
                 editorDialogTarget = Label(name = "")
             }
@@ -248,6 +256,7 @@ private fun UsersContents(
     label: LabelAndUsers?,
     allLabels: List<Label>,
     dialogProperties: DialogProperties,
+    navigationBarInset: Dp,
     userAndLabelsGetter: (String)-> Flow<UserAndLabels?>,
     onBack: ()->Unit,
     onCrateLabel: suspend (Label)->Boolean,
@@ -335,7 +344,10 @@ private fun UsersContents(
             Row(
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(bottom = 24.dp, end = 16.dp)
+                    .padding(
+                        bottom = 24.dp + navigationBarInset,
+                        end = 16.dp
+                    )
             ) {
                 // 戻るボタン
                 FloatingActionButton(
@@ -395,6 +407,7 @@ private fun UsersContentsPreview() {
         },
         allLabels = emptyList(),
         dialogProperties = remember { DialogProperties() },
+        navigationBarInset = 0.dp,
         onBack = {},
         onCrateLabel = { true },
         onUpdateLabels = { _, _ -> },

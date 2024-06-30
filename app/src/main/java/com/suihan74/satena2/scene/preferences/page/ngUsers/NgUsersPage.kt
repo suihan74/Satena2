@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.AnimatedListItem
@@ -48,7 +49,7 @@ import com.suihan74.satena2.utility.rememberMutableTextFieldValue
  */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun NgUsersPage(viewModel: NgUsersViewModel) {
+fun NgUsersPage(viewModel: NgUsersViewModel, navigationBarInset: Dp) {
     val clickedItem = remember { mutableStateOf("") }
     val ngUsers = viewModel.ngUsers.collectAsState()
     val lazyListState = viewModel.lazyListState()
@@ -99,7 +100,11 @@ fun NgUsersPage(viewModel: NgUsersViewModel) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
+                .padding(
+                    bottom = 16.dp + navigationBarInset,
+                    start = 16.dp,
+                    end = 16.dp
+                )
         ) {
             FloatingTextField(
                 isOpen,
@@ -130,7 +135,10 @@ fun NgUsersPage(viewModel: NgUsersViewModel) {
 @Preview
 @Composable
 private fun NgUsersPagePreview() {
-    NgUsersPage(viewModel = FakeNgUsersViewModel())
+    NgUsersPage(
+        viewModel = FakeNgUsersViewModel(),
+        navigationBarInset = 0.dp
+    )
 }
 
 // ------ //

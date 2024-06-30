@@ -1,6 +1,12 @@
 package com.suihan74.satena2.scene.preferences.page.favoriteSites
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
@@ -14,15 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.AnimatedListItem
-import com.suihan74.satena2.compose.emptyFooter
 import com.suihan74.satena2.compose.SingleLineText
 import com.suihan74.satena2.compose.combinedClickable
+import com.suihan74.satena2.compose.emptyFooter
 import com.suihan74.satena2.model.browser.FaviconInfo
 import com.suihan74.satena2.model.favoriteSite.FavoriteSite
 import com.suihan74.satena2.model.favoriteSite.FavoriteSiteAndFavicon
@@ -34,7 +41,10 @@ import java.time.Instant
  * お気に入りサイトページ
  */
 @Composable
-fun FavoriteSitesPage(viewModel: FavoriteSitesViewModel) {
+fun FavoriteSitesPage(
+    viewModel: FavoriteSitesViewModel,
+    navigationBarInset: Dp
+) {
     Box(
         Modifier.fillMaxSize()
     ) {
@@ -81,7 +91,7 @@ fun FavoriteSitesPage(viewModel: FavoriteSitesViewModel) {
             contentColor = CurrentTheme.onPrimary,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 24.dp, end = 16.dp),
+                .padding(bottom = 24.dp + navigationBarInset, end = 16.dp),
             onClick = {
                 // TODO
             }
@@ -97,7 +107,10 @@ fun FavoriteSitesPage(viewModel: FavoriteSitesViewModel) {
 @Preview
 @Composable
 private fun FavoriteSitesPagePreview() {
-    FavoriteSitesPage(FakeFavoriteSitesViewModel())
+    FavoriteSitesPage(
+        viewModel = FakeFavoriteSitesViewModel(),
+        navigationBarInset = 0.dp
+    )
 }
 
 // ------ //

@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -61,6 +62,7 @@ import com.suihan74.satena2.utility.extension.add
 fun AccountsPage(
     state: LazyListState = LazyListState(),
     contents: List<ComposablePrefItem>,
+    navigationBarInset: Dp,
     onReload: ()->Unit
 ) {
     Box(Modifier.fillMaxSize()) {
@@ -80,7 +82,7 @@ fun AccountsPage(
             contentColor = CurrentTheme.onPrimary,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 24.dp, end = 16.dp),
+                .padding(bottom = 24.dp + navigationBarInset, end = 16.dp),
             onClick = onReload
         ) {
             Icon(
