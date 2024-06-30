@@ -68,7 +68,7 @@ fun BackForwardList(
                             foreground = CurrentTheme.onPrimary,
                             subTextColor = CurrentTheme.onPrimary,
                             onClick = {
-                                viewModel.goBackOrForward(it)
+                                viewModel.refresh()
                                 onClickItem()
                             }
                         )
@@ -76,8 +76,8 @@ fun BackForwardList(
                     else {
                         BackForwardListItem(
                             item = item,
-                            background = CurrentTheme.drawerBackground,
-                            foreground = CurrentTheme.drawerOnBackground,
+                            background = CurrentTheme.background,
+                            foreground = CurrentTheme.onBackground,
                             subTextColor = CurrentTheme.grayTextColor,
                             onClick = {
                                 viewModel.goBackOrForward(it)

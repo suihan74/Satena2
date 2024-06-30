@@ -7,10 +7,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -81,6 +86,8 @@ fun DrawerContent(
     onSelectBookmark: (DisplayBookmark)->Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
     val pages = remember { DrawerTab.entries }
     val bookmarksScrollState = rememberLazyListState()
     val bookmarksNavController = rememberNavController()
@@ -128,17 +135,22 @@ fun DrawerContent(
                         }
                     }
                 ) {
-                    Image(
-                        painterResource(id = item.iconId),
-                        contentDescription = "tab icon: ${stringResource(item.titleId)}",
-                        colorFilter = ColorFilter.tint(
-                            if (pagerState.currentPage == index) CurrentTheme.tabSelectedColor
-                            else CurrentTheme.tabUnSelectedColor
-                        ),
-                        modifier = Modifier
-                            .padding(vertical = 16.dp)
-                            .size(24.dp)
-                    )
+                    Column {
+                        Spacer(
+                            Modifier.height(statusBarHeight)
+                        )
+                        Image(
+                            painterResource(id = item.iconId),
+                            contentDescription = "tab icon: ${stringResource(item.titleId)}",
+                            colorFilter = ColorFilter.tint(
+                                if (pagerState.currentPage == index) CurrentTheme.tabSelectedColor
+                                else CurrentTheme.tabUnSelectedColor
+                            ),
+                            modifier = Modifier
+                                .padding(bottom = 16.dp)
+                                .size(24.dp)
+                        )
+                    }
                 }
             }
         }

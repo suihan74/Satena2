@@ -21,12 +21,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -61,6 +69,8 @@ import androidx.compose.material.rememberDrawerState
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -81,13 +91,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -96,6 +106,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.Visibility
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -112,6 +123,7 @@ import com.suihan74.satena2.compose.CombinedIconButton
 import com.suihan74.satena2.compose.OrientatedModalDrawer
 import com.suihan74.satena2.compose.SharingContent
 import com.suihan74.satena2.compose.SwipeRefreshBox
+import com.suihan74.satena2.compose.VerticalGradientEdge
 import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.scene.bookmarks.BookmarkItemMenuContent
 import com.suihan74.satena2.scene.bookmarks.BookmarkTagsMenuContent
@@ -120,8 +132,10 @@ import com.suihan74.satena2.scene.bookmarks.BookmarksViewModel
 import com.suihan74.satena2.scene.bookmarks.BookmarksViewModelImpl
 import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
 import com.suihan74.satena2.ui.theme.CurrentTheme
-import com.suihan74.satena2.ui.theme.Satena2Theme
+import com.suihan74.satena2.ui.theme.Satena2ThemeFullScreen
 import com.suihan74.satena2.utility.extension.add
+import com.suihan74.satena2.utility.extension.toVisibility
+import com.suihan74.satena2.utility.rememberMutableTextFieldValue
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
@@ -146,6 +160,8 @@ class BrowserActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         viewModel.onCreateActivity(activityResultRegistry, lifecycle)
         bookmarksViewModel.onCreateActivity(activityResultRegistry, lifecycle)
         val initialUrl = viewModel.initialUrl(intent)
@@ -155,7 +171,7 @@ class BrowserActivity : ComponentActivity() {
 
         setContent {
             val theme by viewModel.theme.collectAsState()
-            Satena2Theme(theme) {
+            Satena2ThemeFullScreen(theme) {
                 BrowserContent(
                     viewModel = viewModel,
                     bookmarksViewModel = bookmarksViewModel,
@@ -194,6 +210,8 @@ private fun BrowserContent(
     onFinishActivity: ()->Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerAlignment by viewModel.drawerAlignment.collectAsState(initial = Alignment.Start)
@@ -254,119 +272,128 @@ private fun BrowserContent(
         sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         scrimColor = CurrentTheme.tapGuard,
         sheetContent = {
-            NavHost(
-                navController = bottomNavController,
-                startDestination = "empty"
+            Column(
+                Modifier.heightIn(max = screenHeight + navigationBarHeight)
             ) {
-                composable("empty") {
-                    Box(Modifier.height(1.dp))
-                }
-                // 基本のメニュー
-                composable("basicMenu") {
-                    AddressBarMenuContent(
-                        viewModel,
-                        bottomSheetState,
-                        bottomNavController,
-                        drawerState,
-                        drawerPagerState,
-                        onFinishActivity
-                    )
-                }
-                // 戻る/進む履歴スタック
-                composable("historyStack") {
-                    BackForwardList(
-                        viewModel,
-                        onClickItem = { bottomSheetState.hide() }
-                    )
-                }
-                // 共有メニュー
-                composable("share") {
-                    SharingContent(
-                        title = stringResource(R.string.browser_sharing_title),
-                        rawUrl = url,
-                        rawEntryUrl = entryUrl,
-                        text = title.second
-                    )
-                }
-                // 表示中ページのリソースリスト
-                composable("resourcesList") {
-                    val items by viewModel.resourceUrls.collectAsState()
-                    ResourcesList(
-                        items = items,
-                        onInsertBlockedResource = { viewModel.insertBlockedResource(it) }
-                    )
-                }
-                // todo: ブクマメニュー
-                composable("bookmarkMenu") {
-                    BookmarkItemMenuContent(
-                        coroutineScope = coroutineScope,
-                        item = bookmarkMenuTarget,
-                        onShowRecentBookmarks = {
-                            // todo
-                        },
-                        onShowBookmarksToItem = {
-                            // todo
-                        },
-                        onShowUserLabelDialog = {
-                            bottomSheetState.hide()
-                            //bottomSheetContent = BottomSheetContent.UserLabel
-                            bottomSheetState.show()
-                        },
-                        onSelectUrlsMenu = {
-                            bottomNavController.navigate("bookmarkUrlsMenu")
-                        },
-                        onSelectTagsMenu = {
-                            bottomNavController.navigate("bookmarkTagsMenu")
-                        },
-                        onSelectNgWordsMenu = {
-                            // todo
-                        },
-                        onFollow = {
-                            // todo
-                        },
-                        onIgnore = {
-                            // todo
-                        },
-                        onShare = {
-                            bottomNavController.navigate("shareBookmarkMenu")
-                        },
-                        onReport = {
-                            // todo
-                        },
-                        onDeleteMyBookmark = {
-                            // todo
-                        }
-                    )
-                }
-                composable("bookmarkUrlsMenu") {
-                    BookmarkUrlsMenuContent(
-                        item = bookmarkMenuTarget,
-                        onSelectUrl = {
-                            coroutineScope.launch {
+                NavHost(
+                    navController = bottomNavController,
+                    startDestination = "empty"
+                ) {
+                    composable("empty") {
+                        Box(Modifier.height(1.dp))
+                    }
+                    // 基本のメニュー
+                    composable("basicMenu") {
+                        AddressBarMenuContent(
+                            viewModel,
+                            bottomSheetState,
+                            bottomNavController,
+                            drawerState,
+                            drawerPagerState,
+                            onFinishActivity
+                        )
+                    }
+                    // 戻る/進む履歴スタック
+                    composable("historyStack") {
+                        BackForwardList(
+                            viewModel,
+                            onClickItem = { bottomSheetState.hide() }
+                        )
+                    }
+                    // 共有メニュー
+                    composable("share") {
+                        SharingContent(
+                            title = stringResource(R.string.browser_sharing_title),
+                            rawUrl = url,
+                            rawEntryUrl = entryUrl,
+                            text = title.second
+                        )
+                    }
+                    // 表示中ページのリソースリスト
+                    composable("resourcesList") {
+                        val items by viewModel.resourceUrls.collectAsState()
+                        ResourcesList(
+                            items = items,
+                            onInsertBlockedResource = { viewModel.insertBlockedResource(it) }
+                        )
+                    }
+                    // todo: ブクマメニュー
+                    composable("bookmarkMenu") {
+                        BookmarkItemMenuContent(
+                            coroutineScope = coroutineScope,
+                            item = bookmarkMenuTarget,
+                            onShowRecentBookmarks = {
+                                // todo
+                            },
+                            onShowBookmarksToItem = {
+                                // todo
+                            },
+                            onShowUserLabelDialog = {
                                 bottomSheetState.hide()
-//                                viewModel.openBrowser(it)
+                                //bottomSheetContent = BottomSheetContent.UserLabel
+                                bottomSheetState.show()
+                            },
+                            onSelectUrlsMenu = {
+                                bottomNavController.navigate("bookmarkUrlsMenu")
+                            },
+                            onSelectTagsMenu = {
+                                bottomNavController.navigate("bookmarkTagsMenu")
+                            },
+                            onSelectNgWordsMenu = {
+                                // todo
+                            },
+                            onFollow = {
+                                // todo
+                            },
+                            onIgnore = {
+                                // todo
+                            },
+                            onShare = {
+                                bottomNavController.navigate("shareBookmarkMenu")
+                            },
+                            onReport = {
+                                // todo
+                            },
+                            onDeleteMyBookmark = {
+                                // todo
                             }
-                        }
-                    )
-                }
-                composable("bookmarkTagsMenu") {
-                    BookmarkTagsMenuContent(
-                        item = bookmarkMenuTarget,
-                        onSelectTag = {
-                            coroutineScope.launch {
-                                bottomSheetState.hide()
-//                                viewModel.launchEntriesActivityForTag(it)
+                        )
+                    }
+                    composable("bookmarkUrlsMenu") {
+                        BookmarkUrlsMenuContent(
+                            item = bookmarkMenuTarget,
+                            onSelectUrl = {
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                    //                                viewModel.openBrowser(it)
+                                }
                             }
-                        }
-                    )
-                }
-                composable("shareBookmarkMenu") {
-                    Column(Modifier.height(300.dp)) {
-                        bookmarkMenuTarget?.let {
-                            BookmarkSharingContent(bookmark = it.bookmark)
+                        )
+                    }
+                    composable("bookmarkTagsMenu") {
+                        BookmarkTagsMenuContent(
+                            item = bookmarkMenuTarget,
+                            onSelectTag = {
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                    //                                viewModel.launchEntriesActivityForTag(it)
+                                }
+                            }
+                        )
+                    }
+                    composable("shareBookmarkMenu") {
+                        Column(Modifier.height(300.dp)) {
+                            bookmarkMenuTarget?.let {
+                                BookmarkSharingContent(bookmark = it.bookmark)
+                            }
                         }
                     }
                 }
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(navigationBarHeight)
+                )
             }
         }
     ) {
@@ -434,7 +461,7 @@ private fun BrowserContent(
 /**
  * アプリ内ブラウザ画面のコンテンツ
  */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun MainContent(
     viewModel: BrowserViewModel,
@@ -443,6 +470,8 @@ private fun MainContent(
     onShowBackForwardList: ()->Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     val webViewState = rememberSaveableWebViewState()
     val webViewNavigator = com.google.accompanist.web.rememberWebViewNavigator(coroutineScope)
@@ -463,8 +492,28 @@ private fun MainContent(
     val addressBarAlignment by viewModel.addressBarAlignment.collectAsState(initial = Alignment.Bottom)
     val isAddressBarTop = remember(addressBarAlignment) { addressBarAlignment == Alignment.Top }
 
-    ConstraintLayout(Modifier.fillMaxSize()) {
-        val (webView, progressBar, addressBar) = createRefs()
+    ConstraintLayout(
+        Modifier
+            .fillMaxSize()
+            .imePadding()
+    ) {
+        val (statusBar, webView, progressBar, addressBar, navigationBar) = createRefs()
+
+        Spacer(
+            modifier = Modifier
+                .background(CurrentTheme.titleBarBackground)
+                .constrainAs(statusBar) {
+                    linkTo(
+                        top = parent.top,
+                        bottom = if (isAddressBarTop) addressBar.top else webView.top,
+                        start = parent.start,
+                        end = parent.end
+                    )
+                    width = Dimension.fillToConstraints
+                    height = Dimension.value(statusBarHeight)
+                    visibility = (!isAddressBarTop).toVisibility()
+                }
+        )
 
         SwipeRefreshBox(
             refreshing = refreshing,
@@ -472,7 +521,7 @@ private fun MainContent(
             modifier = Modifier
                 .constrainAs(webView) {
                     linkTo(
-                        top = if (isAddressBarTop) addressBar.bottom else parent.top,
+                        top = if (isAddressBarTop) addressBar.bottom else statusBar.bottom,
                         bottom = if (isAddressBarTop) parent.bottom else addressBar.top,
                         start = parent.start,
                         end = parent.end
@@ -524,17 +573,27 @@ private fun MainContent(
                 }
         )
         // アドレスバー部分
-        TopAppBar(
-            backgroundColor = CurrentTheme.titleBarBackground,
+        androidx.compose.material3.TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors().copy(
+                containerColor = CurrentTheme.titleBarBackground,
+                scrolledContainerColor = CurrentTheme.titleBarBackground,
+                titleContentColor = CurrentTheme.titleBarOnBackground,
+                navigationIconContentColor = CurrentTheme.titleBarOnBackground,
+                actionIconContentColor = CurrentTheme.titleBarOnBackground
+            ),
+            windowInsets =
+                if (isAddressBarTop) WindowInsets.statusBars.only(WindowInsetsSides.Top)
+                else WindowInsets.navigationBars.only(WindowInsetsSides.Bottom),
             modifier = Modifier
                 .constrainAs(addressBar) {
                     linkTo(
-                        top = if (isAddressBarTop) parent.top else webView.bottom,
+                        top = if (isAddressBarTop) statusBar.bottom else webView.bottom,
                         bottom = if (isAddressBarTop) webView.top else parent.bottom,
                         start = parent.start,
-                        end = parent.end
+                        end = parent.end,
                     )
                     width = Dimension.fillToConstraints
+                    height = Dimension.wrapContent
                 },
             title = {
                 AddressBar(
@@ -547,12 +606,30 @@ private fun MainContent(
                 IconButton(onClick = onShowMenu) {
                     Icon(
                         Icons.Filled.Menu,
-                        contentDescription = "search",
+                        contentDescription = "open menu",
                         tint = CurrentTheme.titleBarOnBackground
                     )
                 }
             }
         )
+
+        if (isAddressBarTop) {
+            VerticalGradientEdge(
+                topColor = Color.Transparent,
+                bottomColor = CurrentTheme.background,
+                modifier = Modifier.constrainAs(navigationBar) {
+                    linkTo(
+                        top = parent.top,
+                        bottom = parent.bottom,
+                        start = parent.start,
+                        end = parent.end,
+                        verticalBias = 1f
+                    )
+                    width = Dimension.fillToConstraints
+                    height = Dimension.value(navigationBarHeight * 1.5f)
+                }
+            )
+        }
     }
 }
 
@@ -570,14 +647,13 @@ private fun AddressBar(
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = FocusRequester()
     val focusManager = LocalFocusManager.current
-    val addressText = remember {
-        mutableStateOf(TextFieldValue(text = "", selection = TextRange.Zero))
-    }
+    var addressText by rememberMutableTextFieldValue()
+
     LaunchedEffect(Unit) {
         viewModel.currentUrl
             .onEach {
                 Log.i("webView", "currentUrl: $it")
-                addressText.value = addressText.value.copy(text = Uri.decode(it))
+                addressText = addressText.copy(text = Uri.decode(it))
             }
             .launchIn(this)
     }
@@ -594,11 +670,10 @@ private fun AddressBar(
     )
     val keyboardActions = KeyboardActions {
         softwareKeyboardController?.hide()
-        addressText.value = addressText.value.copy(selection = TextRange.Zero)
+        addressText = addressText.copy(selection = TextRange.Zero)
         focusManager.clearFocus()
-        viewModel.enterAddressBarText(addressText.value.text)
+        viewModel.enterAddressBarText(addressText.text)
     }
-    val visualTransformation = VisualTransformation.None
     val interactionSource = remember { MutableInteractionSource() }
 
     val colors = TextFieldDefaults.textFieldColors(
@@ -642,7 +717,8 @@ private fun AddressBar(
 
         Box(
             Modifier
-                .fillMaxSize()
+                .height(42.dp)
+                .fillMaxWidth()
                 .padding(horizontal = 8.dp)
                 .swipeable(
                     state = rememberSwipeableState(0),
@@ -654,16 +730,16 @@ private fun AddressBar(
                 LocalTextSelectionColors provides selectionColor
             ) {
                 BasicTextField(
-                    value = addressText.value,
+                    value = addressText,
                     onValueChange = {
                         if (keepWholeSelection) {
                             keepWholeSelection = false
-                            addressText.value = addressText.value.copy(
-                                selection = TextRange(0, addressText.value.text.length)
+                            addressText = addressText.copy(
+                                selection = TextRange(0, addressText.text.length)
                             )
                         }
                         else {
-                            addressText.value = it
+                            addressText = it
                         }
                     },
                     textStyle = TextStyle.Default.copy(
@@ -674,7 +750,6 @@ private fun AddressBar(
                     maxLines = 1,
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
-                    visualTransformation = visualTransformation,
                     interactionSource = interactionSource,
                     cursorBrush = SolidColor(colors.cursorColor(isError = false).value),
                     // ドロワ表示切替を回避するためにswipeableを設定している
@@ -682,8 +757,8 @@ private fun AddressBar(
                         .focusRequester(focusRequester)
                         .onFocusChanged {
                             if (it.isFocused) {
-                                addressText.value = addressText.value.copy(
-                                    selection = TextRange(0, addressText.value.text.length)
+                                addressText = addressText.copy(
+                                    selection = TextRange(0, addressText.text.length)
                                 )
                                 keepWholeSelection = true
                             }
@@ -694,14 +769,20 @@ private fun AddressBar(
                         )
                         .fillMaxSize()
                 ) { innerTextField ->
-                    Row {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         TextFieldDefaults.TextFieldDecorationBox(
-                            value = addressText.value.text,
+                            value = addressText.text,
                             innerTextField = innerTextField,
-                            placeholder = { Text(stringResource(R.string.browser_address_bar_placeholder)) },
+                            placeholder = {
+                                Text(
+                                    stringResource(R.string.browser_address_bar_placeholder)
+                                )
+                            },
                             enabled = true,
                             singleLine = true,
-                            visualTransformation = visualTransformation,
+                            visualTransformation = VisualTransformation.None,
                             interactionSource = interactionSource,
                             colors = colors,
                             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 32.dp),
@@ -747,7 +828,6 @@ private fun AddressBar(
                     )
                 }
             }
-
         }
     }
 }

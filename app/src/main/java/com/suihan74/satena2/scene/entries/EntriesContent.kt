@@ -434,7 +434,7 @@ private fun SingleTabContent(
                         state = lazyListState,
                         color = CurrentTheme.primary
                     ),
-                key = { it.entry.url },
+                key = { "${it.entry.eid}__${it.entry.url}" },
                 onAppearLastItem = { onAppearLastItem() },
                 footer = { emptyFooter() }
             ) { entry ->

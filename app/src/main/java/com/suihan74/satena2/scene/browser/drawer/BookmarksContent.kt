@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -68,6 +72,7 @@ fun BookmarksContent(
     navController: NavController,
     onSelectBookmark: (DisplayBookmark)->Unit
 ) {
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     var additionalAreaVisible by remember { mutableStateOf(false) }
     var currentTab by remember { mutableStateOf(BookmarksTab.RECENT) }
     val items by remember(currentTab) {
@@ -79,124 +84,138 @@ fun BookmarksContent(
         }
     }.collectAsState()
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        backgroundColor = CurrentTheme.drawerBackground,
-        floatingActionButtonPosition = FabPosition.Center,
-        isFloatingActionButtonDocked = true,
-        floatingActionButton = {
-            // 投稿ボタン
-            FloatingActionButton(
-                backgroundColor = CurrentTheme.primary,
-                contentColor = CurrentTheme.onPrimary,
-                modifier = Modifier.size(40.dp),
-                onClick = {
-                    if (additionalAreaVisible) {
-                        additionalAreaVisible = false
-                    }
-                    else {
-                        bookmarksViewModel.openPostActivity()
-                    }
-                }
-            ) {
-                if (additionalAreaVisible) {
-                    Image(
-                        painterResource(R.drawable.ic_close),
-                        contentDescription = "close",
-                        colorFilter = ColorFilter.tint(CurrentTheme.onPrimary)
-                    )
-                }
-                else {
-                    Text(text = "B!")
-                }
-            }
-        },
-        bottomBar = {
-            val menuHeight = 40.dp
-            val contentHeight = 200.dp
-            val bottomBarHeight = remember { Animatable(initialValue = menuHeight.value) }
-
-            LaunchedEffect(Unit) {
-                snapshotFlow { additionalAreaVisible }
-                    .collect {
-                        val targetDp =
-                            if (it) menuHeight + contentHeight
-                            else menuHeight
-                        bottomBarHeight.animateTo(
-                            targetValue = targetDp.value,
-                            animationSpec = tween(160)
-                        )
-                    }
-            }
-
-            BottomAppBar(
-                cutoutShape = CircleShape,
-                backgroundColor = CurrentTheme.tabBackground,
-                modifier = Modifier.height(bottomBarHeight.value.dp),
-                contentPadding = PaddingValues(horizontal = 0.dp)
-            ) {
-                Column {
-                    Row(
-                        Modifier.height(menuHeight)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(Color.Transparent)
-                                .width(118.dp)
-                                .fillMaxHeight()
-                                .clickable {
-                                    additionalAreaVisible = !additionalAreaVisible
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(currentTab.textId),
-                                color = CurrentTheme.onBackground,
-                                fontSize = 16.sp
-                            )
+    Column(
+        Modifier.fillMaxSize()
+    ) {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            backgroundColor = CurrentTheme.drawerBackground,
+            floatingActionButtonPosition = FabPosition.Center,
+            isFloatingActionButtonDocked = true,
+            floatingActionButton = {
+                // 投稿ボタン
+                FloatingActionButton(
+                    backgroundColor = CurrentTheme.primary,
+                    contentColor = CurrentTheme.onPrimary,
+                    modifier = Modifier.size(40.dp),
+                    onClick = {
+                        if (additionalAreaVisible) {
+                            additionalAreaVisible = false
+                        }
+                        else {
+                            bookmarksViewModel.openPostActivity()
                         }
                     }
+                ) {
                     if (additionalAreaVisible) {
-                        Column(
-                            Modifier.height(contentHeight)
+                        Image(
+                            painterResource(R.drawable.ic_close),
+                            contentDescription = "close",
+                            colorFilter = ColorFilter.tint(CurrentTheme.onPrimary)
+                        )
+                    }
+                    else {
+                        Text(text = "B!")
+                    }
+                }
+            },
+            bottomBar = {
+                val menuHeight = 40.dp
+                val contentHeight = 200.dp
+                val bottomBarHeight = remember { Animatable(initialValue = menuHeight.value) }
+
+                LaunchedEffect(Unit) {
+                    snapshotFlow { additionalAreaVisible }
+                        .collect {
+                            val targetDp =
+                                if (it) menuHeight + contentHeight
+                                else menuHeight
+                            bottomBarHeight.animateTo(
+                                targetValue = targetDp.value,
+                                animationSpec = tween(160)
+                            )
+                        }
+                }
+
+
+                BottomAppBar(
+                    cutoutShape = CircleShape,
+                    backgroundColor = CurrentTheme.tabBackground,
+                    modifier = Modifier.height(bottomBarHeight.value.dp),
+                    contentPadding = PaddingValues(horizontal = 0.dp)
+                ) {
+                    Column {
+                        Row(
+                            Modifier.height(menuHeight)
                         ) {
-                            BookmarksTab.entries.forEach { tab ->
-                                Box(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            currentTab = tab
-                                            additionalAreaVisible = false
-                                        }
-                                ) {
-                                    Text(
-                                        text = stringResource(tab.textId),
-                                        color =
+                            Box(
+                                modifier = Modifier
+                                    .background(Color.Transparent)
+                                    .width(118.dp)
+                                    .fillMaxHeight()
+                                    .clickable {
+                                        additionalAreaVisible = !additionalAreaVisible
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(currentTab.textId),
+                                    color = CurrentTheme.onBackground,
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                        if (additionalAreaVisible) {
+                            Column(
+                                Modifier.height(contentHeight)
+                            ) {
+                                BookmarksTab.entries.forEach { tab ->
+                                    Box(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                currentTab = tab
+                                                additionalAreaVisible = false
+                                            }
+                                    ) {
+                                        Text(
+                                            text = stringResource(tab.textId),
+                                            color =
                                             if (tab == currentTab) CurrentTheme.primary
                                             else CurrentTheme.onBackground,
-                                        fontSize = 16.sp,
-                                        modifier = Modifier
-                                            .padding(
-                                                top = 8.dp,
-                                                bottom = 8.dp,
-                                                start = 16.dp
-                                            )
-                                    )
+                                            fontSize = 16.sp,
+                                            modifier = Modifier
+                                                .padding(
+                                                    top = 8.dp,
+                                                    bottom = 8.dp,
+                                                    start = 16.dp
+                                                )
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        },
-    ) {
-        BookmarksTabContent(
-            viewModel = bookmarksViewModel,
-            tab = currentTab,
-            lazyListState = lazyListState,
-            bookmarks = items,
-            navController = navController,
-            onShowBookmarkItemMenu = onSelectBookmark
+            },
+        ) {
+            BookmarksTabContent(
+                viewModel = bookmarksViewModel,
+                tab = currentTab,
+                lazyListState = lazyListState,
+                bookmarks = items,
+                navController = navController,
+                onShowBookmarkItemMenu = onSelectBookmark
+            )
+        }
+
+        Spacer(
+            Modifier
+                .background(CurrentTheme.tabBackground)
+                .fillMaxWidth()
+                .height(navigationBarHeight)
         )
     }
 

@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.ExperimentalMaterialApi
@@ -43,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -246,8 +249,13 @@ private fun BookmarksScene(
         sheetShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
         sheetBackgroundColor = CurrentTheme.background,
         sheetContent = {
+            val screenHeight = LocalConfiguration.current.screenHeightDp.dp
             val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-            Column {
+            val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+            Column(
+                Modifier.heightIn(max = screenHeight - statusBarHeight)
+            ) {
                 when (bottomSheetContent) {
                     // 何も設定されていない状態
                     BottomSheetContent.Empty -> {
