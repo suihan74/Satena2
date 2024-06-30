@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,7 +61,7 @@ fun NgWordsPage(
     val isNgWordSettingDialogVisible = remember { mutableStateOf(false) }
 
     val clickedItem = remember { mutableStateOf<IgnoredEntry?>(null) }
-    val selectedTabIndex = remember { mutableStateOf(viewModel.currentTab.value) }
+    val selectedTabIndex = remember { mutableIntStateOf(viewModel.currentTab.value) }
     val currentTabItems = viewModel.currentTabItems.collectAsState()
 
     ConstraintLayout(
@@ -136,7 +137,7 @@ fun NgWordsPage(
             )
         }
     }
-    Dialogs(viewModel, selectedTabIndex.value, clickedItem, isMenuDialogVisible, isNgWordSettingDialogVisible)
+    Dialogs(viewModel, selectedTabIndex.intValue, clickedItem, isMenuDialogVisible, isNgWordSettingDialogVisible)
 }
 
 @Composable
