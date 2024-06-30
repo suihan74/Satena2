@@ -1,6 +1,5 @@
 package com.suihan74.satena2.scene.bookmarks
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -209,7 +208,6 @@ private fun TitleBarContent(entity: Entity) {
     }
 
     val entry = entity.entry
-    val title = remember(entry) { Uri.decode(entry.title) }
     val numUsers = remember(entity.bookmarksEntry) {
         entry.count.let { u ->
             "$u user${if (u != 1) "s" else ""}"
@@ -225,7 +223,7 @@ private fun TitleBarContent(entity: Entity) {
     Column {
         // ページタイトル
         MarqueeText(
-            text = title,
+            text = entry.title,
             fontSize = 18.sp,
             color = CurrentTheme.titleBarOnBackground,
             gradientColor = CurrentTheme.titleBarBackground

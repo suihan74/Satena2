@@ -77,7 +77,6 @@ fun EntryItem(
     onLongClickComment: (DisplayEntry, BookmarkResult)->Unit = { _, _ -> }
 ) {
     val entry = item.entry
-    val decodedTitle = Uri.decode(entry.title).toString()
     val commentItems = remember(entry) {
         buildList {
             entry.bookmarkedData?.let { add(it) }
@@ -181,7 +180,7 @@ fun EntryItem(
             }
         )
         Text(
-            text = decodedTitle,
+            text = entry.title,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = CurrentTheme.onBackground,
