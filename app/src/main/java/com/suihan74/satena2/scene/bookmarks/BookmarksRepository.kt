@@ -751,11 +751,13 @@ class BookmarksRepositoryImpl @Inject constructor(
                 filtersMutex.withLock {
                     bookmarks
                         .filter { b ->
-                            val isMyBookmark = b.user == accountName
-                            val notNgUser = !ignoredUsers.contains(b.user)
-                            val notBlankComment = b.comment.isNotBlank()
-                            val notMuted = filters.none { it.match(b) }
-                            isMyBookmark || notNgUser && notBlankComment && notMuted
+                            if (b.user == accountName) true
+                            else {
+                                val notNgUser = !ignoredUsers.contains(b.user)
+                                val notBlankComment = b.comment.isNotBlank()
+                                val notMuted = filters.none { it.match(b) }
+                                notNgUser && notBlankComment && notMuted
+                            }
                         }
                         .map { b -> b.toDisplayBookmark(eid) }
                 }
@@ -765,11 +767,13 @@ class BookmarksRepositoryImpl @Inject constructor(
                 filtersMutex.withLock {
                     bookmarks
                         .filter { b ->
-                            val isMyBookmark = b.user == accountName
-                            val notNgUser = !ignoredUsers.contains(b.user)
-                            val notBlankComment = b.comment.isNotBlank()
-                            val notMuted = filters.none { it.match(b) }
-                            isMyBookmark || notNgUser && notBlankComment && notMuted
+                            if (b.user == accountName) true
+                            else {
+                                val notNgUser = !ignoredUsers.contains(b.user)
+                                val notBlankComment = b.comment.isNotBlank()
+                                val notMuted = filters.none { it.match(b) }
+                                notNgUser && notBlankComment && notMuted
+                            }
                         }
                         .map { b -> b.toDisplayBookmark(eid) }
                 }

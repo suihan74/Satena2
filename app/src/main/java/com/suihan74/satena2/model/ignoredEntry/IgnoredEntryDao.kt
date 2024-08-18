@@ -1,7 +1,11 @@
 package com.suihan74.satena2.model.ignoredEntry
 
 import android.database.sqlite.SQLiteConstraintException
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -14,7 +18,7 @@ interface IgnoredEntryDao {
 
     fun entryFiltersFlow() : Flow<List<IgnoredEntry>> = filtersFlow(IgnoreTarget.ENTRY.id)
 
-    fun bookmarkFiltersFlow() : Flow<List<IgnoredEntry>> = filtersFlow(IgnoreTarget.ENTRY.id)
+    fun bookmarkFiltersFlow() : Flow<List<IgnoredEntry>> = filtersFlow(IgnoreTarget.BOOKMARK.id)
 
     /**
      * 全ての非表示設定を取得する
