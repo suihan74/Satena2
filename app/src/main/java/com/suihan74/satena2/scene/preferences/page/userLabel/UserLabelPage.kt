@@ -60,6 +60,7 @@ import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
 import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.model.userLabel.Label
 import com.suihan74.satena2.model.userLabel.LabelAndUsers
 import com.suihan74.satena2.model.userLabel.UserAndLabels
@@ -177,7 +178,12 @@ private fun LabelsContents(
         // コンテンツ
         LazyColumn(
             state = lazyListState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScrollbar(
+                    state = lazyListState,
+                    color = CurrentTheme.primary
+                )
         ) {
             items(labels) { item ->
                 AnimatedListItem {
@@ -193,7 +199,9 @@ private fun LabelsContents(
                     thickness = 1.dp
                 )
             }
-            emptyFooter()
+            emptyFooter(
+                height = 112.dp + navigationBarInset
+            )
         }
 
         // 項目追加ボタン
@@ -321,7 +329,12 @@ private fun UsersContents(
                 // コンテンツ
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScrollbar(
+                            state = listState,
+                            color = CurrentTheme.primary
+                        )
                 ) {
                     items(label.users) { item ->
                         AnimatedListItem {
@@ -337,7 +350,9 @@ private fun UsersContents(
                             thickness = 1.dp
                         )
                     }
-                    emptyFooter()
+                    emptyFooter(
+                        height = 112.dp + navigationBarInset
+                    )
                 }
             }
 

@@ -40,6 +40,7 @@ import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
 import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.model.ignoredEntry.IgnoreTarget
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntry
 import com.suihan74.satena2.model.ignoredEntry.IgnoredEntryType
@@ -64,6 +65,8 @@ fun NgWordsPage(
     val selectedTabIndex = remember { mutableIntStateOf(viewModel.currentTab.value) }
     val currentTabItems = viewModel.currentTabItems.collectAsState()
 
+    val lazyListState = viewModel.lazyListState()
+
     ConstraintLayout(
         Modifier.fillMaxSize()
     ) {
@@ -71,8 +74,13 @@ fun NgWordsPage(
 
         // コンテンツ
         LazyColumn(
-            state = viewModel.lazyListState(),
-            modifier = Modifier.fillMaxSize()
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScrollbar(
+                    state = lazyListState,
+                    color = CurrentTheme.primary
+                )
         ) {
             items(
                 currentTabItems.value,
@@ -89,7 +97,9 @@ fun NgWordsPage(
                     thickness = 1.dp
                 )
             }
-            emptyFooter()
+            emptyFooter(
+                height = 112.dp + navigationBarInset
+            )
         }
 
         // URL/TEXTタブ切替えボタン

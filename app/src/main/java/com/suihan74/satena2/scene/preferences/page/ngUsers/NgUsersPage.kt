@@ -89,7 +89,9 @@ fun NgUsersPage(viewModel: NgUsersViewModel, navigationBarInset: Dp) {
                         thickness = 1.dp
                     )
                 }
-                emptyFooter()
+                emptyFooter(
+                    height = 112.dp + navigationBarInset
+                )
             }
         }
 
