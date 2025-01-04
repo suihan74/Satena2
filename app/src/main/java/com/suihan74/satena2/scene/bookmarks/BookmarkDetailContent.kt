@@ -1,6 +1,5 @@
 package com.suihan74.satena2.scene.bookmarks
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -250,7 +249,6 @@ private fun BookmarkArea(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MentionsArea(
     modifier: Modifier = Modifier,

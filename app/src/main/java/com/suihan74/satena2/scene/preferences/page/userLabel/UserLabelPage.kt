@@ -5,7 +5,6 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.ModalBottomSheetLayout
@@ -76,7 +74,6 @@ import kotlinx.coroutines.launch
 /**
  * ユーザーラベルページ
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserLabelsPage(
     viewModel: UserLabelsViewModel,
@@ -258,7 +255,6 @@ private fun LabelsContents(
 /**
  * 指定ラベルがついたユーザーリスト
  */
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun UsersContents(
     label: LabelAndUsers?,

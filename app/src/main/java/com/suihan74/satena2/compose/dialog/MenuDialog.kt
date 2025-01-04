@@ -11,7 +11,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
@@ -176,7 +175,6 @@ fun menuDialogItem(
 
 // ------ //
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Preview
 @Composable
 private fun MenuDialogPreview() {

@@ -10,7 +10,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -395,7 +394,6 @@ private fun PreferencesScenePreview() {
 
 // ------ //
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MainContents(
     viewModels : PrefViewModels,
@@ -694,7 +692,6 @@ private fun TopBar(
  * 設定カテゴリリスト
  */
 @Suppress("SameParameterValue")
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Categories(
     categories: List<PreferencesCategory>,
@@ -714,7 +711,6 @@ private fun Categories(
 /**
  * 設定カテゴリ項目
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PrefCategoryItem(
     category: PreferencesCategory,

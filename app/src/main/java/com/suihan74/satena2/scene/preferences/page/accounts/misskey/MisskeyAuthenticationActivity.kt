@@ -23,7 +23,6 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -76,7 +75,6 @@ class MisskeyAuthenticationActivity : ComponentActivity() {
 
 // ------ //
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun MisskeyAuthenticationContent(
     viewModel: MisskeyAuthenticationViewModel,

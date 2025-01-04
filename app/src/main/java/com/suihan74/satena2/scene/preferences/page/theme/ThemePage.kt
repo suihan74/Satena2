@@ -45,7 +45,6 @@ import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
 /**
  * 「テーマ」ページ
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ThemePage(
     viewModel: ThemeViewModel,
@@ -233,7 +232,6 @@ private fun PresetItemMenuDialog(
 
 // ------ //
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun ThemePagePreview() {

@@ -9,7 +9,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -201,7 +200,6 @@ class BrowserActivity : ComponentActivity() {
 /**
  * アプリ内ブラウザ画面のコンテンツ
  */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun BrowserContent(
     viewModel: BrowserViewModel,
@@ -865,7 +863,6 @@ private fun AddressBarPreview() {
 /**
  * アドレスバーのメニューボタン押下時に出てくるボトムバーのコンテンツ
  */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun AddressBarMenuContent(
     viewModel: BrowserViewModel,
@@ -944,7 +941,6 @@ private fun AddressBarMenuContent(
 /**
  * 戻る/進むリストに遷移した状態でボトムシートを表示する
  */
-@OptIn(ExperimentalMaterialApi::class)
 private suspend fun showHistoryBottomSheet(
     bottomSheetState: ModalBottomSheetState,
     navController: NavController

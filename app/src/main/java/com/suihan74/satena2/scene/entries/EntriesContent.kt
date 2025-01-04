@@ -1,6 +1,5 @@
 package com.suihan74.satena2.scene.entries
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -77,7 +76,6 @@ private fun rememberLazyListState(
 /**
  * カテゴリの種類によってタブ表示を使い分ける
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EntriesContent(
     id: String,
@@ -204,7 +202,6 @@ fun EntriesContent(
 /**
  * 複数タブ用のコンテンツ
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun MultipleTabsContent(
     id: String,
@@ -353,7 +350,6 @@ private fun MultipleTabsContent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun MultipleTabsContentPreview() {
@@ -375,7 +371,7 @@ private fun MultipleTabsContentPreview() {
 /**
  * 単一タブ・複数タブの各タブ内容部分のコンテンツ
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun SingleTabContent(
     id: String,
@@ -465,7 +461,6 @@ private fun SingleTabContent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun SingleTabContentPreview() {

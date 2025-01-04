@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DrawerValue
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
@@ -178,7 +177,6 @@ class BookmarksActivity : ComponentActivity() {
 
 // ------ //
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun BookmarksScene(
     viewModel: BookmarksViewModel,

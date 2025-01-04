@@ -95,7 +95,7 @@ private val listStatesSaver: Saver<List<LazyListState>, *> = listSaver(
  *
  * 各タブとそれに対応するブクマリスト
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookmarksMainContent(
     viewModel: BookmarksViewModel,
@@ -282,7 +282,6 @@ private fun TitleBarContent(entity: Entity) {
 /**
  * メイン領域のタブとページャ
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BookmarksPager(
     viewModel: BookmarksViewModel,

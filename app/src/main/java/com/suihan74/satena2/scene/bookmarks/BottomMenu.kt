@@ -6,7 +6,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,6 @@ import com.suihan74.satena2.compose.BottomSearchContent
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomMenu(
     pagerState: PagerState,
@@ -119,7 +117,6 @@ fun BottomMenu(
 /**
  * メインメニュー
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MainContent(
     pagerState: PagerState,
