@@ -560,6 +560,7 @@ private fun MentionItem(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = mention.bookmark?.comment.orEmpty(),
+                    color = CurrentTheme.onBackground,
                     fontSize = 14.sp
                 )
             }
