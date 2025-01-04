@@ -2,7 +2,6 @@ package com.suihan74.satena2.scene.browser
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -75,7 +74,6 @@ enum class DrawerTab(
 /**
  * ドロワーに表示するコンテンツ
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DrawerContent(
     viewModel: BrowserViewModel,
@@ -196,7 +194,6 @@ fun DrawerContent(
 
 // ------ //
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun DrawerContentPreview() {

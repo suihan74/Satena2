@@ -9,13 +9,14 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.LocalRippleConfiguration
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.RippleConfiguration
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
-import androidx.compose.material.ripple.LocalRippleTheme
+import androidx.compose.material.ripple
 import androidx.compose.material.ripple.RippleAlpha
-import androidx.compose.material.ripple.RippleTheme
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -60,6 +61,7 @@ val CurrentTheme
 //val CurrentTheme
 //    @Composable get() = CurrentThemePreset.collectAsState().value
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Satena2Theme(
     theme: ThemePreset,
@@ -90,25 +92,19 @@ fun Satena2Theme(
     // クリック時の背景色
     val rippleColor = t.colors.ripple
     // clickable用
-    val indicationColor = rememberRipple(color = t.colors.ripple, bounded = true)
+    val indicationColor = ripple(color = t.colors.ripple, bounded = true)
     // アイコンボタン用
     val buttonRippleColor = remember {
-        object : RippleTheme {
-            @Composable
-            override fun defaultColor() : Color =
-                RippleTheme.defaultRippleColor(
-                    contentColor = rippleColor,
-                    lightTheme = false
-                )
-            @Composable
-            override fun rippleAlpha() : RippleAlpha =
+        RippleConfiguration(
+            color = rippleColor,
+            rippleAlpha =
                 RippleAlpha(
                     draggedAlpha = .5f,
                     focusedAlpha = .5f,
                     hoveredAlpha = .5f,
                     pressedAlpha = .5f
                 )
-        }
+        )
     }
 
     MaterialTheme(
@@ -118,7 +114,7 @@ fun Satena2Theme(
     ) {
         CompositionLocalProvider(
             LocalIndication provides indicationColor,
-            LocalRippleTheme provides buttonRippleColor,
+            LocalRippleConfiguration provides buttonRippleColor,
             LocalTextSelectionColors provides textSelectionColors,
             LocalTheme provides t,
             content = content

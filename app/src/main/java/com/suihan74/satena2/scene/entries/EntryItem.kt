@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -316,7 +316,7 @@ fun EntryItem(
             Modifier
                 .background(Color.Transparent)
                 .combinedClickable(
-                    indication = rememberRipple(
+                    indication = ripple(
                         color = CurrentTheme.ripple,
                         bounded = false
                     ),

@@ -184,7 +184,7 @@ private fun clearExpiredCaches(backStackCategories: List<String>, listStateMap: 
  *
  * 右からも開けるドロワとScaffoldを併用するために階層化
  */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EntriesScene(
     viewModel: EntriesViewModel,
@@ -675,16 +675,18 @@ private fun MainContent(
     val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     // ボトムバーのスワイプ処理
+    val exBottomMenuDecayAnimation = rememberSplineBasedDecay<Float>()
     val exBottomMenuDraggableState = remember {
         AnchoredDraggableState(
             initialValue = false,
             anchors = DraggableAnchors {
-                true at 300f  // dp
+                true at 300f
                 false at 0f
             },
             positionalThreshold = { it * .6f },
             velocityThreshold = { with(density) { 20.dp.toPx() } },
-            animationSpec = tween()
+            snapAnimationSpec = tween(),
+            decayAnimationSpec = exBottomMenuDecayAnimation
         )
     }
 
@@ -1417,7 +1419,6 @@ private fun MenuContentPreview() {
 
 // ------ //
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun AnimatedVisibilityScope.MenuText(
     index: Int,
