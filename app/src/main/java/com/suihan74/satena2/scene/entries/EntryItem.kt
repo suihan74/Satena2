@@ -293,10 +293,17 @@ fun EntryItem(
                         topMargin = 8.dp,
                         bottomMargin = verticalPadding
                     )
-                    width = Dimension.fillToConstraints
-                    visibility = commentItems
-                        .isNotEmpty()
-                        .toVisibility()
+                    // todo: `Dimension.fillToConstraints`と`Visibility.Gone`を同時に指定すると表示がバグる。
+                    // https://issuetracker.google.com/issues/299134793
+                    if (commentItems.isEmpty()) {
+                        width = Dimension.value(0.dp)
+                        height = Dimension.value(0.dp)
+                    }
+                    else {
+                        width = Dimension.fillToConstraints
+                        height = Dimension.wrapContent
+                    }
+                    visibility = commentItems.isNotEmpty().toVisibility()
                 }
         ) {
             for (c in commentItems) {

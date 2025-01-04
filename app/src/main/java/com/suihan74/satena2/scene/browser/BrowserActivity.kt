@@ -133,6 +133,7 @@ import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2ThemeFullScreen
 import com.suihan74.satena2.utility.extension.add
+import com.suihan74.satena2.utility.extension.toVisibility
 import com.suihan74.satena2.utility.rememberMutableTextFieldValue
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -506,8 +507,11 @@ private fun MainContent(
                         start = parent.start,
                         end = parent.end
                     )
-                    width = Dimension.fillToConstraints
+                    // todo: `Dimension.fillToConstraints`と`Visibility.Gone`を同時に指定すると表示がバグる
+                    // https://issuetracker.google.com/issues/299134793
+                    width = if (isAddressBarTop) Dimension.value(0.dp) else Dimension.fillToConstraints
                     height = Dimension.value(if (isAddressBarTop) 0.dp else statusBarHeight)
+                    visibility = (!isAddressBarTop).toVisibility()
                 }
         )
 

@@ -576,10 +576,10 @@ private fun BookmarkPostContent(
                         end = parent.end,
                         topMargin = 6.dp
                     )
-                    width = Dimension.fillToConstraints
-                    visibility = loading
-                        .not()
-                        .toVisibility()
+                    // todo: `Dimension.fillToConstraints`と`Visibility.Gone`を同時に指定すると表示がバグる
+                    // https://issuetracker.google.com/issues/299134793
+                    width = if (loading) Dimension.fillToConstraints else Dimension.value(0.dp)
+                    visibility = (!loading).toVisibility()
                 }
         ) {
             Spacer(Modifier.width(23.dp))
@@ -625,8 +625,16 @@ private fun BookmarkPostContent(
                         start = main.start,
                         end = main.end
                     )
-                    width = Dimension.fillToConstraints
-                    height = Dimension.fillToConstraints
+                    // todo: `Dimension.fillToConstraints`と`Visibility.Gone`を同時に指定すると表示がバグる
+                    // https://issuetracker.google.com/issues/299134793
+                    if (loading) {
+                        width = Dimension.fillToConstraints
+                        height = Dimension.fillToConstraints
+                    }
+                    else {
+                        width = Dimension.value(0.dp)
+                        height = Dimension.value(0.dp)
+                    }
                     visibility = loading.toVisibility()
                 }
         )
