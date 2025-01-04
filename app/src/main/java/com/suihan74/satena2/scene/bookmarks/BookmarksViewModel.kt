@@ -5,7 +5,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.ui.Alignment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -170,7 +169,6 @@ interface BookmarksViewModel : DialogPropertiesProvider {
     /**
      * タブの初期化
      */
-    @OptIn(ExperimentalFoundationApi::class)
     suspend fun initializeTab(pagerState: PagerState)
 
     /**
@@ -526,7 +524,6 @@ class BookmarksViewModelImpl @Inject constructor(
     /**
      * タブの初期化
      */
-    @OptIn(ExperimentalFoundationApi::class)
     override suspend fun initializeTab(pagerState: PagerState) {
         prefsRepo.dataStore.data.map { it.bookmarkInitialTab }
             .collect {
@@ -833,6 +830,7 @@ class BookmarksViewModelImpl @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 userLabelRepo.updateUserLabels(user, states)
+                repository.reloadCustomBookmarks(entityFlow.value)
             }.onSuccess {
                 context.showToast(
                     context.getString(R.string.set_user_label_success, user)
@@ -1017,7 +1015,6 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     override fun load(url: String) {
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
     override suspend fun initializeTab(pagerState: PagerState) {
     }
 

@@ -120,6 +120,11 @@ interface BookmarksRepository {
     suspend fun updateMyBookmark(bookmarkResult: BookmarkResult?)
 
     /**
+     * 「カスタム」タブの既にロードされているブクマを再度フィルタリングする
+     */
+    suspend fun reloadCustomBookmarks(entity: Entity)
+
+    /**
      * ユーザーを非表示にする
      */
     suspend fun ignoreUser(user: String)
@@ -617,6 +622,18 @@ class BookmarksRepositoryImpl @Inject constructor(
                 }
             }
         }.sortedByDescending { it.timestamp }
+    }
+
+    /**
+     * 「カスタム」タブの既にロードされているブクマを再度フィルタリングする
+     */
+    override suspend fun reloadCustomBookmarks(entity: Entity) {
+        customBookmarksFlow.value = toDisplayList(
+            entity.entry,
+            entity.bookmarks,
+            filters,
+            BookmarksTab.CUSTOM
+        )
     }
 
     // ------ //
