@@ -958,10 +958,13 @@ private fun MainContent(
                 NavHost(
                     navController = navController,
                     startDestination = "blank",
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     // 初期表示カテゴリなどのロード前に表示しておく画面
-                    composable("blank") {
+                    composable("blank",
+                        enterTransition = { EnterTransition.None },
+                        exitTransition = { ExitTransition.None }
+                    ) {
                         val initialState by viewModel.initialState.collectAsState(initial = null)
                         initialState?.let {
                             viewModel.initialNavigation(it, navController)
@@ -988,7 +991,8 @@ private fun MainContent(
                             navArgument("issue") { type = NavType.StringType; defaultValue = "" }
                         ),
                         enterTransition = {
-                            slideInHorizontally(animationSpec = tween(300)) { it }
+                            fadeIn(tween(300))
+//                            slideInHorizontally(animationSpec = tween(300)) { it }
                         },
                         exitTransition = {
                             slideOutHorizontally(animationSpec = tween(300)) { it }
@@ -1008,27 +1012,32 @@ private fun MainContent(
                             navBackStackEntry.argument<String>("target").orEmpty()
                         }
 
-                        EntriesContent(
-                            id = navBackStackEntry.id,
-                            viewModel = viewModel,
-                            listStateMap = listStateMap,
-                            navHostController = navController,
-                            category = c,
-                            issue = pageIssue,
-                            target = argTarget,
-                            readMarkVisible = entryReadMarkVisible,
-                            onChangeTab = onChangeTab,
-                            onRefresh = onRefresh,
-                            onAppearLastItem = onAppearLastItem,
-                            onClickItem = onClickItem,
-                            onLongClickItem = onLongClickItem,
-                            onDoubleClickItem = onDoubleClickItem,
-                            onClickItemEdge = onClickItemEdge,
-                            onLongClickItemEdge = onLongClickItemEdge,
-                            onDoubleClickItemEdge = onDoubleClickItemEdge,
-                            onClickItemComment = onClickItemComment,
-                            onLongClickItemComment = onLongClickItemComment
-                        )
+                        // 予測型戻るジェスチャ時にコンテンツが重複しないようにページごとにも背景色を設定している
+                        Box(
+                            Modifier.background(CurrentTheme.background)
+                        ) {
+                            EntriesContent(
+                                id = navBackStackEntry.id,
+                                viewModel = viewModel,
+                                listStateMap = listStateMap,
+                                navHostController = navController,
+                                category = c,
+                                issue = pageIssue,
+                                target = argTarget,
+                                readMarkVisible = entryReadMarkVisible,
+                                onChangeTab = onChangeTab,
+                                onRefresh = onRefresh,
+                                onAppearLastItem = onAppearLastItem,
+                                onClickItem = onClickItem,
+                                onLongClickItem = onLongClickItem,
+                                onDoubleClickItem = onDoubleClickItem,
+                                onClickItemEdge = onClickItemEdge,
+                                onLongClickItemEdge = onLongClickItemEdge,
+                                onDoubleClickItemEdge = onDoubleClickItemEdge,
+                                onClickItemComment = onClickItemComment,
+                                onLongClickItemComment = onLongClickItemComment
+                            )
+                        }
 
                         BackHandler(drawerState.isOpen) {
                             coroutineScope.launch {
