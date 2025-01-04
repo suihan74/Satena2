@@ -599,6 +599,15 @@
     <!-- タブ -->
     <string name="pref_bookmark_initial_tab">最初に表示するタブ</string>
     <string name="pref_bookmark_change_initial_tab_by_long_click">タブ長押しで初期タブを変更する</string>
+    <!-- リンク -->
+    <string name="pref_bookmark_open_in_browser_on_click_url">ブコメ中のURLをブラウザで開く挙動のトリガ</string>
+
+    <string name="pref_bookmark_on_comment_link_click_trigger_disable">動作させない</string>
+    <string name="pref_bookmark_on_comment_link_click_trigger_single_click">シングルクリックで動作</string>
+    <string name="pref_bookmark_on_comment_link_click_trigger_double_click">ダブルクリックで動作</string>
+
+    <string name="msg_pref_bookmark_open_in_browser_on_click_url_disabled">URLクリックでリンクを開かない設定になっています</string>
+    <string name="msg_pref_bookmark_open_in_browser_on_click_url_require_double_click">もう一度クリックするとリンクを開きます</string>
 
     <!-- TagsListOrder -->
     <string name="post_bookmark_tags_list_order_index">名前順</string>

@@ -11,6 +11,7 @@ import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
 import com.suihan74.satena2.scene.bookmarks.BookmarksTab
+import com.suihan74.satena2.scene.bookmarks.OpenCommentLinkTrigger
 import com.suihan74.satena2.scene.preferences.PrefButton
 import com.suihan74.satena2.scene.preferences.PrefToggleButton
 import com.suihan74.satena2.scene.preferences.Section
@@ -30,7 +31,7 @@ fun bookmarkPageContents(viewModel: BookmarkViewModel) = buildComposableList {
     titleBarSection()
     behaviorSection()
     muteSection()
-    linkSection()
+    linkSection(viewModel)
     digestSection()
 }
 
@@ -129,8 +130,34 @@ private fun MutableComposableList.muteSection() = add(
     0 to { Section(R.string.pref_bookmark_section_mute) }
 )
 
-private fun MutableComposableList.linkSection() = add(
-    0 to { Section(R.string.pref_bookmark_section_link) }
+private fun MutableComposableList.linkSection(viewModel: BookmarkViewModel) = add(
+    0 to { Section(R.string.pref_bookmark_section_link) },
+    R.string.pref_bookmark_open_in_browser_on_click_url to {
+        val dialogVisible = remember { mutableStateOf(false) }
+        PrefButton(
+            mainTextId = R.string.pref_bookmark_open_in_browser_on_click_url,
+            subTextId = viewModel.openCommentLinkTrigger.collectAsState().value.textId,
+            subTextPrefixId = R.string.pref_current_value_prefix
+        ) {
+            dialogVisible.value = true
+        }
+
+        if (dialogVisible.value) {
+            MenuDialog(
+                titleText = stringResource(R.string.pref_bookmark_open_in_browser_on_click_url),
+                menuItems = OpenCommentLinkTrigger.entries.map { item ->
+                    menuDialogItem(item.textId) {
+                        viewModel.openCommentLinkTrigger.value = item
+                        true
+                    }
+                },
+                negativeButton = dialogButton(R.string.cancel) { dialogVisible.value = false },
+                onDismissRequest = { dialogVisible.value = false },
+                colors = themedCustomDialogColors(),
+                properties = viewModel.dialogProperties()
+            )
+        }
+    }
 )
 
 private fun MutableComposableList.digestSection() = add(

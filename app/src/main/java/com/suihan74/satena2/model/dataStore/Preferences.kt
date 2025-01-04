@@ -10,6 +10,7 @@ import com.suihan74.satena2.model.mastodon.TootVisibility
 import com.suihan74.satena2.model.misskey.NoteVisibility
 import com.suihan74.satena2.scene.bookmarks.BookmarksTab
 import com.suihan74.satena2.scene.bookmarks.CustomTabSetting
+import com.suihan74.satena2.scene.bookmarks.OpenCommentLinkTrigger
 import com.suihan74.satena2.scene.entries.BottomMenuItem
 import com.suihan74.satena2.scene.entries.Category
 import com.suihan74.satena2.scene.entries.ClickEntryAction
@@ -165,6 +166,9 @@ data class Preferences(
 
     /** ブクマ: 「カスタム」タブの表示対象設定 */
     val bookmarkCustomTabSetting: CustomTabSetting = CustomTabSetting(),
+
+    /** ブクマ: ブコメ中のURLクリック時にブラウザで開く */
+    val bookmarkOpenCommentLinkTrigger : OpenCommentLinkTrigger = OpenCommentLinkTrigger.DoubleClick,
 
     // ------ //
 

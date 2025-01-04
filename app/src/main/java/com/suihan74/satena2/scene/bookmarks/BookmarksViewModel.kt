@@ -36,6 +36,9 @@ import com.suihan74.satena2.utility.extension.showToast
 import com.suihan74.satena2.utility.hatena.hatenaUserIconUrl
 import com.suihan74.satena2.utility.hatena.toBookmark
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -369,6 +372,13 @@ class BookmarksViewModelImpl @Inject constructor(
     // ------ //
 
     /**
+     * ブコメ中のURLクリック時にブラウザで開く
+     */
+    private val openCommentLinkTrigger = MutableStateFlow(OpenCommentLinkTrigger.Disabled)
+
+    // ------ //
+
+    /**
      * 現在表示中ページのエントリ・ブクマ情報
      */
     override val entityFlow = repository.entityFlow
@@ -479,6 +489,7 @@ class BookmarksViewModelImpl @Inject constructor(
         prefsRepo.dataStore.data
             .onEach {
                 recordReadEntriesEnabled.value = it.recordReadEntriesEnabled
+                openCommentLinkTrigger.value = it.bookmarkOpenCommentLinkTrigger
             }
             .launchIn(viewModelScope)
     }
@@ -719,8 +730,39 @@ class BookmarksViewModelImpl @Inject constructor(
      * ブコメ中のリンクをクリックした時の処理
      */
     override fun onClickLink(url: String) {
-        openBrowser(url)
+        if (clickedUrlOnComment.value == url) {
+            clickedUrlOnComment.value = null
+            clickedUrlOnCommentJob?.cancel()
+            openBrowser(url)
+            return
+        }
+
+        when(openCommentLinkTrigger.value) {
+            OpenCommentLinkTrigger.Disabled ->
+                viewModelScope.launch {
+                    context.showToast(R.string.msg_pref_bookmark_open_in_browser_on_click_url_disabled)
+                }
+
+            OpenCommentLinkTrigger.SingleClick ->
+                openBrowser(url)
+
+            OpenCommentLinkTrigger.DoubleClick -> {
+                clickedUrlOnComment.value = null
+                clickedUrlOnCommentJob = viewModelScope.launch {
+                    clickedUrlOnCommentJob?.cancelAndJoin()
+                    clickedUrlOnComment.value = url
+                    context.showToast(R.string.msg_pref_bookmark_open_in_browser_on_click_url_require_double_click)
+                    delay(2000L)
+                }
+                clickedUrlOnCommentJob?.invokeOnCompletion {
+                    clickedUrlOnComment.value = null
+                    clickedUrlOnCommentJob = null
+                }
+            }
+        }
     }
+    private var clickedUrlOnCommentJob: Job? = null
+    private val clickedUrlOnComment = MutableStateFlow<String?>(null)
 
     // ------ //
 

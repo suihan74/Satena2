@@ -3,6 +3,7 @@ package com.suihan74.satena2.scene.preferences.page.bookmarks
 import androidx.compose.ui.Alignment
 import androidx.lifecycle.viewModelScope
 import com.suihan74.satena2.scene.bookmarks.BookmarksTab
+import com.suihan74.satena2.scene.bookmarks.OpenCommentLinkTrigger
 import com.suihan74.satena2.scene.preferences.PreferencesRepository
 import com.suihan74.satena2.scene.preferences.page.FakePreferencesPageViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.IPreferencePageViewModel
@@ -19,6 +20,12 @@ interface BookmarkViewModel : IPreferencePageViewModel {
 
     /** タブ長押しで初期タブを変更する */
     val changeInitialTabByLongClick : MutableStateFlow<Boolean>
+
+    // ------ //
+    // リンク
+
+    /** ブコメ中のリンクをクリック時にブラウザで開く */
+    val openCommentLinkTrigger : MutableStateFlow<OpenCommentLinkTrigger>
 
     // ------ //
     // 投稿
@@ -48,6 +55,11 @@ class BookmarkViewModelImpl @Inject constructor(
 
     // ------ //
 
+    /** ブコメ中のリンクをクリック時にブラウザで開く */
+    override val openCommentLinkTrigger : MutableStateFlow<OpenCommentLinkTrigger> = prefsStateFlow(OpenCommentLinkTrigger.Disabled)
+
+    // ------ //
+
     /** ブクマする前に確認する */
     override val postConfirmation: MutableStateFlow<Boolean> = prefsStateFlow(true)
 
@@ -64,6 +76,7 @@ class BookmarkViewModelImpl @Inject constructor(
             .onEach {
                 initialTab.value = it.bookmarkInitialTab
                 changeInitialTabByLongClick.value = it.bookmarkChangeInitialTabByLongClick
+                openCommentLinkTrigger.value = it.bookmarkOpenCommentLinkTrigger
                 postConfirmation.value = it.postBookmarkConfirmation
                 postDialogVerticalAlignment.value = it.postBookmarkDialogVerticalAlignment
                 postSaveStates.value = it.postBookmarkSaveStates
@@ -81,6 +94,7 @@ class BookmarkViewModelImpl @Inject constructor(
             prefs.copy(
                 bookmarkInitialTab = initialTab.value,
                 bookmarkChangeInitialTabByLongClick = changeInitialTabByLongClick.value,
+                bookmarkOpenCommentLinkTrigger = openCommentLinkTrigger.value,
                 postBookmarkConfirmation = postConfirmation.value,
                 postBookmarkDialogVerticalAlignment = postDialogVerticalAlignment.value,
                 postBookmarkSaveStates = postSaveStates.value
@@ -96,6 +110,7 @@ class FakeBookmarkViewModel :
 {
     override val initialTab = MutableStateFlow(BookmarksTab.DIGEST)
     override val changeInitialTabByLongClick = MutableStateFlow(true)
+    override val openCommentLinkTrigger = MutableStateFlow(OpenCommentLinkTrigger.Disabled)
     override val postConfirmation = MutableStateFlow(true)
     override val postDialogVerticalAlignment = MutableStateFlow(Alignment.CenterVertically)
     override val postSaveStates = MutableStateFlow(true)
