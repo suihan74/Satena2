@@ -133,7 +133,6 @@ import com.suihan74.satena2.scene.bookmarks.DisplayBookmark
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2ThemeFullScreen
 import com.suihan74.satena2.utility.extension.add
-import com.suihan74.satena2.utility.extension.toVisibility
 import com.suihan74.satena2.utility.rememberMutableTextFieldValue
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -508,8 +507,7 @@ private fun MainContent(
                         end = parent.end
                     )
                     width = Dimension.fillToConstraints
-                    height = Dimension.value(statusBarHeight)
-                    visibility = (!isAddressBarTop).toVisibility()
+                    height = Dimension.value(if (isAddressBarTop) 0.dp else statusBarHeight)
                 }
         )
 
@@ -567,7 +565,7 @@ private fun MainContent(
                     height = Dimension.value(3.dp)
                     visibility =
                         if (progress < 1f) Visibility.Visible
-                        else Visibility.Gone
+                        else Visibility.Invisible
                 }
         )
         // アドレスバー部分
@@ -676,6 +674,7 @@ private fun AddressBar(
 
     val colors = TextFieldDefaults.textFieldColors(
         textColor = CurrentTheme.titleBarOnBackground,
+        backgroundColor = Color.Transparent,
         placeholderColor = CurrentTheme.titleBarOnBackground.copy(alpha = .6f),
         cursorColor = CurrentTheme.titleBarOnBackground,
         trailingIconColor = CurrentTheme.titleBarOnBackground,
@@ -762,7 +761,7 @@ private fun AddressBar(
                             }
                         }
                         .background(
-                            color = colors.backgroundColor(enabled = true).value,
+                            color = CurrentTheme.titleBarOnBackground.copy(alpha = .12f),
                             shape = RoundedCornerShape(50)
                         )
                         .fillMaxSize()
