@@ -184,7 +184,6 @@ private fun clearExpiredCaches(backStackCategories: List<String>, listStateMap: 
  *
  * 右からも開けるドロワとScaffoldを併用するために階層化
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EntriesScene(
     viewModel: EntriesViewModel,

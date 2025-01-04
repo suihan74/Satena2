@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,10 +40,12 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -60,7 +61,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -72,7 +72,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.LocalLongClickVibrationDuration
 import com.suihan74.satena2.compose.Tooltip
@@ -262,11 +261,6 @@ class PreferencesActivity : ComponentActivity() {
                 LocalLongClickVibrationDuration provides longClickVibrationDuration
             ) {
                 Satena2ThemeFullScreen(theme) {
-                    val systemUiController = rememberSystemUiController()
-                    systemUiController.setStatusBarColor(
-                        color = CurrentTheme.titleBarBackground,
-                        darkIcons = CurrentTheme.titleBarBackground.luminance() > .5f
-                    )
                     PreferencesScene(
                         viewModels,
                         categories,
@@ -305,7 +299,6 @@ class PreferencesActivity : ComponentActivity() {
 
 // ------ //
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PreferencesScene(
     viewModels : PrefViewModels,
@@ -327,11 +320,6 @@ private fun PreferencesScene(
             .fillMaxSize()
             .background(CurrentTheme.background)
     ) {
-        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        Spacer(
-            Modifier.height(statusBarHeight)
-        )
-
         // トップバー
         TopBar(
             category = currentCategory,
@@ -611,6 +599,7 @@ private fun SearchContents(
 /**
  * トップバー
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar(
     category: PreferencesCategory,
@@ -625,7 +614,13 @@ private fun TopBar(
     }
 
     TopAppBar(
-        backgroundColor = CurrentTheme.titleBarBackground,
+        colors = TopAppBarDefaults.topAppBarColors().copy(
+            containerColor = CurrentTheme.titleBarBackground,
+            scrolledContainerColor = CurrentTheme.titleBarBackground,
+            titleContentColor = CurrentTheme.titleBarOnBackground,
+            navigationIconContentColor = CurrentTheme.titleBarOnBackground,
+            actionIconContentColor = CurrentTheme.titleBarOnBackground
+        ),
         title = {
             if (isSearchViewEnabled) {
                 val keyboardController = LocalSoftwareKeyboardController.current
