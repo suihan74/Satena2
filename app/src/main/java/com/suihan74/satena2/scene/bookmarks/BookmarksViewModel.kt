@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -172,7 +173,7 @@ interface BookmarksViewModel : DialogPropertiesProvider {
     /**
      * タブの初期化
      */
-    suspend fun initializeTab(pagerState: PagerState)
+    suspend fun initializeTab(pagerState: PagerState?) : BookmarksTab
 
     /**
      * リストを更新
@@ -535,14 +536,15 @@ class BookmarksViewModelImpl @Inject constructor(
     /**
      * タブの初期化
      */
-    override suspend fun initializeTab(pagerState: PagerState) {
-        prefsRepo.dataStore.data.map { it.bookmarkInitialTab }
-            .collect {
-                if (!tabInitialized.value) {
-                    tabInitialized.value = true
-                    pagerState.scrollToPage(it.ordinal)
-                }
-            }
+    private var initialTab : BookmarksTab? = null
+    override suspend fun initializeTab(pagerState: PagerState?) : BookmarksTab {
+        if (!tabInitialized.value) {
+            tabInitialized.value = true
+            val page = prefsRepo.dataStore.data.map { it.bookmarkInitialTab }.first()
+            initialTab = page
+            pagerState?.scrollToPage(page.ordinal)
+        }
+        return initialTab!!
     }
 
     /**
@@ -1057,7 +1059,8 @@ class FakeBookmarksViewModel : BookmarksViewModel {
     override fun load(url: String) {
     }
 
-    override suspend fun initializeTab(pagerState: PagerState) {
+    override suspend fun initializeTab(pagerState: PagerState?) : BookmarksTab {
+        return BookmarksTab.DIGEST
     }
 
     override fun refresh(tab: BookmarksTab) {

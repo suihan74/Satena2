@@ -80,9 +80,13 @@ fun BookmarksContent(
             BookmarksTab.DIGEST -> bookmarksViewModel.popularBookmarksFlow
             BookmarksTab.RECENT -> bookmarksViewModel.recentBookmarksFlow
             BookmarksTab.ALL -> bookmarksViewModel.allBookmarksFlow
-            BookmarksTab.CUSTOM -> bookmarksViewModel.allBookmarksFlow //todo
+            BookmarksTab.CUSTOM -> bookmarksViewModel.customBookmarksFlow
         }
     }.collectAsState()
+
+    LaunchedEffect(Unit) {
+        currentTab = bookmarksViewModel.initializeTab(pagerState = null)
+    }
 
     Column(
         Modifier.fillMaxSize()
