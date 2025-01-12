@@ -2,7 +2,13 @@ package com.suihan74.satena2.scene.browser.drawer
 
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -26,7 +32,7 @@ fun BookmarksConfirmationContent(
     bookmarksViewModel: BookmarksViewModel,
     onConfirmed: ()->Unit
 ) {
-    val url = remember { Uri.decode(currentUrl) }
+    val url = remember(currentUrl) { Uri.decode(currentUrl) }
     Box(
         Modifier
             .fillMaxSize()

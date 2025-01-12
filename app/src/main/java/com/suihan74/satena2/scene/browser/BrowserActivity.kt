@@ -163,6 +163,11 @@ class BrowserActivity : ComponentActivity() {
 
         viewModel.onCreateActivity(activityResultRegistry, lifecycle)
         bookmarksViewModel.onCreateActivity(activityResultRegistry, lifecycle)
+
+        viewModel.currentUrl.onEach {
+            prefsViewModel.currentUrl.value = it
+        }.launchIn(lifecycleScope)
+
         val initialUrl = viewModel.initialUrl(intent)
         if (savedInstanceState == null) {
             viewModel.loadUrl(initialUrl)

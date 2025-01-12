@@ -41,6 +41,15 @@ interface BrowserViewModel : IPreferencePageViewModel {
      * ウェブサイトのテーマ
      */
     val webViewTheme : MutableStateFlow<WebViewTheme>
+
+    // ------ //
+
+    /**
+     * ブラウザで現在表示しているページのURL
+     *
+     * 設定画面をブラウザで表示している場合だけ使用
+     */
+    val currentUrl : MutableStateFlow<String?>
 }
 
 // ------ //
@@ -77,6 +86,15 @@ class BrowserViewModelImpl @Inject constructor(
      * ウェブサイトのテーマ
      */
     override val webViewTheme : MutableStateFlow<WebViewTheme> = prefsStateFlow(WebViewTheme.AUTO)
+
+    // ------ //
+
+    /**
+     * ブラウザで現在表示しているページのURL
+     *
+     * 設定画面をブラウザで表示している場合だけ使用
+     */
+    override val currentUrl : MutableStateFlow<String?> = MutableStateFlow(null)
 
     // ------ //
 
@@ -127,4 +145,8 @@ class FakeBrowserViewModel :
     override val urlBlockingEnabled = MutableStateFlow(true)
     override val addressBarAlignment = MutableStateFlow(Alignment.Bottom)
     override val webViewTheme = MutableStateFlow(WebViewTheme.AUTO)
+
+    // ------ //
+
+    override val currentUrl : MutableStateFlow<String?> = MutableStateFlow(null)
 }

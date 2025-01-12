@@ -634,4 +634,8 @@
     <string name="browser_webview_theme_dark">対応サイトでは暗くする</string>
     <string name="browser_webview_theme_force_dark">全サイトで強制的に暗くする</string>
 
+    <!-- スタートページ設定ダイアログ -->
+    <string name="pref_browser_start_page_url_placeholder">最初に表示するページのURL</string>
+    <string name="pref_browser_current_page">表示中のページ</string>
+
 </resources>

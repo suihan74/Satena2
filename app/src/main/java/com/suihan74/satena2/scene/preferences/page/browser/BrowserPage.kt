@@ -1,14 +1,21 @@
 package com.suihan74.satena2.scene.preferences.page.browser
 
 import android.os.Build
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.dialog.CustomDialog
 import com.suihan74.satena2.compose.dialog.MenuDialog
@@ -21,8 +28,12 @@ import com.suihan74.satena2.scene.preferences.Section
 import com.suihan74.satena2.scene.preferences.page.MutableComposableList
 import com.suihan74.satena2.scene.preferences.page.buildComposableList
 import com.suihan74.satena2.ui.theme.themed.themedCustomDialogColors
+import com.suihan74.satena2.ui.theme.themed.themedTextFieldColors
 import com.suihan74.satena2.utility.extension.add
 import com.suihan74.satena2.utility.extension.textId
+import com.suihan74.satena2.utility.focusKeyboardRequester
+import com.suihan74.satena2.utility.rememberMutableTextFieldValue
+import kotlinx.coroutines.launch
 
 /**
  * 「アプリ内ブラウザ」ページのコンテンツ
@@ -73,6 +84,7 @@ private fun MutableComposableList.basicSection(viewModel: BrowserViewModel) = ad
     R.string.pref_browser_start_page to {
         var dialogVisible by remember { mutableStateOf(false) }
         val current by viewModel.startPageUrl.collectAsState()
+
         PrefButton(
             mainText = stringResource(R.string.pref_browser_start_page),
             subText = current,
@@ -82,14 +94,45 @@ private fun MutableComposableList.basicSection(viewModel: BrowserViewModel) = ad
         }
 
         if (dialogVisible) {
+            val coroutineScope = rememberCoroutineScope()
+            val textFieldValue = rememberMutableTextFieldValue(text = current)
+            val focusRequester = focusKeyboardRequester()
+
             CustomDialog(
                 titleText = stringResource(R.string.pref_browser_start_page),
                 negativeButton = dialogButton(R.string.cancel) { dialogVisible = false },
+                positiveButton = dialogButton(R.string.register) {
+                    coroutineScope.launch {
+                        viewModel.startPageUrl.value = textFieldValue.value.text
+                        dialogVisible = false
+                    }
+                },
+                neutralButton =
+                    viewModel.currentUrl.value?.let { url ->
+                        dialogButton(R.string.pref_browser_current_page) {
+                            textFieldValue.value = textFieldValue.value.copy(
+                                text = url,
+                                selection = TextRange(start = 0, end = url.length)
+                            )
+                        }
+                    },
                 onDismissRequest = { dialogVisible = false },
                 colors = themedCustomDialogColors(),
                 properties = viewModel.dialogProperties()
             ) {
-                // todo
+                TextField(
+                    value = textFieldValue.value,
+                    onValueChange = { textFieldValue.value = it },
+                    placeholder = { Text(
+                        stringResource(R.string.pref_browser_start_page_url_placeholder)
+                    ) },
+                    singleLine = true,
+                    maxLines = 1,
+                    colors = themedTextFieldColors(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                )
             }
         }
     }
