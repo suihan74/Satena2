@@ -41,6 +41,7 @@ fun CustomTabSettingContent(
     var areNoLabelsShown by remember { mutableStateOf(initialSetting.areNoLabelsShown) }
     var areNoCommentsShown by remember { mutableStateOf(initialSetting.areNoCommentsShown) }
     var areIgnoresShown by remember { mutableStateOf(initialSetting.areIgnoresShown) }
+    var areUrlOnlyCommentsShown by remember { mutableStateOf(initialSetting.areUrlOnlyCommentsShown) }
     var labels by remember {
         mutableStateOf(
             allLabels.map { label ->
@@ -80,6 +81,14 @@ fun CustomTabSettingContent(
                         value = areNoCommentsShown
                     ) {
                         areNoCommentsShown = !areNoCommentsShown
+                    }
+                }
+                item {
+                    BottomSheetMenuToggleItem(
+                        text = stringResource(id = R.string.bookmark_custom_tab_setting_url_only_comments_shown),
+                        value = areUrlOnlyCommentsShown
+                    ) {
+                        areUrlOnlyCommentsShown = !areUrlOnlyCommentsShown
                     }
                 }
                 item {
@@ -126,7 +135,8 @@ fun CustomTabSettingContent(
                                     .toSet(),
                             areNoLabelsShown = areNoLabelsShown,
                             areNoCommentsShown = areNoCommentsShown,
-                            areIgnoresShown = areIgnoresShown
+                            areIgnoresShown = areIgnoresShown,
+                            areUrlOnlyCommentsShown = areUrlOnlyCommentsShown
                         )
                     )
                 }

@@ -17,5 +17,8 @@ data class CustomTabSetting(
     val areNoCommentsShown: Boolean = false,
 
     /** ミュート対象を表示する */
-    val areIgnoresShown: Boolean = false
+    val areIgnoresShown: Boolean = false,
+
+    /** URLだけのブコメを表示する */
+    val areUrlOnlyCommentsShown: Boolean = false
 )

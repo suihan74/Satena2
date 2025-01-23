@@ -271,6 +271,7 @@
     <string name="bookmark_custom_tab_setting_title">カスタム設定</string>
     <string name="bookmark_custom_tab_setting_no_labels_users_shown">ラベルがついていないユーザー</string>
     <string name="bookmark_custom_tab_setting_no_comments_shown">無言ブクマ</string>
+    <string name="bookmark_custom_tab_setting_url_only_comments_shown">URLだけのブコメ</string>
     <string name="bookmark_custom_tab_setting_ignored_users_shown">非表示ユーザー</string>
 
     <!-- UserLabelDialog -->

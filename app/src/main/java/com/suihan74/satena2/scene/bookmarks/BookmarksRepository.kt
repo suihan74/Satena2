@@ -816,6 +816,11 @@ class BookmarksRepositoryImpl @Inject constructor(
                             if (!s.areIgnoresShown && ignoredUsers.contains(b.user)) return@filter false
                             if (!s.areNoCommentsShown && b.comment.isBlank()) return@filter false
                             if (!s.areIgnoresShown && filters.any { it.match(b) }) return@filter false
+                            if (
+                                !s.areUrlOnlyCommentsShown
+                                && b.comment.isNotBlank()
+                                && urlRegex.replace(b.comment,"").isBlank()
+                            ) return@filter false
 
                             val labeled = userLabelRepo.isLabeledUser(b.user)
                             if (labeled) enabledUsers.contains(b.user)
