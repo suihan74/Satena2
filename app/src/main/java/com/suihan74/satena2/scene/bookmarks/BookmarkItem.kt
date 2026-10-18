@@ -193,14 +193,14 @@ fun BookmarkItem(
                 ),
                 state = if (clickable) clickableTextState else rememberClickableTextState {},
                 onClick = {
-                    annotatedComment.getUrlAnnotations(it, it).firstOrNull()?.let { link ->
-                        onClickLink(link.item.url)
+                    annotatedComment.getLinkAnnotations(it, it).firstOrNull()?.let { link ->
+                        onClickLink(link.item.toString())
                         true
                     } ?: false
                 },
                 onLongClick = {
-                    annotatedComment.getUrlAnnotations(it, it).firstOrNull()?.let { link ->
-                        onClickLink(link.item.url)
+                    annotatedComment.getLinkAnnotations(it, it).firstOrNull()?.let { link ->
+                        onClickLink(link.item.toString())
                         true
                     } ?: false
                 }

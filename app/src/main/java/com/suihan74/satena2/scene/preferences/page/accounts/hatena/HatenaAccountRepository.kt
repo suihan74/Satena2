@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.time.LocalDateTime
 
 class HatenaSignInException(
     override val cause: Throwable? = null,
@@ -101,7 +102,7 @@ interface HatenaAccountRepository {
     /**
      * NGユーザーを再取得する
      */
-    suspend fun reloadNgUsers()
+    suspend fun reloadNgUsers(force: Boolean = false)
 
     /**
      * アカウントを(明示的に)取得する
@@ -163,6 +164,11 @@ class HatenaAccountRepositoryImpl(
      * 比較的時間がかかる処理のため読み込み状態を参照できるようにする
      */
     override val loadingNgUsers = MutableStateFlow(false)
+
+    /**
+     * 最後に非表示ユーザーを取得した時刻
+     */
+    private val lastFetchedAt = MutableStateFlow(LocalDateTime.MIN)
 
     // ------ //
 
@@ -228,6 +234,7 @@ class HatenaAccountRepositoryImpl(
                     ngUsersMutex.withLock {
                         runCatching {
                             ngUsers.value = getNgUsers()
+                            lastFetchedAt.value = LocalDateTime.now()
                         }.onFailure {
                             ngUsers.value = emptyList()
                             exceptionFlow.emit(HatenaFetchNgUsersException(cause = it))
@@ -241,10 +248,17 @@ class HatenaAccountRepositoryImpl(
     /**
      * NGユーザーを再取得する
      */
-    override suspend fun reloadNgUsers() {
+    override suspend fun reloadNgUsers(force: Boolean) {
         ngUsersMutex.withLock {
             runCatching {
-                ngUsers.value = getNgUsers()
+                if (
+                    force
+                    || ngUsers.value.isEmpty()
+                    || lastFetchedAt.value.plusHours(1) < LocalDateTime.now()
+                ) {
+                    ngUsers.value = getNgUsers()
+                    lastFetchedAt.value = LocalDateTime.now()
+                }
             }.onFailure {
                 exceptionFlow.emit(HatenaFetchNgUsersException(cause = it))
             }

@@ -4,8 +4,8 @@ package com.suihan74.satena2.compose
 
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.runtime.*
@@ -75,7 +75,7 @@ private fun TooltipContent(
     modifier: Modifier,
     content: @Composable ColumnScope.()->Unit
 ) {
-    val transition = updateTransition(expandedStates, "Tooltip")
+    val transition = rememberTransition(expandedStates, "Tooltip")
     val alpha by transition.animateFloat(
         label = "alpha",
         transitionSpec = {

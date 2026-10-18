@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 interface MisskeyAuthenticationViewModel {
     /**
@@ -78,7 +79,7 @@ class MisskeyAuthenticationViewModelImpl @Inject constructor(
                     .setShowTitle(true)
                     .setUrlBarHidingEnabled(true)
                     .build()
-                intent.launchUrl(context, Uri.parse(session.url))
+                intent.launchUrl(context, session.url.toUri())
             }
         }
     }

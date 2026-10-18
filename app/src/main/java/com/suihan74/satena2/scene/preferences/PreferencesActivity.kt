@@ -39,9 +39,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -77,6 +74,8 @@ import com.suihan74.satena2.compose.Tooltip
 import com.suihan74.satena2.compose.VerticalGradientEdge
 import com.suihan74.satena2.compose.clickGuard
 import com.suihan74.satena2.compose.combinedClickable
+import com.suihan74.satena2.compose.icons.Close
+import com.suihan74.satena2.compose.icons.Search
 import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.scene.preferences.page.BasicPreferencesPage
 import com.suihan74.satena2.scene.preferences.page.ComposablePrefItem
@@ -673,8 +672,8 @@ private fun TopBar(
                 }
             ) {
                 val iconVector =
-                    if (isSearchViewEnabled) Icons.Filled.Close
-                    else Icons.Filled.Search
+                    if (isSearchViewEnabled) Close
+                    else Search
 
                 Icon(
                     iconVector,

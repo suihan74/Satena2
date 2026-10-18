@@ -1,7 +1,11 @@
 package com.suihan74.satena2.scene.entries
 
 import android.util.Log
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Divider
@@ -9,15 +13,31 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.*
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.suihan74.hatena.model.entry.MaintenanceEntry
-import com.suihan74.satena2.compose.*
+import com.suihan74.satena2.compose.AdditionalLoadableLazyColumn
+import com.suihan74.satena2.compose.ClickableText
+import com.suihan74.satena2.compose.SingleLineText
+import com.suihan74.satena2.compose.SwipeRefreshBox
+import com.suihan74.satena2.compose.VerticalScrollableIndicator
+import com.suihan74.satena2.compose.combinedClickable
+import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.rememberClickableTextState
+import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.utility.extension.appendRegex
 import com.suihan74.satena2.utility.extension.zonedString
@@ -146,14 +166,14 @@ fun MaintenanceItem(
                     ),
                     state = clickableTextState,
                     onClick = {
-                        bodyText.getUrlAnnotations(it, it).firstOrNull()?.let { link ->
+                        bodyText.getLinkAnnotations(it, it).firstOrNull()?.let { link ->
                             // todo
-                            Log.i("anno", "clicked: ${link.item.url}")
+                            Log.i("anno", "clicked: ${link.item.toString()}")
                             true
                         } ?: false
                     },
                     onLongClick = {
-                        bodyText.getUrlAnnotations(it, it).firstOrNull()?.let { link ->
+                        bodyText.getLinkAnnotations(it, it).firstOrNull()?.let { link ->
                             // todo
                             true
                         } ?: false
@@ -190,13 +210,12 @@ private fun MaintenanceEntry.annotatedTitle() = buildAnnotatedString {
     }
 }
 
-@OptIn(ExperimentalTextApi::class)
 private fun MaintenanceEntry.annotatedBody(linkColor: Color) = buildAnnotatedString {
     val linkRegex = Regex("""<a href="(.+)">(.*)</a>""")
     appendRegex(linkRegex, body) { m ->
         val url = m.groupValues[1]
         val text = m.groupValues[2]
-        withAnnotation(urlAnnotation = UrlAnnotation(url)) {
+        withLink(LinkAnnotation.Url(url)) {
             withStyle(
                 SpanStyle(
                     color = linkColor,

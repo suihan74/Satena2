@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 /**
  * 関連エントリリスト項目に対する操作を処理する[ViewModel]
@@ -363,7 +364,7 @@ class RelatedEntriesViewModelImpl @Inject constructor(
                     override fun createIntent(context: Context, input: String) =
                         Intent().apply {
                             action = Intent.ACTION_VIEW
-                            data = Uri.parse(input)
+                            data = input.toUri()
                         }.createIntentWithoutThisApplication(context)
                     override fun parseResult(resultCode: Int, intent: Intent?) { /* do nothing */ }
                 }

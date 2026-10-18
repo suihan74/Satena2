@@ -43,6 +43,7 @@ import com.suihan74.satena2.utility.extension.createIntentWithDefaultBrowser
 import com.suihan74.satena2.utility.extension.showToast
 import com.suihan74.satena2.utility.hatena.actualUrl
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 /**
  * エントリを共有するダイアログのコンテンツ
@@ -332,7 +333,7 @@ private suspend fun copyTextToClipboard(context: Context, text: CharSequence) {
  * 他アプリで開く
  */
 private fun openInOtherApp(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
     context.startActivity(intent)
 }
 
@@ -340,7 +341,7 @@ private fun openInOtherApp(context: Context, url: String) {
  * ブラウザで開く
  */
 private fun openInBrowser(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).createIntentWithDefaultBrowser(context)
+    val intent = Intent(Intent.ACTION_VIEW, url.toUri()).createIntentWithDefaultBrowser(context)
     context.startActivity(intent)
 }
 

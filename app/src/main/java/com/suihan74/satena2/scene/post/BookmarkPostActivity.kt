@@ -46,9 +46,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -64,7 +61,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -78,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -95,6 +92,8 @@ import com.suihan74.satena2.compose.HorizontalScrollableIndicator
 import com.suihan74.satena2.compose.MarqueeText
 import com.suihan74.satena2.compose.Tooltip
 import com.suihan74.satena2.compose.clickGuard
+import com.suihan74.satena2.compose.icons.Add
+import com.suihan74.satena2.compose.icons.ArrowBack
 import com.suihan74.satena2.scene.preferences.page.theme.ThemeViewModelImpl
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.Satena2Theme
@@ -556,7 +555,7 @@ private fun BookmarkPostContent(
                         }
                     ) {
                         Icon(
-                            Icons.Default.Add,
+                            Add,
                             contentDescription = "add tags continuously",
                             tint = CurrentTheme.onBackground
                         )
@@ -695,7 +694,7 @@ private fun BookmarkPostContent(
                     }
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
+                        ArrowBack,
                         contentDescription = "back"
                     )
                 }

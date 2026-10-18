@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 interface IMastodonAuthenticationViewModel {
     val completed : SharedFlow<Boolean>
@@ -38,7 +39,7 @@ class MastodonAuthenticationViewModel @Inject constructor(
             .setShowTitle(true)
             .setUrlBarHidingEnabled(true)
             .build()
-        intent.launchUrl(context, Uri.parse(oauthUrl))
+        intent.launchUrl(context, oauthUrl.toUri())
     }
 
     override fun onResume(intent: Intent) {

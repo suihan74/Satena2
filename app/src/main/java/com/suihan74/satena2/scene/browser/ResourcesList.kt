@@ -10,8 +10,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.CombinedIconButton
+import com.suihan74.satena2.compose.icons.Add
 import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.utility.extension.trimScheme
@@ -131,7 +130,7 @@ fun ResourcesList(
                 },
             ) {
                 Icon(
-                    Icons.Default.Add,
+                    Add,
                     contentDescription = "add blocking url",
                     tint = CurrentTheme.primary
                 )

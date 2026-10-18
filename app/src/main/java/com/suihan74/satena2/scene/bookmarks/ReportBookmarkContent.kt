@@ -19,8 +19,6 @@ import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.suihan74.hatena.model.bookmark.Report
 import com.suihan74.hatena.model.entry.Entry
 import com.suihan74.satena2.R
+import com.suihan74.satena2.compose.icons.Send
 import com.suihan74.satena2.ui.theme.CurrentTheme
 
 /**
@@ -154,7 +153,7 @@ fun ReportBookmarkContent(
                 }
             ) {
                 Image(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    imageVector = Send,
                     contentDescription = "report",
                     colorFilter = ColorFilter.tint(CurrentTheme.onPrimary)
                 )

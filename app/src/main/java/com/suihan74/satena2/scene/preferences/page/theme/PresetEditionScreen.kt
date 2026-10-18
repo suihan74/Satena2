@@ -22,8 +22,6 @@ import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -46,6 +44,7 @@ import com.suihan74.satena2.compose.SingleLineText
 import com.suihan74.satena2.compose.dialog.CustomDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.icons.ArrowBack
 import com.suihan74.satena2.model.theme.ThemeColors
 import com.suihan74.satena2.model.theme.ThemePreset
 import com.suihan74.satena2.scene.preferences.PrefToggleButton
@@ -152,7 +151,7 @@ fun PresetEditionScreen(
                         .align(Alignment.Bottom),
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
+                        ArrowBack,
                         contentDescription = "back"
                     )
                 }

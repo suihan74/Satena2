@@ -7,8 +7,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.suihan74.satena2.utility.focusKeyboardRequester
 import com.suihan74.satena2.utility.rememberMutableTextFieldValue
+import com.suihan74.satena2.compose.icons.Search
 
 data class FloatingTextFieldColors(
     val background : Color,
@@ -49,7 +48,7 @@ fun FloatingTextField(
     modifier: Modifier = Modifier,
     colors: FloatingTextFieldColors = FloatingTextFieldColors.Default,
     placeholderText: String = "",
-    imageVector: ImageVector = Icons.Filled.Search,
+    imageVector: ImageVector = Search,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default

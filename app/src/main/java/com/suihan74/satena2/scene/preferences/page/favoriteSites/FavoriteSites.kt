@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +28,7 @@ import com.suihan74.satena2.compose.AnimatedListItem
 import com.suihan74.satena2.compose.SingleLineText
 import com.suihan74.satena2.compose.combinedClickable
 import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.icons.Add
 import com.suihan74.satena2.model.browser.FaviconInfo
 import com.suihan74.satena2.model.favoriteSite.FavoriteSite
 import com.suihan74.satena2.model.favoriteSite.FavoriteSiteAndFavicon
@@ -97,7 +96,7 @@ fun FavoriteSitesPage(
             }
         ) {
             Icon(
-                Icons.Filled.Add,
+                Add,
                 contentDescription = "add an item"
             )
         }

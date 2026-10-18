@@ -62,10 +62,10 @@ abstract class AppDatabase : RoomDatabase() {
 fun RoomDatabase.Builder<AppDatabase>.migrate(): RoomDatabase.Builder<AppDatabase> {
     return this.apply {
         addMigrations(
-            Migration1to2(),
-            Migration2to3(),
-            Migration3to4()
-        ).fallbackToDestructiveMigration()
+                Migration1to2(),
+                Migration2to3(),
+                Migration3to4()
+            ).fallbackToDestructiveMigration(false)
     }
 }
 

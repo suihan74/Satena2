@@ -3,12 +3,11 @@ package com.suihan74.satena2.scene.bookmarks
 import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.UrlAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withAnnotation
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import com.suihan74.hatena.model.bookmark.Bookmark
 import com.suihan74.hatena.model.star.StarColor
@@ -69,7 +68,6 @@ fun AnnotatedString.Builder.appendStarCountText(starsEntry: StarsEntry) {
 /**
  * ブコメのテキスト装飾
  */
-@OptIn(ExperimentalTextApi::class)
 fun buildAnnotatedComment(
     bookmark: Bookmark,
     linkColor: Color
@@ -81,7 +79,7 @@ fun buildAnnotatedComment(
 
     appendRegex(urlRegex, bookmark.comment) { m ->
         if (m.value.startsWith("http")) {
-            withAnnotation(urlAnnotation = UrlAnnotation(m.value)) {
+            withLink(LinkAnnotation.Url(m.value)) {
                 withStyle(
                     SpanStyle(
                         color = linkColor,

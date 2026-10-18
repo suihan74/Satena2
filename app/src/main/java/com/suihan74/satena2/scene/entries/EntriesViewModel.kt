@@ -60,6 +60,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 /**
  * EntriesActivityのUI部分から要求されるVMインターフェイス
@@ -611,7 +612,6 @@ class EntriesViewModelImpl @Inject constructor(
                     EntryItemEvent.ClickEdge -> clickEdgeAction.value
                     EntryItemEvent.LongClickEdge -> longClickEdgeAction.value
                     EntryItemEvent.DoubleClickEdge -> doubleClickEdgeAction.value
-                    else -> throw IllegalArgumentException()
                 }
                 launchClickAction(entry, action, onShowMenu, onShare)
             }
@@ -1120,7 +1120,7 @@ class EntriesViewModelImpl @Inject constructor(
                     override fun createIntent(context: Context, input: String) =
                         Intent().apply {
                             action = Intent.ACTION_VIEW
-                            data = Uri.parse(input)
+                            data = input.toUri()
                         }.createIntentWithoutThisApplication(context)
                     override fun parseResult(resultCode: Int, intent: Intent?) { /* do nothing */ }
                 }

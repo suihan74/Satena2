@@ -17,9 +17,6 @@ import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,6 +39,8 @@ import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
 import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.icons.Close
+import com.suihan74.satena2.compose.icons.Refresh
 import com.suihan74.satena2.model.mastodon.TootVisibility
 import com.suihan74.satena2.model.misskey.NoteVisibility
 import com.suihan74.satena2.scene.preferences.PrefButton
@@ -86,7 +85,7 @@ fun AccountsPage(
             onClick = onReload
         ) {
             Icon(
-                Icons.Filled.Refresh,
+                Refresh,
                 contentDescription = "reload"
             )
         }
@@ -322,7 +321,7 @@ private fun AccountItem(
             )
             IconButton(onClick = onClear) {
                 Icon(
-                    Icons.Filled.Close,
+                    Close,
                     contentDescription = "remove account button",
                     tint = CurrentTheme.onBackground,
                     modifier = Modifier.size(24.dp)

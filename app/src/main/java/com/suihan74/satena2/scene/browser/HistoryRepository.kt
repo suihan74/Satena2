@@ -22,6 +22,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.ZoneId
+import androidx.core.net.toUri
 
 interface HistoryRepository {
     val histories : StateFlow<List<History>>
@@ -70,7 +71,7 @@ class HistoryRepositoryImpl(
         val decodedUrl = Uri.decode(url)
 
         val faviconInfoId =
-            Uri.parse(url).estimatedHierarchy?.let { dao.findFaviconInfo(it)?.id } ?: 0L
+            url.toUri().estimatedHierarchy?.let { dao.findFaviconInfo(it)?.id } ?: 0L
 
         val page =
             dao.getHistoryPage(decodedUrl)?.let {
@@ -113,7 +114,7 @@ class HistoryRepositoryImpl(
         }
         else {
             historiesMutex.withLock {
-                val domain = Uri.parse(url).estimatedHierarchy!!
+                val domain = url.toUri().estimatedHierarchy!!
                 val faviconInfo = existedPage.faviconInfo ?: dao.findFaviconInfo(domain)
                 val updated = existedPage.page.copy(
                     title = title,
@@ -208,7 +209,7 @@ class HistoryRepositoryImpl(
 
     suspend fun findFaviconInfo(url: String): FaviconInfo? = faviconMutex.withLock {
         runCatching {
-            val site = Uri.parse(url).estimatedHierarchy ?: return null
+            val site = url.toUri().estimatedHierarchy ?: return null
             dao.findFaviconInfo(site)
         }.getOrNull()
     }
@@ -220,7 +221,7 @@ class HistoryRepositoryImpl(
     ) { withContext(Dispatchers.IO) {
         faviconMutex.withLock {
             runCatching {
-                val site = Uri.parse(url).estimatedHierarchy!!
+                val site = url.toUri().estimatedHierarchy!!
                 val existed = dao.findFaviconInfo(site)
                 val filename =
                     ByteBuffer.allocate(bitmap.byteCount).let { buffer ->
@@ -297,7 +298,7 @@ class HistoryRepositoryImpl(
                 histories.value
                     .map { h ->
                         val faviconInfoId = h.page.page.faviconInfoId
-                        val site = Uri.parse(h.page.page.url).estimatedHierarchy
+                        val site = h.page.page.url.toUri().estimatedHierarchy
                         if (faviconInfoId == faviconInfo.id || (faviconInfoId == 0L && site == faviconInfo.site)) {
                             val updatedPage = h.page.page.copy(faviconInfoId = faviconInfo.id)
                             if (faviconInfoId == 0L) {

@@ -62,10 +62,10 @@ inline fun <T> T.onNotNull(action: (T)->Unit) : T {
 @OptIn(kotlin.contracts.ExperimentalContracts::class)
 inline fun <reified T, R> Any?.letAs(block: (T) -> R) : R? {
     contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
-    return if (this is T) block(this as T)
+    return if (this is T) block(this)
     else null
 }
 
@@ -73,11 +73,11 @@ inline fun <reified T, R> Any?.letAs(block: (T) -> R) : R? {
 @OptIn(kotlin.contracts.ExperimentalContracts::class)
 inline fun <reified T> Any?.alsoAs(block: (T) -> Unit) : T? {
     contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
     return if (this is T) {
-        block(this as T)
+        block(this)
         this
     }
     else null

@@ -8,13 +8,14 @@ import com.suihan74.hatena.model.entry.IssueEntry
 import com.suihan74.hatena.model.entry.MyHotEntry
 import com.suihan74.hatena.model.entry.UserEntry
 import com.suihan74.hatena.model.entry.UserEntryComment
+import androidx.core.net.toUri
 
 /**
  * PR用のURLからエントリの実際のURLを取得する
  */
 fun Entry.actualUrl() : String {
     if (!this.isPr) return this.url
-    val uri = Uri.parse(this.url)
+    val uri = this.url.toUri()
     return uri.getQueryParameter("url")?.let { Uri.decode(it) } ?: this.url
 }
 
@@ -38,6 +39,5 @@ fun Entry.copy(bookmarkResult: BookmarkResult?) : Entry {
                 } ?: UserEntryComment(raw = "", tags = emptyList(), body = "")
             )
         }
-        else -> throw NotImplementedError()
     }
 }

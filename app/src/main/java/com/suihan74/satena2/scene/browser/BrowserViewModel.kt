@@ -15,6 +15,7 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.Alignment
+import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
@@ -380,13 +381,13 @@ class BrowserViewModelImpl @Inject constructor(
             if (mimeType == "application/pdf") {
                 runCatching {
                     val intent = Intent(Intent.ACTION_VIEW).also {
-                        it.setDataAndType(Uri.parse(url), mimeType)
+                        it.setDataAndType(url.toUri(), mimeType)
                     }
                     context.startActivity(intent)
                 }.onFailure {
                     // 開けるアプリが無かったらストアを開く
                     val storeIntent = Intent(Intent.ACTION_VIEW).also {
-                        it.data = Uri.parse("market://search?q=pdf")
+                        it.data = "market://search?q=pdf".toUri()
                     }
                     runCatching {
                         context.startActivity(storeIntent)
@@ -703,7 +704,7 @@ class BrowserViewModelImpl @Inject constructor(
                     override fun createIntent(context: Context, input: String) =
                         Intent().apply {
                             action = Intent.ACTION_VIEW
-                            data = Uri.parse(input)
+                            data = input.toUri()
                         }.createIntentWithoutThisApplication(context)
                     override fun parseResult(resultCode: Int, intent: Intent?) { /* do nothing */ }
                 }

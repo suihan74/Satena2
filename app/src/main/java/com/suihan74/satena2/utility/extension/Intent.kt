@@ -12,6 +12,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import androidx.core.net.toUri
 
 inline fun <reified T> Intent.putObjectExtra(key: String?, value: T) {
     this.putExtra(key, Json.encodeToString(value))
@@ -36,7 +37,7 @@ fun Intent.createIntentWithoutThisApplication(
     title: CharSequence = "Choose a browser",
 ) : Intent {
     val packageManager = context.packageManager
-    val dummyIntent = Intent(this.action, Uri.parse("https://dummy"))
+    val dummyIntent = Intent(this.action, "https://dummy".toUri())
     val useChooser = true // todo
 
     if (!useChooser) {
@@ -100,7 +101,7 @@ fun Intent.createIntentWithoutThisApplication(
  */
 fun Intent.createIntentWithDefaultBrowser(context: Context) : Intent? {
     val packageManager = context.packageManager
-    val dummyIntent = Intent(this.action, Uri.parse("https://dummy"))
+    val dummyIntent = Intent(this.action, "https://dummy".toUri())
     val resolveInfo = packageManager.resolveActivity(dummyIntent, PackageManager.MATCH_DEFAULT_ONLY)
         ?: return null
 

@@ -11,11 +11,11 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onPlaced
 
 /**
  * 挿入アニメーションを含む`LazyColumn`の項目
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LazyItemScope.AnimatedListItem(
     modifier: Modifier = Modifier,
@@ -30,7 +30,7 @@ fun LazyItemScope.AnimatedListItem(
                     animationSpec = tween(durationMillis, easing = FastOutSlowInEasing),
                     initialOffsetX = { fullWidth -> fullWidth / 4 }
                 ),
-        modifier = modifier.animateItemPlacement(),
+        modifier = modifier.animateItem()
     ) {
         content()
     }

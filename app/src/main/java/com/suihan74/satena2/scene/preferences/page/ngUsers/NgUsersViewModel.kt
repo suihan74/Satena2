@@ -106,7 +106,7 @@ class NgUsersViewModelImpl @Inject constructor(
     override fun reload() {
         viewModelScope.launch {
             runCatching {
-                repository.reloadNgUsers()
+                repository.reloadNgUsers(force = true)
             }.onFailure {
                 context.showToast(R.string.pref_fetch_ng_users_failure)
             }

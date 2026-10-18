@@ -557,7 +557,7 @@ private fun MentionItem(
             if (!bookmark?.comment.isNullOrEmpty()) {
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = mention.bookmark?.comment.orEmpty(),
+                    text = mention.bookmark.comment,
                     color = CurrentTheme.onBackground,
                     fontSize = 14.sp
                 )

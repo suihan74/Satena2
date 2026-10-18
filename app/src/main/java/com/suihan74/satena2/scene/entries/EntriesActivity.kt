@@ -29,8 +29,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -70,6 +68,7 @@ import com.suihan74.hatena.model.bookmark.BookmarkResult
 import com.suihan74.hatena.model.entry.Issue
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.*
+import com.suihan74.satena2.compose.icons.Search
 import com.suihan74.satena2.scene.entries.bottomSheet.BrowserLauncher
 import com.suihan74.satena2.scene.entries.bottomSheet.CommentMenuContent
 import com.suihan74.satena2.scene.entries.bottomSheet.EntryBottomSheetContent
@@ -824,7 +823,7 @@ private fun MainContent(
                                 onClick = { /* TODO */ }
                             ) {
                                 Icon(
-                                    Icons.Filled.Search,
+                                    Search,
                                     contentDescription = "search",
                                     tint = CurrentTheme.titleBarOnBackground
                                 )

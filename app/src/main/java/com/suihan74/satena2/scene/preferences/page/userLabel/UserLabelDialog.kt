@@ -13,8 +13,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Checkbox
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -34,6 +32,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.suihan74.satena2.R
 import com.suihan74.satena2.compose.BottomSheetMenuItem
 import com.suihan74.satena2.compose.SingleLineText
+import com.suihan74.satena2.compose.icons.Add
 import com.suihan74.satena2.model.userLabel.Label
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import com.suihan74.satena2.ui.theme.themed.themedCheckboxColors
@@ -75,7 +74,7 @@ fun UserLabelDialog(
                 }
                 item {
                     BottomSheetMenuItem(
-                        icon = rememberVectorPainter(image = Icons.Default.Add),
+                        icon = rememberVectorPainter(image = Add),
                         text = stringResource(R.string.user_label_dialog_add_new_label),
                         onClick = {
                             editorDialogTarget = Label(name = "")

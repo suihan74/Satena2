@@ -299,6 +299,10 @@ class BookmarksRepositoryImpl @Inject constructor(
             }
             .launchIn(coroutineScope)
 
+        coroutineScope.launch {
+            hatenaRepo.reloadNgUsers()
+        }
+
         combine(
             entityFlow,
             filtersFlow,

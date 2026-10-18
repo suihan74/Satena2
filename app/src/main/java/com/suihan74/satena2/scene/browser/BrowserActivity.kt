@@ -59,10 +59,6 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.material.rememberModalBottomSheetState
@@ -123,6 +119,9 @@ import com.suihan74.satena2.compose.OrientatedModalDrawer
 import com.suihan74.satena2.compose.SharingContent
 import com.suihan74.satena2.compose.SwipeRefreshBox
 import com.suihan74.satena2.compose.VerticalGradientEdge
+import com.suihan74.satena2.compose.icons.KeyboardArrowLeft
+import com.suihan74.satena2.compose.icons.KeyboardArrowRight
+import com.suihan74.satena2.compose.icons.Menu
 import com.suihan74.satena2.compose.verticalScrollbar
 import com.suihan74.satena2.scene.bookmarks.BookmarkItemMenuContent
 import com.suihan74.satena2.scene.bookmarks.BookmarkTagsMenuContent
@@ -610,7 +609,7 @@ private fun MainContent(
             actions = {
                 IconButton(onClick = onShowMenu) {
                     Icon(
-                        Icons.Filled.Menu,
+                        Menu,
                         contentDescription = "open menu",
                         tint = CurrentTheme.titleBarOnBackground
                     )
@@ -650,7 +649,7 @@ private fun AddressBar(
     val state = viewModel.webViewClient.state
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
-    val focusRequester = FocusRequester()
+    val focusRequester = remember{ FocusRequester() }
     val focusManager = LocalFocusManager.current
     var addressText by rememberMutableTextFieldValue()
 
@@ -808,7 +807,7 @@ private fun AddressBar(
             ) {
                 if (canGoBack) {
                     Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        KeyboardArrowLeft,
                         contentDescription = "go back",
                         tint = CurrentTheme.titleBarOnBackground,
                         modifier = Modifier.size(12.dp)
@@ -827,7 +826,7 @@ private fun AddressBar(
             ) {
                 if (canGoForward) {
                     Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        KeyboardArrowRight,
                         contentDescription = "go forward",
                         tint = CurrentTheme.titleBarOnBackground,
                         modifier = Modifier.size(12.dp)
@@ -857,7 +856,7 @@ private fun AddressBarPreview() {
                 onClick = {}
             ) {
                 Icon(
-                    Icons.Filled.Menu,
+                    Menu,
                     contentDescription = "search",
                     tint = CurrentTheme.titleBarOnBackground
                 )

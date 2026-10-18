@@ -7,6 +7,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jsoup.Jsoup
+import androidx.core.net.toUri
 
 /**
  * ブックマーク情報が正常に取得できるURLに修正する
@@ -31,7 +32,7 @@ suspend fun modifySpecificUrl(url: String?) : String? {
 private fun removeUtmParameters(url: String?) : String? {
     if (url == null || !url.contains("?")) return url
 
-    val uri = Uri.parse(url)
+    val uri = url.toUri()
     val queries = uri.queryParameterNames
         .mapNotNull { key ->
             if (key.startsWith("utm_")) null
@@ -140,10 +141,10 @@ private suspend fun modifySpecificUrlWithConnection(url: String) : String = with
                     ?.attr("content")
                     ?: realUrl
             }
-        } ?: url
+        }
 
-        val modifiedUri = Uri.parse(modified)
-        val urlUri = Uri.parse(url)
+        val modifiedUri = modified.toUri()
+        val urlUri = url.toUri()
 
         if (modifiedUri.scheme != urlUri.scheme && url.removePrefix(urlUri.scheme ?: "") == modified.removePrefix(modifiedUri.scheme ?: "")) url
         else modified
@@ -181,7 +182,7 @@ suspend fun getEntryRootUrl(srcUrl: String) : String {
             twMatch != null -> twMatch.groupValues[0]
 
             else -> runCatching {
-                val uri = Uri.parse(modifiedUrl)
+                val uri = modifiedUrl.toUri()
                 uri.scheme + "://" + uri.authority + "/"
             }.getOrDefault(modifiedUrl)
         }

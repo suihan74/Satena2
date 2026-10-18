@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 interface InformationViewModel : IPreferencePageViewModel {
     /**
@@ -114,7 +115,7 @@ class InformationViewModelImpl @Inject constructor(
     override fun launchPlayStore(context: Context) {
         runCatching {
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse(context.getString(R.string.play_store))
+                data = context.getString(R.string.play_store).toUri()
                 `package` = "com.android.vending"
             }
             context.startActivity(intent)
@@ -138,7 +139,7 @@ class InformationViewModelImpl @Inject constructor(
     override fun sendMailToDeveloper(context: Context) {
         runCatching {
             val address = context.getString(R.string.developer_email)
-            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).also {
+            val intent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).also {
                 it.putExtra(Intent.EXTRA_EMAIL, arrayOf(address))
             }
             context.startActivity(intent)
@@ -170,7 +171,7 @@ class InformationViewModelImpl @Inject constructor(
     private fun openUrl(context: Context, @StringRes urlTextId: Int) {
         runCatching {
             val url = context.getString(urlTextId)
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             context.startActivity(intent)
         }.onFailure {
             /* TODO: エラーメッセージ */

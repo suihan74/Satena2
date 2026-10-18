@@ -30,9 +30,6 @@ import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -60,6 +57,8 @@ import com.suihan74.satena2.compose.dialog.MenuDialog
 import com.suihan74.satena2.compose.dialog.dialogButton
 import com.suihan74.satena2.compose.dialog.menuDialogItem
 import com.suihan74.satena2.compose.emptyFooter
+import com.suihan74.satena2.compose.icons.Add
+import com.suihan74.satena2.compose.icons.ArrowBack
 import com.suihan74.satena2.scene.entries.BottomMenuItem
 import com.suihan74.satena2.scene.entries.Category
 import com.suihan74.satena2.scene.entries.ClickEntryAction
@@ -352,7 +351,7 @@ private fun BottomMenuPrefItem(
                 onClick = { dialogTargetIndex = 0 }
             ) {
                 Icon(
-                    Icons.Default.Add,
+                    Add,
                     contentDescription = "add an item",
                     tint = CurrentTheme.bottomBarOnBackground
                 )
@@ -507,7 +506,7 @@ private fun InitialTabsSelector(
                         .size(36.dp)
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
+                        ArrowBack,
                         contentDescription = "back"
                     )
                 }

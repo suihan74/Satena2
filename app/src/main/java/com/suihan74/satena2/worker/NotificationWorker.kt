@@ -30,6 +30,7 @@ import com.suihan74.satena2.utility.hatena.firstBookmarkMetadata
 import com.suihan74.satena2.utility.hatena.message
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import androidx.core.net.toUri
 
 /**
  * バックグラウンドで通知を確認する[CoroutineWorker]
@@ -152,12 +153,12 @@ class NotificationWorker @AssistedInject constructor(
                     openBookmarkIntent
                 }.getOrElse {
                     actions = null
-                    Intent(Intent.ACTION_VIEW, Uri.parse(notice.link))
+                    Intent(Intent.ACTION_VIEW, notice.link.toUri())
                 }
             }
 
             NoticeVerb.ADD_FAVORITE.str -> {
-                Intent(Intent.ACTION_VIEW, Uri.parse(notice.link))
+                Intent(Intent.ACTION_VIEW, notice.link.toUri())
             }
 
             NoticeVerb.FIRST_BOOKMARK.str -> {
