@@ -42,6 +42,11 @@ interface BrowserViewModel : IPreferencePageViewModel {
      */
     val webViewTheme : MutableStateFlow<WebViewTheme>
 
+    /**
+     * 有効なブロック設定
+     */
+    val blockResources : MutableStateFlow<List<String>>
+
     // ------ //
 
     /**
@@ -50,6 +55,13 @@ interface BrowserViewModel : IPreferencePageViewModel {
      * 設定画面をブラウザで表示している場合だけ使用
      */
     val currentUrl : MutableStateFlow<String?>
+
+    // ------ //
+
+    /**
+     * 指定したブロック設定を削除する
+     */
+    fun deleteBlockedResource(resource: String)
 }
 
 // ------ //
@@ -87,6 +99,11 @@ class BrowserViewModelImpl @Inject constructor(
      */
     override val webViewTheme : MutableStateFlow<WebViewTheme> = prefsStateFlow(WebViewTheme.AUTO)
 
+    /**
+     * 有効なブロック設定
+     */
+    override val blockResources : MutableStateFlow<List<String>> = prefsStateFlow(emptyList())
+
     // ------ //
 
     /**
@@ -95,6 +112,15 @@ class BrowserViewModelImpl @Inject constructor(
      * 設定画面をブラウザで表示している場合だけ使用
      */
     override val currentUrl : MutableStateFlow<String?> = MutableStateFlow(null)
+
+    // ------ //
+
+    /**
+     * 指定したブロック設定を削除する
+     */
+    override fun deleteBlockedResource(resource: String) {
+        blockResources.value = blockResources.value.minus(resource)
+    }
 
     // ------ //
 
@@ -107,6 +133,7 @@ class BrowserViewModelImpl @Inject constructor(
                 urlBlockingEnabled.value = it.urlBlockingEnabled
                 addressBarAlignment.value = it.addressBarAlignment
                 webViewTheme.value = it.webViewTheme
+                blockResources.value = it.blockedResources
             }
             .launchIn(viewModelScope)
     }
@@ -126,7 +153,8 @@ class BrowserViewModelImpl @Inject constructor(
                         javascriptEnabled = javascriptEnabled.value,
                         urlBlockingEnabled = urlBlockingEnabled.value,
                         addressBarAlignment = addressBarAlignment.value,
-                        webViewTheme = webViewTheme.value
+                        webViewTheme = webViewTheme.value,
+                        blockedResources = blockResources.value
                     )
                 }
             }.launchIn(viewModelScope)
@@ -145,8 +173,18 @@ class FakeBrowserViewModel :
     override val urlBlockingEnabled = MutableStateFlow(true)
     override val addressBarAlignment = MutableStateFlow(Alignment.Bottom)
     override val webViewTheme = MutableStateFlow(WebViewTheme.AUTO)
+    override val blockResources = MutableStateFlow<List<String>>(emptyList())
 
     // ------ //
 
     override val currentUrl : MutableStateFlow<String?> = MutableStateFlow(null)
+
+    // ------ //
+
+    /**
+     * 指定したブロック設定を削除する
+     */
+    override fun deleteBlockedResource(resource: String) {
+        blockResources.value = blockResources.value.minus(resource)
+    }
 }

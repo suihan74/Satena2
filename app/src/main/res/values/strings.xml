@@ -624,6 +624,7 @@
     <string name="pref_browser_start_page">スタートページ</string>
     <string name="pref_browser_address_bar_alignment">アドレスバーの位置</string>
     <string name="pref_browser_web_view_theme">ウェブサイトのテーマ</string>
+    <string name="pref_browser_block_settings">ブロック設定</string>
 
     <!-- BrowserType -->
     <string name="browser_type_webview">WebView</string>

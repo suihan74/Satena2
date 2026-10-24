@@ -42,8 +42,7 @@ import com.suihan74.satena2.scene.bookmarks.FakeBookmarksViewModel
 import com.suihan74.satena2.scene.browser.drawer.BookmarksContentHost
 import com.suihan74.satena2.scene.browser.drawer.BrowserBookmarksContentDestination
 import com.suihan74.satena2.scene.browser.drawer.HistoryContent
-import com.suihan74.satena2.scene.preferences.page.BasicPreferencesPage
-import com.suihan74.satena2.scene.preferences.page.browser.browserPageContents
+import com.suihan74.satena2.scene.preferences.page.browser.BrowserPageContents
 import com.suihan74.satena2.ui.theme.CurrentTheme
 import kotlinx.coroutines.launch
 
@@ -177,9 +176,10 @@ fun DrawerContent(
                 }
 
                 DrawerTab.Preferences.ordinal -> {
-                    BasicPreferencesPage(
-                        state = prefsViewModel.lazyListState(),
-                        contents = browserPageContents(prefsViewModel)
+                    BrowserPageContents(
+                        viewModel = prefsViewModel,
+                        pagerState = pagerState,
+                        navigationBarInset = 0.dp
                     )
                 }
 

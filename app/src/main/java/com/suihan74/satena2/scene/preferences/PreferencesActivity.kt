@@ -89,10 +89,10 @@ import com.suihan74.satena2.scene.preferences.page.bookmarks.BookmarkViewModel
 import com.suihan74.satena2.scene.preferences.page.bookmarks.BookmarkViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.bookmarks.FakeBookmarkViewModel
 import com.suihan74.satena2.scene.preferences.page.bookmarks.bookmarkPageContents
+import com.suihan74.satena2.scene.preferences.page.browser.BrowserPageContents
 import com.suihan74.satena2.scene.preferences.page.browser.BrowserViewModel
 import com.suihan74.satena2.scene.preferences.page.browser.BrowserViewModelImpl
 import com.suihan74.satena2.scene.preferences.page.browser.FakeBrowserViewModel
-import com.suihan74.satena2.scene.preferences.page.browser.browserPageContents
 import com.suihan74.satena2.scene.preferences.page.entries.EntryPage
 import com.suihan74.satena2.scene.preferences.page.entries.EntryViewModel
 import com.suihan74.satena2.scene.preferences.page.entries.EntryViewModelImpl
@@ -151,8 +151,7 @@ private data class PrefContents(
     val information: List<ComposablePrefItem>,
     val general: List<ComposablePrefItem>,
     val account: List<ComposablePrefItem>,
-    val bookmark: List<ComposablePrefItem>,
-    val browser: List<ComposablePrefItem>,
+    val bookmark: List<ComposablePrefItem>
 ) {
     private var _allItems: List<Pair<String, @Composable ()->Unit>>? = null
     fun allItems(context: Context) : List<Pair<String, @Composable ()->Unit>> {
@@ -172,7 +171,6 @@ private data class PrefContents(
             addItems(general)
             addItems(account)
             addItems(bookmark)
-            addItems(browser)
         }
         _allItems = items
         return items
@@ -242,8 +240,7 @@ class PreferencesActivity : ComponentActivity() {
                 information = informationPageContents(informationViewModel),
                 general = generalPageContents(generalViewModel),
                 account = accountPageContents(accountViewModel),
-                bookmark = bookmarkPageContents(bookmarkViewModel),
-                browser = browserPageContents(browserViewModel)
+                bookmark = bookmarkPageContents(bookmarkViewModel)
             )
 
             LaunchedEffect(Unit) {
@@ -380,8 +377,7 @@ private fun PreferencesScenePreview() {
         information = informationPageContents(viewModels.information),
         general = generalPageContents(viewModels.general),
         account = accountPageContents(viewModels.account),
-        bookmark = bookmarkPageContents(viewModels.bookmark),
-        browser = browserPageContents(viewModels.browser)
+        bookmark = bookmarkPageContents(viewModels.bookmark)
     )
 
     PreferencesScene(
@@ -499,9 +495,10 @@ private fun MainContents(
                     }
 
                     PreferencesCategory.Browser -> {
-                        BasicPreferencesPage(
-                            state = viewModels.browser.lazyListState(),
-                            contents = contents.browser
+                        BrowserPageContents(
+                            viewModel = viewModels.browser,
+                            pagerState = pagerState,
+                            navigationBarInset = navigationBarHeight
                         )
                     }
 
