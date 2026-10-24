@@ -1,5 +1,6 @@
 package com.suihan74.satena2.scene.preferences.page.userLabel
 
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -30,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -127,24 +130,44 @@ fun UserLabelsPage(
                 slideOutHorizontally(animationSpec = tween(300)) { it }
             }
         ) {
+            var backProgress by remember { mutableFloatStateOf(0f) }
+            PredictiveBackHandler { progressFlow ->
+                runCatching {
+                    progressFlow.collect { backEvent ->
+                        backProgress = backEvent.progress
+                    }
+                    navController.popBackStack()
+                }.onFailure {
+                    backProgress = 0f
+                }
+            }
+
             targetLabel.value?.let { l ->
                 val label by viewModel.labeledUsersFlow(l).collectAsState(initial = null)
-                UsersContents(
-                    label = label,
-                    allLabels = labels,
-                    dialogProperties = viewModel.dialogProperties(),
-                    navigationBarInset = navigationBarInset,
-                    userAndLabelsGetter = { user -> viewModel.userAndLabelsFlow(user) },
-                    onBack = {
-                        navController.popBackStack()
-                    },
-                    onCrateLabel = {
-                        viewModel.createLabel(it)
-                    },
-                    onUpdateLabels = { user, states ->
-                        viewModel.updateUserLabels(user, states)
-                    }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            translationX = backProgress * size.width
+                        }
+                ) {
+                    UsersContents(
+                        label = label,
+                        allLabels = labels,
+                        dialogProperties = viewModel.dialogProperties(),
+                        navigationBarInset = navigationBarInset,
+                        userAndLabelsGetter = { user -> viewModel.userAndLabelsFlow(user) },
+                        onBack = {
+                            navController.popBackStack()
+                        },
+                        onCrateLabel = {
+                            viewModel.createLabel(it)
+                        },
+                        onUpdateLabels = { user, states ->
+                            viewModel.updateUserLabels(user, states)
+                        }
+                    )
+                }
             }
         }
     }

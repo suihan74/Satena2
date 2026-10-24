@@ -1,6 +1,7 @@
 package com.suihan74.satena2.scene.preferences.page.browser
 
 import android.os.Build
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -28,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,6 +38,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextOverflow
@@ -101,7 +104,12 @@ fun BrowserPageContents(
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None }
     ) {
-        composable("basic") {
+        composable(
+            "basic",
+            exitTransition = {
+                slideOutHorizontally(animationSpec = tween(300)) { it }
+            }
+        ) {
             val browserType by viewModel.browserType.collectAsState()
             val startPageUrl by viewModel.startPageUrl.collectAsState()
             val currentUrl by viewModel.currentUrl.collectAsState()
@@ -132,21 +140,38 @@ fun BrowserPageContents(
             },
             popExitTransition = {
                 slideOutHorizontally(animationSpec = tween(300)) { it }
-            },
-            exitTransition = {
-                slideOutHorizontally(animationSpec = tween(300)) { it }
             }
         ) {
             val blockedResources by viewModel.blockResources.collectAsState()
+            var backProgress by remember { mutableFloatStateOf(0f) }
 
-            BlockedResourcesPage(
-                blockedResources = blockedResources,
-                navigationBarInset = navigationBarInset,
-                onBack = { navController.popBackStack() },
-                onEditItem = {},
-                onDeleteItem = { viewModel.deleteBlockedResource(it) },
-                dialogProperties = viewModel.dialogProperties()
-            )
+            PredictiveBackHandler { progressFlow ->
+                runCatching {
+                    progressFlow.collect { backEvent ->
+                        backProgress = backEvent.progress
+                    }
+                    navController.popBackStack()
+                }.onFailure {
+                    backProgress = 0f
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        translationX = backProgress * size.width
+                    }
+            ) {
+                BlockedResourcesPage(
+                    blockedResources = blockedResources,
+                    navigationBarInset = navigationBarInset,
+                    onBack = { navController.popBackStack() },
+                    onEditItem = {},
+                    onDeleteItem = { viewModel.deleteBlockedResource(it) },
+                    dialogProperties = viewModel.dialogProperties()
+                )
+            }
         }
     }
 }
